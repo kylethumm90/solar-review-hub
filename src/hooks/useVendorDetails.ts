@@ -32,10 +32,7 @@ export const useVendorDetails = (vendorId: string | undefined) => {
         // Fetch reviews for this company
         const { data: reviewsData, error: reviewsError } = await supabase
           .from('reviews')
-          .select(`
-            *,
-            users (full_name)
-          `)
+          .select('*')
           .eq('company_id', vendorId)
           .order('created_at', { ascending: false });
         
@@ -44,6 +41,30 @@ export const useVendorDetails = (vendorId: string | undefined) => {
           toast.error('Failed to load reviews');
           throw reviewsError;
         }
+
+        // Fetch user names for reviews separately 
+        const reviewsWithUsers = await Promise.all(
+          (reviewsData || []).map(async (review) => {
+            if (review.user_id) {
+              const { data: userData, error: userError } = await supabase
+                .from('users')
+                .select('full_name')
+                .eq('id', review.user_id)
+                .single();
+              
+              if (!userError && userData) {
+                return {
+                  ...review,
+                  users: userData
+                };
+              }
+            }
+            return {
+              ...review,
+              users: { full_name: 'Anonymous User' }
+            };
+          })
+        );
         
         // Fetch review questions for this company type
         const companyType = companyData.type.toLowerCase().replace(/ /g, '_');
@@ -59,25 +80,37 @@ export const useVendorDetails = (vendorId: string | undefined) => {
         
         // Fetch review answers if there are reviews
         let answersData: any[] = [];
-        if (reviewsData && reviewsData.length > 0) {
-          const reviewIds = reviewsData.map(review => review.id);
+        if (reviewsWithUsers && reviewsWithUsers.length > 0) {
+          const reviewIds = reviewsWithUsers.map(review => review.id);
+          
+          // Get review questions first for joining manually
+          const { data: allQuestions } = await supabase
+            .from('review_questions')
+            .select('*');
+            
+          // Get answers
           const { data: fetchedAnswers, error: answersError } = await supabase
             .from('review_answers')
-            .select(`
-              *,
-              review_questions (*)
-            `)
+            .select('*')
             .in('review_id', reviewIds);
             
           if (answersError) {
             console.error('Error fetching review answers:', answersError);
             throw answersError;
           }
-          answersData = fetchedAnswers || [];
+          
+          // Manually join answers with questions
+          answersData = (fetchedAnswers || []).map(answer => {
+            const question = allQuestions?.find(q => q.id === answer.question_id);
+            return {
+              ...answer,
+              review_questions: question || null
+            };
+          });
         }
         
         setCompany(companyData);
-        setReviews(reviewsData || []);
+        setReviews(reviewsWithUsers || []);
         setReviewQuestions(questionsData || []);
         setReviewAnswers(answersData);
         

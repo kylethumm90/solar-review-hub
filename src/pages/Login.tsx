@@ -14,10 +14,15 @@ const Login = () => {
   
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user } = useAuth();
 
   // Get redirect path from location state or default to dashboard
   const from = location.state?.from?.pathname || '/dashboard';
+  
+  // If already logged in, redirect to dashboard
+  if (user) {
+    navigate(from, { replace: true });
+  }
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,25 +40,25 @@ const Login = () => {
         const { error, data } = await signUp(email, password, fullName);
         
         if (error) {
-          toast.error(error.message);
+          setIsLoading(false);
         } else {
           toast.success('Account created! Please verify your email to continue');
           setIsSignUp(false);
+          setIsLoading(false);
         }
       } else {
         // Handle sign in
         const { error } = await signIn(email, password);
         
         if (error) {
-          toast.error(error.message);
+          setIsLoading(false);
         } else {
-          toast.success('Signed in successfully!');
-          navigate(from, { replace: true });
+          // Don't set isLoading to false here, as we'll be redirecting
+          // The redirect will happen automatically via the user state check
         }
       }
     } catch (error: any) {
       toast.error(error?.message || 'An error occurred');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -72,6 +77,7 @@ const Login = () => {
             <button
               onClick={() => setIsSignUp(!isSignUp)}
               className="font-medium text-primary hover:text-primary/80"
+              type="button"
             >
               {isSignUp ? 'Sign in' : 'Create one'}
             </button>

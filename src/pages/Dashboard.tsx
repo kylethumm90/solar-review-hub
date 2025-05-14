@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { useAuth } from '@/context/AuthContext';
@@ -7,7 +6,7 @@ import { Calendar, Star, File, Building } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -72,10 +71,9 @@ const Dashboard = () => {
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
-        toast({
+        toast.custom({
           title: "Error loading dashboard data",
-          description: "Please try again later",
-          variant: "destructive"
+          description: "Please try again later"
         });
       } finally {
         setIsLoading(false);

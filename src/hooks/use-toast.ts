@@ -1,4 +1,5 @@
 import * as React from "react"
+import { toast as sonnerToast } from "sonner"
 
 import type {
   ToastActionElement,
@@ -137,36 +138,33 @@ function dispatch(action: Action) {
   })
 }
 
-type Toast = Omit<ToasterToast, "id">
-
-function toast({ ...props }: Toast) {
-  const id = genId()
-
-  const update = (props: ToasterToast) =>
-    dispatch({
-      type: "UPDATE_TOAST",
-      toast: { ...props, id },
-    })
-  const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
-
-  dispatch({
-    type: "ADD_TOAST",
-    toast: {
-      ...props,
-      id,
-      open: true,
-      onOpenChange: (open) => {
-        if (!open) dismiss()
-      },
-    },
-  })
-
-  return {
-    id: id,
-    dismiss,
-    update,
+// Create a wrapper function for sonnerToast
+const toast = {
+  // Basic toast
+  message: (message: string, options?: any) => {
+    return sonnerToast(message, options);
+  },
+  // Success toast
+  success: (message: string, options?: any) => {
+    return sonnerToast.success(message, options);
+  },
+  // Error toast
+  error: (message: string, options?: any) => {
+    return sonnerToast.error(message, options);
+  },
+  // Warning toast
+  warning: (message: string, options?: any) => {
+    return sonnerToast.warning(message, options);
+  },
+  // Info toast
+  info: (message: string, options?: any) => {
+    return sonnerToast.info(message, options);
+  },
+  // Custom toast to handle title and description format
+  custom: ({ title, description, ...options }: { title: string, description: string, [key: string]: any }) => {
+    return sonnerToast(description ? `${title}: ${description}` : title, options);
   }
-}
+};
 
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)

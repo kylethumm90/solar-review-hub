@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { calculateWeightedAverage } from '@/utils/reviewUtils';
 import { ReviewQuestion } from '@/types';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -36,10 +36,9 @@ const Reviews = () => {
         }
       } catch (error) {
         console.error('Error fetching vendor info:', error);
-        toast({
+        toast.custom({
           title: "Error",
-          description: "Vendor not found.",
-          variant: "destructive"
+          description: "Vendor not found."
         });
         navigate('/vendors');
       } finally {
@@ -56,10 +55,9 @@ const Reviews = () => {
     questionRatings: Record<string, { rating: number; notes?: string; question: ReviewQuestion }>
   ) => {
     if (!user) {
-      toast({
+      toast.custom({
         title: "Authentication required",
-        description: "You must be logged in to submit a review",
-        variant: "destructive"
+        description: "You must be logged in to submit a review"
       });
       navigate('/login', { state: { from: { pathname: `/reviews/${vendorId}` } } });
       return;
@@ -73,10 +71,9 @@ const Reviews = () => {
     );
     
     if (unansweredQuestions.length > 0) {
-      toast({
+      toast.custom({
         title: "Incomplete review",
-        description: "Please rate all questions before submitting",
-        variant: "destructive"
+        description: "Please rate all questions before submitting"
       });
       return;
     }
@@ -103,16 +100,15 @@ const Reviews = () => {
         formattedRatings
       );
       
-      toast({
+      toast.custom({
         title: "Success",
         description: "Review submitted successfully!"
       });
       navigate(`/vendors/${vendorId}`);
     } catch (error: any) {
-      toast({
+      toast.custom({
         title: "Error",
-        description: error.message || 'Failed to submit review',
-        variant: "destructive"
+        description: error.message || 'Failed to submit review'
       });
     } finally {
       setSubmitting(false);

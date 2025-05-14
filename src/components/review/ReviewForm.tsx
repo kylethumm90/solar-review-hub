@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import ReviewCategoryGroup from '@/components/ReviewCategoryGroup';
 import { ReviewQuestion } from '@/types';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 interface ReviewFormProps {
   vendor: {
@@ -39,10 +39,9 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
     e.preventDefault();
 
     if (!reviewTitle.trim()) {
-      toast({
-        title: "Missing title",
-        description: "Please provide a title for your review",
-        variant: "destructive"
+      toast.custom({ 
+        title: "Missing title", 
+        description: "Please provide a title for your review" 
       });
       return;
     }
@@ -53,10 +52,9 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
     );
     
     if (unansweredQuestions.length > 0) {
-      toast({
+      toast.custom({
         title: "Incomplete review",
-        description: "Please rate all questions before submitting",
-        variant: "destructive"
+        description: "Please rate all questions before submitting"
       });
       return;
     }

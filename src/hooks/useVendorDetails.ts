@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 
 export const useVendorDetails = (vendorId: string | undefined) => {
   const [company, setCompany] = useState<any>(null);

@@ -13,7 +13,7 @@ export interface Company {
   description: string;
   website: string;
   logo_url?: string;
-  type: 'epc' | 'sales_org' | 'lead_gen' | 'software';
+  type: string; // Changed from specific literals to accept any string to match database
   is_verified: boolean;
   grade?: string;
   last_verified?: string;

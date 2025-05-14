@@ -49,7 +49,8 @@ const Vendors = () => {
           };
         });
 
-        setCompanies(processedCompanies);
+        // Cast the processed companies to match our Company[] type
+        setCompanies(processedCompanies as Company[]);
       } catch (error) {
         console.error('Error fetching companies:', error);
       } finally {

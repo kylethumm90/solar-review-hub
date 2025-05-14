@@ -11,7 +11,7 @@ interface VendorCardProps {
   logoUrl?: string;
   website?: string;
   grade?: string;
-  type: 'epc' | 'sales_org' | 'lead_gen' | 'software';
+  type: string; // Updated to accept any string
   rating?: number;
   isVerified: boolean;
 }

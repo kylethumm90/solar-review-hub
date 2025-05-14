@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Star, Phone, Globe, Mail, MapPin, Calendar, Shield, AlertCircle } from 'lucide-react';
 import { calculateAverageRating } from '@/lib/utils';
+import { toast } from "sonner";
 
 const VendorDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -27,7 +28,11 @@ const VendorDetails = () => {
           .eq('id', id)
           .single();
         
-        if (companyError) throw companyError;
+        if (companyError) {
+          console.error('Error fetching company details:', companyError);
+          toast.error('Failed to load vendor details');
+          throw companyError;
+        }
         
         // Fetch reviews for this company
         const { data: reviewsData, error: reviewsError } = await supabase
@@ -39,7 +44,11 @@ const VendorDetails = () => {
           .eq('company_id', id)
           .order('created_at', { ascending: false });
         
-        if (reviewsError) throw reviewsError;
+        if (reviewsError) {
+          console.error('Error fetching reviews:', reviewsError);
+          toast.error('Failed to load reviews');
+          throw reviewsError;
+        }
         
         // Fetch review questions for this company type
         const companyType = companyData.type.toLowerCase().replace(/ /g, '_');
@@ -48,7 +57,10 @@ const VendorDetails = () => {
           .select('*')
           .eq('company_type', companyType);
           
-        if (questionsError) throw questionsError;
+        if (questionsError) {
+          console.error('Error fetching review questions:', questionsError);
+          throw questionsError;
+        }
         
         // Fetch review answers if there are reviews
         let answersData: any[] = [];
@@ -62,7 +74,10 @@ const VendorDetails = () => {
             `)
             .in('review_id', reviewIds);
             
-          if (answersError) throw answersError;
+          if (answersError) {
+            console.error('Error fetching review answers:', answersError);
+            throw answersError;
+          }
           answersData = fetchedAnswers || [];
         }
         
@@ -70,6 +85,8 @@ const VendorDetails = () => {
         setReviews(reviewsData || []);
         setReviewQuestions(questionsData || []);
         setReviewAnswers(answersData);
+        
+        toast.success(`Loaded details for ${companyData.name}`);
       } catch (error) {
         console.error('Error fetching vendor details:', error);
       } finally {

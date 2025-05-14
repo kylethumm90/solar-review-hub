@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Star, Shield } from 'lucide-react';
+import { Star, Shield, Globe, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Company } from '@/types';

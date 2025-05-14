@@ -20,6 +20,7 @@ export interface Company {
   created_at: string;
   reviews?: Review[];
   avg_rating?: number;
+  review_count?: number;
 }
 
 export interface Review {

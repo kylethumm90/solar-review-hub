@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import StarRating from './StarRating';
 import { Building, ExternalLink } from 'lucide-react';
 import { Button } from './ui/button';
+import { Card, CardContent } from './ui/card';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from './ui/hover-card';
+import { Badge } from './ui/badge';
 
 interface VendorCardProps {
   id: string;
@@ -11,9 +14,10 @@ interface VendorCardProps {
   logoUrl?: string;
   website?: string;
   grade?: string;
-  type: string; // Updated to accept any string
+  type: string;
   rating?: number;
   isVerified: boolean;
+  reviewCount?: number;
 }
 
 const VendorCard = ({
@@ -26,6 +30,7 @@ const VendorCard = ({
   type,
   rating = 0,
   isVerified,
+  reviewCount = 0,
 }: VendorCardProps) => {
   // Format the company type for display
   const formatType = (type: string) => {
@@ -35,8 +40,8 @@ const VendorCard = ({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg">
-      <div className="p-6">
+    <Card className="overflow-hidden transition-all hover:shadow-lg hover:translate-y-[-2px]">
+      <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
             {logoUrl ? (
@@ -55,9 +60,9 @@ const VendorCard = ({
               <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
                 {name}
                 {isVerified && (
-                  <span className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full dark:bg-green-900 dark:text-green-100">
+                  <Badge variant="outline" className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full dark:bg-green-900 dark:text-green-100">
                     Verified
-                  </span>
+                  </Badge>
                 )}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">{formatType(type)}</p>
@@ -73,13 +78,20 @@ const VendorCard = ({
         <div className="mb-4">
           <StarRating value={rating} readOnly size="sm" />
           <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
-            {rating.toFixed(1)} rating
+            {rating.toFixed(1)} {reviewCount > 0 ? `(${reviewCount})` : ''}
           </span>
         </div>
         
-        <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2 mb-4">
-          {description}
-        </p>
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2 mb-4 cursor-default">
+              {description}
+            </p>
+          </HoverCardTrigger>
+          <HoverCardContent className="w-80 text-sm">
+            {description}
+          </HoverCardContent>
+        </HoverCard>
         
         <div className="flex justify-between items-center mt-4">
           <Button asChild variant="outline" size="sm">
@@ -97,8 +109,8 @@ const VendorCard = ({
             </a>
           )}
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

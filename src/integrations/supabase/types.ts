@@ -9,7 +9,92 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      companies: {
+        Row: {
+          created_at: string
+          description: string
+          grade: string | null
+          id: string
+          is_verified: boolean
+          last_verified: string | null
+          logo_url: string | null
+          name: string
+          type: string
+          website: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          grade?: string | null
+          id?: string
+          is_verified?: boolean
+          last_verified?: string | null
+          logo_url?: string | null
+          name: string
+          type: string
+          website: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          grade?: string | null
+          id?: string
+          is_verified?: boolean
+          last_verified?: string | null
+          logo_url?: string | null
+          name?: string
+          type?: string
+          website?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          rating_communication: number
+          rating_install_quality: number
+          rating_payment_reliability: number
+          rating_post_install_support: number
+          rating_timeliness: number
+          text_feedback: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          rating_communication: number
+          rating_install_quality: number
+          rating_payment_reliability: number
+          rating_post_install_support: number
+          rating_timeliness: number
+          text_feedback: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          rating_communication?: number
+          rating_install_quality?: number
+          rating_payment_reliability?: number
+          rating_post_install_support?: number
+          rating_timeliness?: number
+          text_feedback?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

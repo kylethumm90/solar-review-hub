@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { supabase } from '@/utils/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Star, Phone, Globe, Mail, MapPin, Calendar, Shield, AlertCircle } from 'lucide-react';
 import { calculateAverageRating } from '@/lib/utils';

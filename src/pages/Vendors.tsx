@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/utils/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 import VendorCard from '@/components/VendorCard';
 import { Search, Filter } from 'lucide-react';
 import { Company } from '@/types';

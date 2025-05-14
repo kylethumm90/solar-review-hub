@@ -27,7 +27,6 @@ const ReviewQuestionItem = ({ question, onChange }: ReviewQuestionItemProps) => 
   return (
     <div className="p-4 border rounded-lg mb-4 bg-card">
       <div className="mb-2">
-        <h3 className="text-lg font-medium">{question.category}</h3>
         <p className="text-muted-foreground">{question.question}</p>
       </div>
       

@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import ReviewCategoryGroup from '@/components/ReviewCategoryGroup';
 import { ReviewQuestion } from '@/types';
+import { toast } from '@/components/ui/use-toast';
 
 interface ReviewFormProps {
   vendor: {
@@ -36,6 +37,30 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!reviewTitle.trim()) {
+      toast({
+        title: "Missing title",
+        description: "Please provide a title for your review",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check if all questions have been answered
+    const unansweredQuestions = reviewQuestions.filter(
+      q => !questionRatings[q.id] || questionRatings[q.id].rating === 0
+    );
+    
+    if (unansweredQuestions.length > 0) {
+      toast({
+        title: "Incomplete review",
+        description: "Please rate all questions before submitting",
+        variant: "destructive"
+      });
+      return;
+    }
+
     onSubmit(reviewTitle, reviewDetails, questionRatings);
   };
 
@@ -54,6 +79,7 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
             value={reviewTitle}
             onChange={(e) => setReviewTitle(e.target.value)}
             placeholder="Summarize your experience in a few words"
+            required
           />
         </div>
         

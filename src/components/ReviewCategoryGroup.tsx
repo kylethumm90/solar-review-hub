@@ -24,6 +24,7 @@ const ReviewCategoryGroup = ({ title, questions, onQuestionChange }: ReviewCateg
       
       {Object.entries(questionsByCategory).map(([category, categoryQuestions]) => (
         <div key={category} className="mb-4">
+          <h3 className="text-lg font-semibold mb-3">{category}</h3>
           {categoryQuestions.map(question => (
             <ReviewQuestionItem 
               key={question.id} 

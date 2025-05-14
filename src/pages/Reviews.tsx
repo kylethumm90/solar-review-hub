@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/use-toast';
 import { calculateWeightedAverage } from '@/utils/reviewUtils';
 import { ReviewQuestion } from '@/types';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -36,7 +36,11 @@ const Reviews = () => {
         }
       } catch (error) {
         console.error('Error fetching vendor info:', error);
-        toast.error('Vendor not found.');
+        toast({
+          title: "Error",
+          description: "Vendor not found.",
+          variant: "destructive"
+        });
         navigate('/vendors');
       } finally {
         setLoading(false);
@@ -46,17 +50,17 @@ const Reviews = () => {
     fetchVendorInfo();
   }, [vendorId, navigate]);
   
-  const calculateAverageScore = (questionRatings: Record<string, { rating: number; question: ReviewQuestion }>) => {
-    return calculateWeightedAverage(questionRatings);
-  };
-  
   const handleSubmitReview = async (
     title: string, 
     details: string, 
     questionRatings: Record<string, { rating: number; notes?: string; question: ReviewQuestion }>
   ) => {
     if (!user) {
-      toast.error('You must be logged in to submit a review');
+      toast({
+        title: "Authentication required",
+        description: "You must be logged in to submit a review",
+        variant: "destructive"
+      });
       navigate('/login', { state: { from: { pathname: `/reviews/${vendorId}` } } });
       return;
     }
@@ -69,7 +73,11 @@ const Reviews = () => {
     );
     
     if (unansweredQuestions.length > 0) {
-      toast.error('Please rate all questions before submitting.');
+      toast({
+        title: "Incomplete review",
+        description: "Please rate all questions before submitting",
+        variant: "destructive"
+      });
       return;
     }
     
@@ -77,7 +85,7 @@ const Reviews = () => {
     
     try {
       // Calculate average score
-      const averageScore = calculateAverageScore(questionRatings);
+      const averageScore = calculateWeightedAverage(questionRatings);
       
       // Format question ratings for API
       const formattedRatings: Record<string, { rating: number; notes?: string }> = {};
@@ -95,10 +103,17 @@ const Reviews = () => {
         formattedRatings
       );
       
-      toast.success('Review submitted successfully!');
+      toast({
+        title: "Success",
+        description: "Review submitted successfully!"
+      });
       navigate(`/vendors/${vendorId}`);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to submit review');
+      toast({
+        title: "Error",
+        description: error.message || 'Failed to submit review',
+        variant: "destructive"
+      });
     } finally {
       setSubmitting(false);
     }

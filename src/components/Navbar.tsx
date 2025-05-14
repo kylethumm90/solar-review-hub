@@ -1,4 +1,5 @@
 
+import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Menu, Search, Sun, Moon } from 'lucide-react';

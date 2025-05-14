@@ -1,0 +1,40 @@
+
+import { ReviewQuestion } from '@/types';
+import ReviewQuestionItem from './ReviewQuestionItem';
+
+interface ReviewCategoryGroupProps {
+  title: string;
+  questions: ReviewQuestion[];
+  onQuestionChange: (questionId: string, rating: number, notes?: string) => void;
+}
+
+const ReviewCategoryGroup = ({ title, questions, onQuestionChange }: ReviewCategoryGroupProps) => {
+  // Group questions by category
+  const questionsByCategory = questions.reduce((acc, question) => {
+    if (!acc[question.category]) {
+      acc[question.category] = [];
+    }
+    acc[question.category].push(question);
+    return acc;
+  }, {} as Record<string, ReviewQuestion[]>);
+
+  return (
+    <div className="mb-6">
+      <h2 className="text-xl font-bold mb-4">{title}</h2>
+      
+      {Object.entries(questionsByCategory).map(([category, categoryQuestions]) => (
+        <div key={category} className="mb-4">
+          {categoryQuestions.map(question => (
+            <ReviewQuestionItem 
+              key={question.id} 
+              question={question} 
+              onChange={onQuestionChange} 
+            />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default ReviewCategoryGroup;

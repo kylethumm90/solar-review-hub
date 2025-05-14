@@ -10,6 +10,8 @@ const VendorDetails = () => {
   const { id } = useParams<{ id: string }>();
   const [company, setCompany] = useState<any>(null);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewAnswers, setReviewAnswers] = useState<any[]>([]);
+  const [reviewQuestions, setReviewQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
@@ -39,8 +41,35 @@ const VendorDetails = () => {
         
         if (reviewsError) throw reviewsError;
         
+        // Fetch review questions for this company type
+        const companyType = companyData.type.toLowerCase().replace(/ /g, '_');
+        const { data: questionsData, error: questionsError } = await supabase
+          .from('review_questions')
+          .select('*')
+          .eq('company_type', companyType);
+          
+        if (questionsError) throw questionsError;
+        
+        // Fetch review answers if there are reviews
+        let answersData: any[] = [];
+        if (reviewsData && reviewsData.length > 0) {
+          const reviewIds = reviewsData.map(review => review.id);
+          const { data: fetchedAnswers, error: answersError } = await supabase
+            .from('review_answers')
+            .select(`
+              *,
+              review_questions (*)
+            `)
+            .in('review_id', reviewIds);
+            
+          if (answersError) throw answersError;
+          answersData = fetchedAnswers || [];
+        }
+        
         setCompany(companyData);
         setReviews(reviewsData || []);
+        setReviewQuestions(questionsData || []);
+        setReviewAnswers(answersData);
       } catch (error) {
         console.error('Error fetching vendor details:', error);
       } finally {
@@ -79,7 +108,30 @@ const VendorDetails = () => {
     );
   }
   
-  const avgRating = calculateAverageRating(reviews);
+  // Get average score either from the reviews.average_score or calculate it from legacy fields
+  const getReviewAvgScore = (review: any) => {
+    if (review.average_score) return review.average_score;
+    return (
+      review.rating_communication +
+      review.rating_install_quality +
+      review.rating_payment_reliability +
+      review.rating_timeliness +
+      review.rating_post_install_support
+    ) / 5;
+  };
+  
+  const avgRating = reviews.length 
+    ? reviews.reduce((sum, review) => sum + getReviewAvgScore(review), 0) / reviews.length 
+    : 0;
+  
+  // Group review answers by review ID
+  const reviewAnswersByReviewId = reviewAnswers.reduce((acc, answer) => {
+    if (!acc[answer.review_id]) {
+      acc[answer.review_id] = [];
+    }
+    acc[answer.review_id].push(answer);
+    return acc;
+  }, {} as Record<string, any[]>);
   
   return (
     <div className="container mx-auto py-8">
@@ -169,43 +221,82 @@ const VendorDetails = () => {
         <h2 className="text-2xl font-bold mb-6">Reviews ({reviews.length})</h2>
         
         {reviews.length > 0 ? (
-          <div className="space-y-6">
+          <div className="space-y-8">
             {reviews.map((review) => (
               <div 
                 key={review.id} 
-                className="border-b dark:border-gray-700 pb-6 last:border-0"
+                className="border-b dark:border-gray-700 pb-8 last:border-0"
               >
                 <div className="flex justify-between mb-2">
-                  <span className="font-semibold">
-                    {review.users?.full_name || 'Anonymous User'}
-                  </span>
+                  <div>
+                    <span className="font-semibold">
+                      {review.users?.full_name || 'Anonymous User'}
+                    </span>
+                    {review.review_title && (
+                      <h3 className="text-lg font-medium mt-1">{review.review_title}</h3>
+                    )}
+                  </div>
                   <span className="text-gray-500 text-sm">
                     {new Date(review.created_at).toLocaleDateString()}
                   </span>
                 </div>
                 
                 <div className="flex items-center mb-3">
-                  {Array(5).fill(0).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-4 w-4 ${
-                        i < Math.round((
-                          review.rating_communication +
-                          review.rating_install_quality +
-                          review.rating_payment_reliability +
-                          review.rating_timeliness +
-                          review.rating_post_install_support
-                        ) / 5)
-                          ? 'fill-yellow-500'
-                          : 'fill-gray-200 dark:fill-gray-700'
-                      }`}
-                    />
-                  ))}
+                  <div className="flex items-center text-yellow-500 mr-2">
+                    {Array(5).fill(0).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-4 w-4 ${
+                          i < Math.round(getReviewAvgScore(review))
+                            ? 'fill-yellow-500'
+                            : 'fill-gray-200 dark:fill-gray-700'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-gray-600 dark:text-gray-300">
+                    {getReviewAvgScore(review).toFixed(1)}
+                  </span>
                 </div>
                 
-                <p className="text-gray-600 dark:text-gray-300">
-                  {review.text_feedback}
+                <p className="text-gray-600 dark:text-gray-300 mb-4">
+                  {review.review_details || review.text_feedback}
                 </p>
+                
+                {/* Show detailed ratings if available */}
+                {reviewAnswersByReviewId[review.id] && reviewAnswersByReviewId[review.id].length > 0 && (
+                  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {reviewAnswersByReviewId[review.id].map((answer) => (
+                      <div key={answer.id} className="bg-gray-50 dark:bg-gray-700/30 p-3 rounded">
+                        <div className="text-sm font-medium mb-1">
+                          {answer.review_questions?.category}
+                        </div>
+                        <div className="flex items-center">
+                          <div className="flex items-center text-yellow-500 mr-2">
+                            {Array(5).fill(0).map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`h-3 w-3 ${
+                                  i < answer.rating
+                                    ? 'fill-yellow-500'
+                                    : 'fill-gray-200 dark:fill-gray-700'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-gray-600 dark:text-gray-300 text-xs">
+                            {answer.rating}
+                          </span>
+                        </div>
+                        {answer.notes && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">
+                            "{answer.notes}"
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>

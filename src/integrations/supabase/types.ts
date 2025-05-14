@@ -48,8 +48,78 @@ export type Database = {
         }
         Relationships: []
       }
+      review_answers: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          question_id: string
+          rating: number
+          review_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          question_id: string
+          rating: number
+          review_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          question_id?: string
+          rating?: number
+          review_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "review_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_answers_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      review_questions: {
+        Row: {
+          category: string
+          company_type: string
+          created_at: string
+          id: string
+          question: string
+          weight: number
+        }
+        Insert: {
+          category: string
+          company_type: string
+          created_at?: string
+          id?: string
+          question: string
+          weight?: number
+        }
+        Update: {
+          category?: string
+          company_type?: string
+          created_at?: string
+          id?: string
+          question?: string
+          weight?: number
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
+          average_score: number | null
           company_id: string
           created_at: string
           id: string
@@ -58,10 +128,14 @@ export type Database = {
           rating_payment_reliability: number
           rating_post_install_support: number
           rating_timeliness: number
+          review_details: string | null
+          review_title: string | null
           text_feedback: string
           user_id: string
+          verification_status: string | null
         }
         Insert: {
+          average_score?: number | null
           company_id: string
           created_at?: string
           id?: string
@@ -70,10 +144,14 @@ export type Database = {
           rating_payment_reliability: number
           rating_post_install_support: number
           rating_timeliness: number
+          review_details?: string | null
+          review_title?: string | null
           text_feedback: string
           user_id: string
+          verification_status?: string | null
         }
         Update: {
+          average_score?: number | null
           company_id?: string
           created_at?: string
           id?: string
@@ -82,8 +160,11 @@ export type Database = {
           rating_payment_reliability?: number
           rating_post_install_support?: number
           rating_timeliness?: number
+          review_details?: string | null
+          review_title?: string | null
           text_feedback?: string
           user_id?: string
+          verification_status?: string | null
         }
         Relationships: [
           {

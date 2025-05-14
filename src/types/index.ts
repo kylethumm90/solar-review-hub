@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   email: string;
@@ -55,4 +54,22 @@ export interface Claim {
 export interface ApiResponse<T> {
   data: T | null;
   error: string | null;
+}
+
+export interface ReviewQuestion {
+  id: string;
+  company_type: string;
+  category: string;
+  question: string;
+  weight: number;
+  created_at: string;
+}
+
+export interface ReviewAnswer {
+  id?: string;
+  review_id: string;
+  question_id: string;
+  rating: number;
+  notes?: string;
+  created_at?: string;
 }

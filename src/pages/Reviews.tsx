@@ -4,8 +4,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/utils/supabaseClient';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Star } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { ReviewQuestion } from '@/types';
+import ReviewCategoryGroup from '@/components/ReviewCategoryGroup';
+import { calculateWeightedAverage } from '@/utils/reviewUtils';
 
 const Reviews = () => {
   const { vendorId } = useParams<{ vendorId: string }>();
@@ -15,14 +20,14 @@ const Reviews = () => {
   const [vendor, setVendor] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [reviewQuestions, setReviewQuestions] = useState<ReviewQuestion[]>([]);
   
   // Review form state
-  const [ratingCommunication, setRatingCommunication] = useState(0);
-  const [ratingInstallQuality, setRatingInstallQuality] = useState(0);
-  const [ratingPaymentReliability, setRatingPaymentReliability] = useState(0);
-  const [ratingTimeliness, setRatingTimeliness] = useState(0);
-  const [ratingPostInstallSupport, setRatingPostInstallSupport] = useState(0);
-  const [textFeedback, setTextFeedback] = useState('');
+  const [reviewTitle, setReviewTitle] = useState('');
+  const [reviewDetails, setReviewDetails] = useState('');
+  const [questionRatings, setQuestionRatings] = useState<
+    Record<string, { rating: number; notes?: string; question: ReviewQuestion }>
+  >({});
   
   useEffect(() => {
     async function fetchVendorInfo() {
@@ -31,12 +36,24 @@ const Reviews = () => {
       try {
         const { data, error } = await supabase
           .from('companies')
-          .select('id, name, logo_url')
+          .select('id, name, logo_url, type')
           .eq('id', vendorId)
           .single();
           
         if (error) throw error;
         setVendor(data);
+        
+        // Fetch questions for this vendor type
+        if (data?.type) {
+          const { data: questions, error: questionsError } = await supabase
+            .from('review_questions')
+            .select('*')
+            .eq('company_type', data.type.toLowerCase().replace(/ /g, '_'))
+            .order('category');
+            
+          if (questionsError) throw questionsError;
+          setReviewQuestions(questions || []);
+        }
       } catch (error) {
         console.error('Error fetching vendor info:', error);
         toast.error('Vendor not found.');
@@ -49,6 +66,20 @@ const Reviews = () => {
     fetchVendorInfo();
   }, [vendorId, navigate]);
   
+  const handleQuestionChange = (questionId: string, rating: number, notes?: string) => {
+    const question = reviewQuestions.find(q => q.id === questionId);
+    if (!question) return;
+    
+    setQuestionRatings(prev => ({
+      ...prev,
+      [questionId]: { rating, notes, question }
+    }));
+  };
+  
+  const calculateAverageScore = () => {
+    return calculateWeightedAverage(questionRatings);
+  };
+  
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -58,23 +89,57 @@ const Reviews = () => {
       return;
     }
     
+    // Validation
+    const unansweredQuestions = reviewQuestions.filter(
+      q => !questionRatings[q.id] || questionRatings[q.id].rating === 0
+    );
+    
+    if (unansweredQuestions.length > 0) {
+      toast.error('Please rate all questions before submitting.');
+      return;
+    }
+    
     setSubmitting(true);
     
     try {
-      const { error } = await supabase
+      // Calculate average score
+      const averageScore = calculateAverageScore();
+      
+      // Insert review
+      const { data: review, error: reviewError } = await supabase
         .from('reviews')
         .insert({
           company_id: vendorId,
           user_id: user.id,
-          rating_communication: ratingCommunication,
-          rating_install_quality: ratingInstallQuality,
-          rating_payment_reliability: ratingPaymentReliability,
-          rating_timeliness: ratingTimeliness,
-          rating_post_install_support: ratingPostInstallSupport,
-          text_feedback: textFeedback
-        });
+          review_title: reviewTitle,
+          review_details: reviewDetails,
+          text_feedback: reviewDetails,
+          average_score: averageScore,
+          // Add legacy fields for backward compatibility
+          rating_communication: 5,
+          rating_install_quality: 5,
+          rating_payment_reliability: 5,
+          rating_timeliness: 5,
+          rating_post_install_support: 5
+        })
+        .select('id')
+        .single();
         
-      if (error) throw error;
+      if (reviewError) throw reviewError;
+      
+      // Insert individual answers
+      const reviewAnswers = Object.entries(questionRatings).map(([questionId, { rating, notes }]) => ({
+        review_id: review.id,
+        question_id: questionId,
+        rating,
+        notes
+      }));
+      
+      const { error: answersError } = await supabase
+        .from('review_answers')
+        .insert(reviewAnswers);
+        
+      if (answersError) throw answersError;
       
       toast.success('Review submitted successfully!');
       navigate(`/vendors/${vendorId}`);
@@ -84,21 +149,6 @@ const Reviews = () => {
       setSubmitting(false);
     }
   };
-  
-  // Star rating component
-  const StarRating = ({ rating, setRating }: { rating: number, setRating: (rating: number) => void }) => (
-    <div className="flex">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <Star
-          key={star}
-          className={`h-6 w-6 cursor-pointer ${
-            star <= rating ? 'fill-yellow-500 text-yellow-500' : 'text-gray-300 dark:text-gray-600'
-          }`}
-          onClick={() => setRating(star)}
-        />
-      ))}
-    </div>
-  );
   
   if (loading) {
     return (
@@ -111,81 +161,97 @@ const Reviews = () => {
     );
   }
   
+  if (!vendor) {
+    return (
+      <div className="container mx-auto py-8">
+        <div className="max-w-2xl mx-auto">
+          <h1 className="text-3xl font-bold mb-4">Vendor Not Found</h1>
+          <p className="mb-4">Sorry, we couldn't find the vendor you're looking for.</p>
+          <Button asChild>
+            <a href="/vendors">Browse Vendors</a>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
+  const formattedCompanyType = vendor.type
+    ? vendor.type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+    : 'Company';
+  
   return (
     <div className="container mx-auto py-8">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold mb-2">Write a Review</h1>
+        <p className="text-muted-foreground mb-6">
+          Share your experience working with {vendor.name}
+        </p>
+        
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
           {vendor && (
-            <div className="flex items-center mb-6">
+            <div className="flex items-center mb-6 pb-4 border-b">
               {vendor.logo_url ? (
                 <img 
                   src={vendor.logo_url} 
                   alt={`${vendor.name} logo`}
-                  className="w-12 h-12 object-contain rounded-lg mr-4"
+                  className="w-16 h-16 object-contain rounded-lg mr-4"
                 />
               ) : (
-                <div className="w-12 h-12 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg mr-4">
-                  <span className="text-xl text-gray-400">{vendor.name.charAt(0)}</span>
+                <div className="w-16 h-16 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg mr-4">
+                  <span className="text-2xl text-gray-400">{vendor.name.charAt(0)}</span>
                 </div>
               )}
-              <h2 className="text-xl font-semibold">{vendor.name}</h2>
+              <div>
+                <h2 className="text-xl font-semibold">{vendor.name}</h2>
+                <p className="text-muted-foreground">{formattedCompanyType}</p>
+              </div>
             </div>
           )}
           
           <form onSubmit={handleSubmitReview}>
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Communication
-                </label>
-                <StarRating rating={ratingCommunication} setRating={setRatingCommunication} />
+                <Label htmlFor="review-title">Review Title</Label>
+                <Input
+                  id="review-title"
+                  className="mt-1"
+                  value={reviewTitle}
+                  onChange={(e) => setReviewTitle(e.target.value)}
+                  placeholder="Summarize your experience in a few words"
+                />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Install Quality
-                </label>
-                <StarRating rating={ratingInstallQuality} setRating={setRatingInstallQuality} />
+                <Label htmlFor="review-details">Overall Experience</Label>
+                <Textarea
+                  id="review-details"
+                  className="min-h-[120px] mt-1"
+                  value={reviewDetails}
+                  onChange={(e) => setReviewDetails(e.target.value)}
+                  placeholder="Share details about your overall experience working with this vendor..."
+                />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Payment Reliability
-                </label>
-                <StarRating rating={ratingPaymentReliability} setRating={setRatingPaymentReliability} />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Timeliness
-                </label>
-                <StarRating rating={ratingTimeliness} setRating={setRatingTimeliness} />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Post-Install Support
-                </label>
-                <StarRating rating={ratingPostInstallSupport} setRating={setRatingPostInstallSupport} />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Additional Feedback
-                </label>
-                <textarea
-                  className="w-full min-h-[120px] p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-background"
-                  value={textFeedback}
-                  onChange={(e) => setTextFeedback(e.target.value)}
-                  placeholder="Share your experience working with this vendor..."
-                ></textarea>
-              </div>
+              {reviewQuestions.length > 0 ? (
+                <ReviewCategoryGroup
+                  title={`Rate Your Experience with this ${formattedCompanyType}`}
+                  questions={reviewQuestions}
+                  onQuestionChange={handleQuestionChange}
+                />
+              ) : (
+                <div className="py-4 text-center text-muted-foreground">
+                  No review questions available for this vendor type.
+                </div>
+              )}
               
               <div className="flex justify-end">
                 <Button 
                   type="submit" 
-                  disabled={submitting || !ratingCommunication || !ratingInstallQuality || !ratingPaymentReliability || !ratingTimeliness || !ratingPostInstallSupport}
+                  disabled={
+                    submitting || 
+                    reviewQuestions.length === 0 ||
+                    Object.keys(questionRatings).length < reviewQuestions.length
+                  }
                 >
                   {submitting ? 'Submitting...' : 'Submit Review'}
                 </Button>

@@ -9,6 +9,47 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      claims: {
+        Row: {
+          company_email: string
+          company_id: string
+          created_at: string
+          full_name: string
+          id: string
+          job_title: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          company_email: string
+          company_id: string
+          created_at?: string
+          full_name: string
+          id?: string
+          job_title: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          company_email?: string
+          company_id?: string
+          created_at?: string
+          full_name?: string
+          id?: string
+          job_title?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claims_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           created_at: string

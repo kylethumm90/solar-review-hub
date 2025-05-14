@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/utils/supabaseClient';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import { InfoIcon } from 'lucide-react';
 
 const ClaimVendor = () => {
@@ -15,6 +15,7 @@ const ClaimVendor = () => {
   const [vendor, setVendor] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [existingClaim, setExistingClaim] = useState<any>(null);
   
   // Form state
   const [fullName, setFullName] = useState(user?.user_metadata?.full_name || '');
@@ -35,21 +36,31 @@ const ClaimVendor = () => {
         if (error) throw error;
         setVendor(data);
         
-        // Check if there's an existing pending claim
+        // Check if there's an existing claim
         if (user) {
           const { data: claimData, error: claimError } = await supabase
             .from('claims')
             .select('*')
             .eq('company_id', vendorId)
             .eq('user_id', user.id)
-            .eq('status', 'pending')
             .maybeSingle();
             
           if (!claimError && claimData) {
-            toast.info('You already have a pending claim for this vendor');
-            navigate(`/vendors/${vendorId}`);
-            return;
+            setExistingClaim(claimData);
+            
+            if (claimData.status === 'pending') {
+              toast.info('You already have a pending claim for this vendor');
+            } else if (claimData.status === 'approved') {
+              toast.success('Your claim for this vendor has been approved!');
+              navigate(`/vendors/${vendorId}`);
+              return;
+            }
           }
+        } else {
+          // If not logged in, redirect to login
+          toast.info('You must be logged in to claim a vendor');
+          navigate('/login', { state: { from: { pathname: `/claim/${vendorId}` } } });
+          return;
         }
       } catch (error) {
         console.error('Error fetching vendor info:', error);
@@ -105,7 +116,7 @@ const ClaimVendor = () => {
         
       if (error) throw error;
       
-      toast.success('Claim submitted successfully! Our team will review your request.');
+      toast.success('Claim submitted successfully! Our team will review your request within 1-2 business days.');
       navigate(`/vendors/${vendorId}`);
     } catch (error: any) {
       toast.error(error.message || 'Failed to submit claim');
@@ -151,74 +162,84 @@ const ClaimVendor = () => {
             </div>
           )}
           
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-4 mb-6">
-            <div className="flex">
-              <InfoIcon className="h-5 w-5 text-blue-500 mr-2 flex-shrink-0" />
-              <div>
-                <p className="text-blue-800 dark:text-blue-300 text-sm">
-                  To verify your claim, please use your company email address. Our team will review your request within 1-2 business days.
-                </p>
-              </div>
+          {existingClaim && existingClaim.status === 'pending' ? (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded p-4">
+              <p className="text-yellow-800 dark:text-yellow-300">
+                You already have a pending claim for this vendor. Our team is reviewing your request and will respond within 1-2 business days.
+              </p>
             </div>
-          </div>
-          
-          <form onSubmit={handleSubmitClaim}>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Full Name*
-                </label>
-                <input
-                  type="text"
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-background"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Your full name"
-                  required
-                />
+          ) : (
+            <>
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-4 mb-6">
+                <div className="flex">
+                  <InfoIcon className="h-5 w-5 text-blue-500 mr-2 flex-shrink-0" />
+                  <div>
+                    <p className="text-blue-800 dark:text-blue-300 text-sm">
+                      To verify your claim, please use your company email address. Our team will review your request within 1-2 business days.
+                    </p>
+                  </div>
+                </div>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Job Title*
-                </label>
-                <input
-                  type="text"
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-background"
-                  value={jobTitle}
-                  onChange={(e) => setJobTitle(e.target.value)}
-                  placeholder="Your position at the company"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Company Email*
-                </label>
-                <input
-                  type="email"
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-background"
-                  value={companyEmail}
-                  onChange={(e) => setCompanyEmail(e.target.value)}
-                  placeholder="your.name@company.com"
-                  required
-                />
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  Please use your company email address matching the vendor's domain.
-                </p>
-              </div>
-              
-              <div className="flex justify-end mt-6">
-                <Button 
-                  type="submit" 
-                  disabled={submitting || !fullName || !jobTitle || !companyEmail}
-                >
-                  {submitting ? 'Submitting...' : 'Submit Claim'}
-                </Button>
-              </div>
-            </div>
-          </form>
+              <form onSubmit={handleSubmitClaim}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Full Name*
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-background"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Your full name"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Job Title*
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-background"
+                      value={jobTitle}
+                      onChange={(e) => setJobTitle(e.target.value)}
+                      placeholder="Your position at the company"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Company Email*
+                    </label>
+                    <input
+                      type="email"
+                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-background"
+                      value={companyEmail}
+                      onChange={(e) => setCompanyEmail(e.target.value)}
+                      placeholder="your.name@company.com"
+                      required
+                    />
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      Please use your company email address matching the vendor's domain.
+                    </p>
+                  </div>
+                  
+                  <div className="flex justify-end mt-6">
+                    <Button 
+                      type="submit" 
+                      disabled={submitting || !fullName || !jobTitle || !companyEmail || existingClaim?.status === 'pending'}
+                    >
+                      {submitting ? 'Submitting...' : 'Submit Claim'}
+                    </Button>
+                  </div>
+                </div>
+              </form>
+            </>
+          )}
         </div>
       </div>
     </div>

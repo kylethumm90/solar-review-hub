@@ -7,6 +7,7 @@ import { Calendar, Star, File, Building } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { toast } from '@/components/ui/use-toast';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -34,20 +35,48 @@ const Dashboard = () => {
         if (reviewsError) throw reviewsError;
         setReviews(reviewsData);
 
-        // Fetch user's claims
+        // Fetch user's claims - Fixed query to avoid joins that don't exist
         const { data: claimsData, error: claimsError } = await supabase
           .from('claims')
-          .select(`
-            *,
-            company:companies(id, name)
-          `)
+          .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
-        if (claimsError) throw claimsError;
-        setClaims(claimsData);
+        if (claimsError) {
+          console.error('Error fetching claims:', claimsError);
+          // Continue execution even if claims fetch fails
+          setClaims([]);
+        } else {
+          // If claims fetch succeeded, get company names in a separate query
+          const claimsWithCompanies = [];
+          
+          for (const claim of claimsData || []) {
+            if (claim.company_id) {
+              // Fetch company for this claim
+              const { data: companyData } = await supabase
+                .from('companies')
+                .select('id, name')
+                .eq('id', claim.company_id)
+                .single();
+                
+              claimsWithCompanies.push({
+                ...claim,
+                company: companyData
+              });
+            } else {
+              claimsWithCompanies.push(claim);
+            }
+          }
+          
+          setClaims(claimsWithCompanies);
+        }
       } catch (error) {
         console.error('Error fetching user data:', error);
+        toast({
+          title: "Error loading dashboard data",
+          description: "Please try again later",
+          variant: "destructive"
+        });
       } finally {
         setIsLoading(false);
       }

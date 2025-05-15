@@ -82,6 +82,16 @@ const ViewReviewModal = ({ reviewId, isOpen, onClose }: ViewReviewModalProps) =>
 
       if (answersError) throw answersError;
 
+      // Fix for the nested array issue from Supabase
+      // Supabase returns nested selects as arrays
+      const companyData = Array.isArray(reviewData.company) 
+        ? reviewData.company[0] 
+        : reviewData.company;
+        
+      const userData = Array.isArray(reviewData.user) 
+        ? reviewData.user[0] 
+        : reviewData.user;
+
       // Transform the nested data properly
       const formattedReview: ReviewDetails = {
         id: reviewData.id,
@@ -90,25 +100,29 @@ const ViewReviewModal = ({ reviewId, isOpen, onClose }: ViewReviewModalProps) =>
         review_details: reviewData.review_details,
         average_score: reviewData.average_score,
         company: {
-          // Access name property from company object, not array
-          name: reviewData.company?.name || 'Unknown Company'
+          name: companyData?.name || 'Unknown Company'
         },
         user: {
-          // Access user properties from user object, not array
-          full_name: reviewData.user?.full_name || 'Unknown User',
-          email: reviewData.user?.email || 'unknown@email.com'
+          full_name: userData?.full_name || 'Unknown User',
+          email: userData?.email || 'unknown@email.com'
         },
         // Transform the answers data to ensure it matches the expected type
-        answers: (answersData || []).map(answer => ({
-          id: answer.id,
-          rating: answer.rating,
-          notes: answer.notes,
-          question: {
-            // Access question properties from question object, not array
-            category: answer.question?.category || 'Uncategorized',
-            question: answer.question?.question || 'Unknown Question'
-          }
-        }))
+        answers: (answersData || []).map(answer => {
+          // Fix for nested question data as array
+          const questionData = Array.isArray(answer.question) 
+            ? answer.question[0] 
+            : answer.question;
+            
+          return {
+            id: answer.id,
+            rating: answer.rating,
+            notes: answer.notes,
+            question: {
+              category: questionData?.category || 'Uncategorized',
+              question: questionData?.question || 'Unknown Question'
+            }
+          };
+        })
       };
 
       setReview(formattedReview);

@@ -1,6 +1,6 @@
 
 import * as React from "react";
-import { toast as sonnerToast } from "sonner";
+import { toast as sonnerToast, type ToastT } from "sonner";
 
 type ToastProps = {
   title?: string;
@@ -47,11 +47,25 @@ const toast = {
   }
 };
 
-function useToast() {
+// Mock for toasts property to satisfy Toaster component
+const TOAST_LIMIT = 5;
+const TOAST_REMOVE_DELAY = 1000000;
+
+type ToasterToast = ToastT & {
+  id: string;
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+  action?: React.ReactNode;
+};
+
+const useToast = () => {
+  const [toasts, setToasts] = React.useState<ToasterToast[]>([]);
+
   return {
     toast,
-    dismiss: sonnerToast.dismiss
+    dismiss: sonnerToast.dismiss,
+    toasts: toasts,
   };
-}
+};
 
 export { useToast, toast };

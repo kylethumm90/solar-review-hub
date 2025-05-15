@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/utils/supabaseClient';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { InfoIcon } from 'lucide-react';
 
 interface ClaimVendorFormProps {
@@ -31,7 +31,7 @@ const ClaimVendorForm: React.FC<ClaimVendorFormProps> = ({
     e.preventDefault();
     
     if (!companyEmail.includes('@')) {
-      toast({ description: 'Please enter a valid company email address', variant: 'destructive' });
+      toast.error('Please enter a valid company email address');
       return;
     }
     
@@ -63,10 +63,10 @@ const ClaimVendorForm: React.FC<ClaimVendorFormProps> = ({
         
       if (error) throw error;
       
-      toast({ description: 'Claim submitted successfully! Our team will review your request within 1-2 business days.', variant: 'default' });
+      toast.success('Claim submitted successfully! Our team will review your request within 1-2 business days.');
       navigate(`/vendors/${vendorId}`);
     } catch (error: any) {
-      toast({ description: error.message || 'Failed to submit claim', variant: 'destructive' });
+      toast.error(error.message || 'Failed to submit claim');
     } finally {
       setSubmitting(false);
     }

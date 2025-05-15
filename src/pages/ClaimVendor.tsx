@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/utils/supabaseClient';
 import { useAuth } from '@/context/AuthContext';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import LoadingState from '@/components/ui/LoadingState';
 import ClaimVendorHeader from '@/components/vendor/ClaimVendorHeader';
 import ClaimVendorForm from '@/components/vendor/ClaimVendorForm';
@@ -44,34 +44,22 @@ const ClaimVendor = () => {
             setExistingClaim(claimData);
             
             if (claimData.status === 'pending') {
-              toast({
-                description: 'You already have a pending claim for this vendor',
-                variant: 'default'
-              });
+              toast.info('You already have a pending claim for this vendor');
             } else if (claimData.status === 'approved') {
-              toast({
-                description: 'Your claim for this vendor has been approved!',
-                variant: 'default'
-              });
+              toast.success('Your claim for this vendor has been approved!');
               navigate(`/vendors/${vendorId}`);
               return;
             }
           }
         } else {
           // If not logged in, redirect to login
-          toast({
-            description: 'You must be logged in to claim a vendor',
-            variant: 'default'
-          });
+          toast.info('You must be logged in to claim a vendor');
           navigate('/login', { state: { from: { pathname: `/claim/${vendorId}` } } });
           return;
         }
       } catch (error) {
         console.error('Error fetching vendor info:', error);
-        toast({
-          description: 'Vendor not found.',
-          variant: 'destructive'
-        });
+        toast.error('Vendor not found.');
         navigate('/vendors');
       } finally {
         setLoading(false);

@@ -13,7 +13,7 @@ const ClaimsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("pending");
   
-  // Fetch claims with company and user details
+  // Fetch claims with company details
   const { data: claims, isLoading, refetch: refetchClaims } = useQuery({
     queryKey: ["admin", "claims", activeTab],
     queryFn: async () => {
@@ -28,7 +28,6 @@ const ClaimsPage = () => {
           company_email,
           status,
           created_at,
-          user:users(id, full_name, email),
           company:companies(id, name, is_verified)
         `);
       
@@ -47,7 +46,31 @@ const ClaimsPage = () => {
         throw error;
       }
       
-      return data as Claim[];
+      // Separately fetch user details to avoid relation errors
+      if (data && data.length > 0) {
+        const userIds = data.map(claim => claim.user_id);
+        const { data: userData, error: userError } = await supabase
+          .from("users")
+          .select("id, full_name, email, role, created_at")
+          .in("id", userIds);
+        
+        if (userError) {
+          console.error("Error fetching users:", userError);
+        }
+        
+        // Map user data to claims
+        const claimsWithUsers = data.map(claim => {
+          const user = userData?.find(u => u.id === claim.user_id);
+          return {
+            ...claim,
+            user: user || null
+          } as Claim;
+        });
+        
+        return claimsWithUsers;
+      }
+      
+      return (data || []) as Claim[];
     },
   });
   

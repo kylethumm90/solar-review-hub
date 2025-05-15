@@ -71,6 +71,7 @@ export const useDashboardData = () => {
     queryFn: fetchReviews,
     enabled: !!user,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
     meta: {
       onError: (err: Error) => {
         console.error('Error fetching reviews:', err);
@@ -88,6 +89,7 @@ export const useDashboardData = () => {
     queryFn: fetchClaims,
     enabled: !!user,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
     meta: {
       onError: (err: Error) => {
         console.error('Error fetching claims:', err);
@@ -100,8 +102,8 @@ export const useDashboardData = () => {
   const hasErrors = !!reviewsError || !!claimsError;
 
   return {
-    reviews: reviews as unknown as Review[],
-    claims: claims as unknown as Claim[],
+    reviews,
+    claims,
     isLoading,
     hasErrors
   };

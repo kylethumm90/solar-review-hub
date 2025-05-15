@@ -1,7 +1,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/utils/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 // Define the user type with role
@@ -38,114 +38,119 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
     async function getSession() {
       setIsLoading(true);
       try {
         // Get the current session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-        if (sessionError) {
-          console.error('Error getting session:', sessionError);
-          setIsLoading(false);
-          return;
-        }
-
-        if (!session) {
-          setIsLoading(false);
+        if (sessionError || !session) {
+          if (isMounted) {
+            setIsLoading(false);
+          }
           return;
         }
 
         // Set the session and user
-        setSession(session);
-        setUser(session.user as UserWithRole);
+        if (isMounted) {
+          setSession(session);
+          setUser(session.user as UserWithRole);
+        }
         
         // Get additional user data from database if needed
-        try {
-          const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('role, full_name')
-            .eq('id', session.user.id)
-            .single();
+        if (isMounted && session?.user?.id) {
+          try {
+            const { data: userData, error: userError } = await supabase
+              .from('users')
+              .select('role, full_name')
+              .eq('id', session.user.id)
+              .single();
 
-          if (userError) {
-            // If there's an error fetching user data but we have a session,
-            // don't log the user out - they may just need to be inserted into the users table
-            console.error('Error fetching user data:', userError);
-            
-            // If the error is "No rows found", the user may exist in auth but not in the users table
-            if (userError.message.includes('No rows found')) {
-              // Try to create the user in the users table
-              const { error: insertError } = await supabase
-                .from('users')
-                .insert({
-                  id: session.user.id,
-                  email: session.user.email,
-                  full_name: session.user.user_metadata?.full_name || 'User',
-                  role: 'user'
-                });
-                
-              if (!insertError) {
-                // User inserted successfully, now fetch the data again
-                const { data: newUserData } = await supabase
+            if (userError) {
+              // If there's an error fetching user data but we have a session,
+              // don't log the user out - they may just need to be inserted into the users table
+              console.log('Error fetching user data:', userError);
+              
+              // If the error is "No rows found", the user may exist in auth but not in the users table
+              if (userError.message.includes('No rows found') && isMounted) {
+                // Try to create the user in the users table
+                const { error: insertError } = await supabase
                   .from('users')
-                  .select('role, full_name')
-                  .eq('id', session.user.id)
-                  .single();
-                  
-                if (newUserData) {
-                  // Update user with role information
-                  setUser(prevUser => {
-                    if (!prevUser) return null;
-                    return {
-                      ...prevUser,
-                      user_metadata: {
-                        ...prevUser.user_metadata,
-                        role: newUserData.role,
-                        full_name: newUserData.full_name
-                      }
-                    };
+                  .insert({
+                    id: session.user.id,
+                    email: session.user.email,
+                    full_name: session.user.user_metadata?.full_name || 'User',
+                    role: 'user'
                   });
+                  
+                if (!insertError && isMounted) {
+                  // User inserted successfully, now fetch the data again
+                  const { data: newUserData } = await supabase
+                    .from('users')
+                    .select('role, full_name')
+                    .eq('id', session.user.id)
+                    .single();
+                    
+                  if (newUserData && isMounted) {
+                    // Update user with role information
+                    setUser(prevUser => {
+                      if (!prevUser) return null;
+                      return {
+                        ...prevUser,
+                        user_metadata: {
+                          ...prevUser.user_metadata,
+                          role: newUserData.role,
+                          full_name: newUserData.full_name
+                        }
+                      };
+                    });
+                  }
                 }
-              } else {
-                console.error('Error creating user in users table:', insertError);
               }
+            } else if (userData && isMounted) {
+              // Update user with role information
+              setUser(prevUser => {
+                if (!prevUser) return null;
+                return {
+                  ...prevUser,
+                  user_metadata: {
+                    ...prevUser.user_metadata,
+                    role: userData.role,
+                    full_name: userData.full_name
+                  }
+                };
+              });
             }
-          } else if (userData) {
-            // Update user with role information
-            setUser(prevUser => {
-              if (!prevUser) return null;
-              return {
-                ...prevUser,
-                user_metadata: {
-                  ...prevUser.user_metadata,
-                  role: userData.role,
-                  full_name: userData.full_name
-                }
-              };
-            });
+          } catch (err) {
+            console.error('Unexpected error fetching user data:', err);
           }
-        } catch (err) {
-          console.error('Unexpected error fetching user data:', err);
         }
       } catch (err) {
         console.error('Unexpected error in getSession:', err);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     }
 
     getSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
-        setSession(newSession);
+      (event, newSession) => {
+        if (isMounted) {
+          setSession(newSession);
+          setUser(newSession?.user as UserWithRole || null);
+        }
         
-        if (newSession) {
+        if (newSession?.user && isMounted) {
           // Use setTimeout to avoid Supabase auth deadlock
           setTimeout(async () => {
+            if (!isMounted) return;
+            
             try {
-              setUser(newSession.user as UserWithRole);
-              
               // Fetch user data
               const { data: userData, error: userError } = await supabase
                 .from('users')
@@ -153,8 +158,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 .eq('id', newSession.user.id)
                 .single();
               
-              if (userError) {
-                console.error('Error fetching user data on auth change:', userError);
+              if (userError && isMounted) {
+                console.log('Error fetching user data on auth change:', userError);
                 
                 // Handle missing user in users table
                 if (userError.message.includes('No rows found')) {
@@ -171,7 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     console.error('Error creating user in users table:', insertError);
                   }
                 }
-              } else if (userData) {
+              } else if (userData && isMounted) {
                 setUser(prevUser => {
                   if (!prevUser) return null;
                   return {
@@ -188,15 +193,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               console.error('Unexpected error in onAuthStateChange:', err);
             }
           }, 0);
-        } else {
-          setUser(null);
         }
         
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {

@@ -1,33 +1,9 @@
 
-import { toast as sonnerToast } from "sonner";
+// Import the consistent toast implementation from our hooks
+import { toast, useToast } from "@/hooks/use-toast";
 
-// Define toast types for better TypeScript integration
-type ToastProps = {
-  title?: string;
-  description?: string;
-  variant?: "default" | "destructive";
-  duration?: number;
-};
+// Re-export to maintain compatibility with existing imports
+export { toast, useToast };
 
-// Export a wrapper for sonner toast that accepts the same parameters as shadcn toast
-export const toast = {
-  // Standard toast with title and description
-  ...sonnerToast,
-  
-  // Custom method that matches shadcn toast API
-  toast: (props: ToastProps) => {
-    if (props.variant === "destructive") {
-      return sonnerToast.error(props.title, {
-        description: props.description,
-        duration: props.duration
-      });
-    }
-    
-    return sonnerToast(props.title, {
-      description: props.description,
-      duration: props.duration
-    });
-  }
-};
-
+// Export a default object for module imports
 export default toast;

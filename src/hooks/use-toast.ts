@@ -1,70 +1,48 @@
 
 import * as React from "react";
-import { toast as sonnerToast, type ToastT } from "sonner";
+import { toast as sonnerToast } from "sonner";
 
 type ToastProps = {
   title?: string;
   description?: string;
   action?: React.ReactNode;
-  [key: string]: any;
+  variant?: "default" | "destructive";
+  duration?: number;
 };
 
-// Create a wrapper function for sonnerToast that accepts title and description
+// Create a wrapper function for sonner that accepts shadcn toast props
 const toast = {
-  // Basic toast with title and description support
-  custom: ({ title, description, ...props }: ToastProps) => {
-    if (title && description) {
-      return sonnerToast(title, { description, ...props });
-    } else if (title) {
-      return sonnerToast(title, props);
+  // Basic toast with title and description support to match shadcn API
+  toast: ({ title, description, variant, duration }: ToastProps) => {
+    if (variant === "destructive") {
+      return sonnerToast.error(title || "", { 
+        description, 
+        duration 
+      });
     }
-    return sonnerToast("Notification", props);
+    return sonnerToast(title || "", { 
+      description, 
+      duration 
+    });
   },
   
-  // Basic toast
-  message: (message: string, options?: any) => {
-    return sonnerToast(message, options);
-  },
-  
-  // Success toast
-  success: (message: string, options?: any) => {
-    return sonnerToast.success(message, options);
-  },
-  
-  // Error toast
-  error: (message: string, options?: any) => {
-    return sonnerToast.error(message, options);
-  },
-  
-  // Warning toast
-  warning: (message: string, options?: any) => {
-    return sonnerToast.warning(message, options);
-  },
-  
-  // Info toast
-  info: (message: string, options?: any) => {
-    return sonnerToast.info(message, options);
-  }
+  // Standard sonner methods
+  message: sonnerToast,
+  success: sonnerToast.success,
+  error: sonnerToast.error,
+  warning: sonnerToast.warning,
+  info: sonnerToast.info,
+  dismiss: sonnerToast.dismiss
 };
 
-// Mock for toasts property to satisfy Toaster component
-const TOAST_LIMIT = 5;
-const TOAST_REMOVE_DELAY = 1000000;
-
-type ToasterToast = ToastT & {
-  id: string;
-  title?: React.ReactNode;
-  description?: React.ReactNode;
-  action?: React.ReactNode;
-};
-
+// Mock for compatibility with shadcn/ui toast
 const useToast = () => {
-  const [toasts, setToasts] = React.useState<ToasterToast[]>([]);
+  const [toasts] = React.useState<any[]>([]);
 
   return {
     toast,
     dismiss: sonnerToast.dismiss,
-    toasts: toasts,
+    toasts
   };
 };
 

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import AdminSidebar from '@/components/AdminSidebar';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/use-toast';
+import { toast as sonnerToast } from 'sonner';
 
 const AdminLayout = () => {
   const { user, isLoading, setUser } = useAuth();
@@ -111,10 +111,8 @@ const AdminLayout = () => {
 
   // Redirect if not authenticated or not admin
   if (!user || adminVerified === false) {
-    toast({
-      title: "Access Denied",
-      description: "You do not have admin privileges for this area.",
-      variant: "destructive"
+    sonnerToast.error("Access Denied", {
+      description: "You do not have admin privileges for this area."
     });
     return <Navigate to="/dashboard" state={{ from: location }} replace />;
   }

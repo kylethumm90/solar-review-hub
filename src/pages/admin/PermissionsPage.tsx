@@ -66,12 +66,18 @@ const PermissionsPage = () => {
     try {
       // Safety check: prevent removing the last admin
       if (newRole !== 'admin') {
-        const { data: adminCount } = await supabase
+        // Fix: Use .count() to get the count of admin users
+        const { count, error: countError } = await supabase
           .from('users')
-          .select('id', { count: 'exact' })
+          .select('id', { count: 'exact', head: true })
           .eq('role', 'admin');
           
-        if ((adminCount?.count === 1) && elevatedUsers?.find(u => u.id === userId)?.role === 'admin') {
+        if (countError) {
+          toast.error("Failed to check admin count");
+          throw countError;
+        }
+          
+        if ((count === 1) && elevatedUsers?.find(u => u.id === userId)?.role === 'admin') {
           toast.error("Cannot demote the only admin user");
           return;
         }

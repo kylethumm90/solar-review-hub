@@ -79,10 +79,24 @@ const ViewReviewModal = ({ reviewId, isOpen, onClose }: ViewReviewModalProps) =>
 
       if (answersError) throw answersError;
 
-      setReview({
-        ...reviewData,
+      // Fix the type mismatch by extracting the first (and only) element from company and user arrays
+      const formattedReview: ReviewDetails = {
+        id: reviewData.id,
+        review_title: reviewData.review_title,
+        text_feedback: reviewData.text_feedback,
+        review_details: reviewData.review_details,
+        average_score: reviewData.average_score,
+        company: {
+          name: reviewData.company?.name || 'Unknown Company'
+        },
+        user: {
+          full_name: reviewData.user?.full_name || 'Unknown User',
+          email: reviewData.user?.email || 'unknown@email.com'
+        },
         answers: answersData as unknown as Answer[]
-      } as ReviewDetails);
+      };
+
+      setReview(formattedReview);
     } catch (error) {
       console.error('Error fetching review details:', error);
       toast.error('Failed to load review details');

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -5,6 +6,7 @@ import { Claim } from '@/types';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from '@/context/AuthContext';
 
 type ClaimVendorFormProps = {
   vendorId: string;
@@ -23,6 +25,7 @@ const ClaimVendorForm = ({
   const [jobTitle, setJobTitle] = useState('');
   const [companyEmail, setCompanyEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
   
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -33,12 +36,18 @@ const ClaimVendorForm = ({
       setIsSubmitting(false);
       return;
     }
+
+    if (!user) {
+      toast.error('You must be logged in to submit a claim.');
+      setIsSubmitting(false);
+      return;
+    }
     
     try {
       const { error } = await supabase
         .from('claims')
         .insert({
-          user_id: supabase.auth.currentUser?.id,
+          user_id: user.id,
           company_id: vendorId,
           full_name: fullName,
           job_title: jobTitle,

@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { Review, Claim } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 
@@ -74,11 +74,7 @@ export const useDashboardData = () => {
     meta: {
       onError: (err: Error) => {
         console.error('Error fetching reviews:', err);
-        toast({
-          variant: "destructive",
-          title: "Error loading reviews",
-          description: "Please try again later"
-        });
+        toast.error("Error loading reviews. Please try again later.");
       }
     }
   });
@@ -95,11 +91,7 @@ export const useDashboardData = () => {
     meta: {
       onError: (err: Error) => {
         console.error('Error fetching claims:', err);
-        toast({
-          variant: "destructive",
-          title: "Error loading claims",
-          description: "Please try again later"
-        });
+        toast.error("Error loading claims. Please try again later.");
       }
     }
   });
@@ -108,8 +100,8 @@ export const useDashboardData = () => {
   const hasErrors = !!reviewsError || !!claimsError;
 
   return {
-    reviews: reviews as Review[],
-    claims: claims as Claim[],
+    reviews: reviews as unknown as Review[],
+    claims: claims as unknown as Claim[],
     isLoading,
     hasErrors
   };

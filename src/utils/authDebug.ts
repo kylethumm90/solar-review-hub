@@ -1,108 +1,220 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 /**
- * Utility function to diagnose and fix common auth issues
- * This can be called from any admin-related component if issues persist
+ * Diagnoses and repairs auth/user table synchronization issues.
+ * - Verifies if the user exists in public.users
+ * - Creates the user if missing
+ * - Ensures roles are synchronized between auth metadata and public.users
  */
-export const diagnoseAuthIssues = async (userId: string | undefined) => {
-  if (!userId) {
-    console.error('Auth diagnosis: No user ID provided');
-    return { success: false, message: 'No user ID provided' };
-  }
-  
+export const diagnoseAuthIssues = async () => {
   try {
-    console.log('Starting auth diagnosis for user', userId);
+    // Get current session
+    const { data: { session } } = await supabase.auth.getSession();
     
-    // 1. Check if user exists in auth.users (via getUserById)
-    const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
-    
-    if (userError) {
-      console.error('Auth diagnosis: Error fetching user from auth.users', userError);
-      return { success: false, message: 'User not found in auth system' };
+    if (!session?.user) {
+      toast.error("Not logged in. Please sign in first.");
+      return { success: false, message: "Not authenticated" };
     }
     
-    // 2. Check if user exists in public.users
-    const { data: publicUserData, error: publicUserError } = await supabase
+    const userId = session.user.id;
+    const userEmail = session.user.email;
+    const metadataRole = session.user.user_metadata?.role;
+    const metadataName = session.user.user_metadata?.full_name;
+    
+    console.log("Diagnosing auth issues for user:", {
+      userId,
+      userEmail,
+      metadataRole,
+      metadataName
+    });
+    
+    // Check if user exists in public.users table
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select('*')
       .eq('id', userId)
       .single();
       
-    if (publicUserError) {
-      console.error('Auth diagnosis: User not found in public.users table', publicUserError);
-      
-      // 3. If not in public.users, create the record
-      if (publicUserError.message.includes('No rows found')) {
+    if (userError) {
+      if (userError.message.includes('No rows found')) {
+        console.log("User not found in public.users table. Creating...");
+        
+        // Create user in the public.users table
         const { error: insertError } = await supabase
           .from('users')
           .insert({
             id: userId,
-            email: userData.user?.email || '',
-            full_name: userData.user?.user_metadata?.full_name || 'User',
-            role: userData.user?.user_metadata?.role || 'user'
+            email: userEmail || '',
+            full_name: metadataName || 'User',
+            role: metadataRole || 'user'
           });
           
         if (insertError) {
-          console.error('Auth diagnosis: Failed to create user record', insertError);
-          return { success: false, message: 'Failed to create user record' };
+          console.error("Failed to create user record:", insertError);
+          toast.error("Failed to create user record in database");
+          return { success: false, message: "Failed to create user record" };
+        } else {
+          toast.success("User record created in database");
         }
-        
-        console.log('Auth diagnosis: Created missing user record in public.users');
-        return { success: true, message: 'Created missing user record', fixed: true };
+      } else {
+        console.error("Error fetching user data:", userError);
+        toast.error("Error fetching user data");
+        return { success: false, message: "Database error" };
       }
+    } else {
+      console.log("Found user in public.users table:", userData);
       
-      return { success: false, message: 'Error accessing user record' };
-    }
-    
-    // 4. Compare roles between auth.users and public.users
-    const authRole = userData.user?.user_metadata?.role;
-    const dbRole = publicUserData?.role;
-    
-    console.log('Auth diagnosis: Role comparison', { authRole, dbRole });
-    
-    if (authRole !== dbRole) {
-      // 5. Synchronize roles (prioritize database role)
-      if (dbRole === 'admin') {
-        const { error: updateError } = await supabase.auth.updateUser({
-          data: { role: dbRole }
-        });
+      // Check if roles match between metadata and public.users
+      if (userData.role !== metadataRole && metadataRole) {
+        console.log(`Role mismatch: DB=${userData.role}, Metadata=${metadataRole}. Updating DB role...`);
         
-        if (updateError) {
-          console.error('Auth diagnosis: Failed to update auth user role', updateError);
-          return { success: false, message: 'Failed to synchronize roles' };
-        }
-        
-        // Also refresh session
-        await supabase.auth.refreshSession();
-        
-        console.log('Auth diagnosis: Updated auth role to match database', dbRole);
-        return { success: true, message: 'Synchronized roles to admin', fixed: true };
-      } else if (authRole === 'admin') {
-        // If auth has admin but db doesn't, update db
+        // Update public.users with the role from metadata
         const { error: updateError } = await supabase
           .from('users')
-          .update({ role: 'admin' })
+          .update({ role: metadataRole })
           .eq('id', userId);
           
         if (updateError) {
-          console.error('Auth diagnosis: Failed to update database role', updateError);
-          return { success: false, message: 'Failed to synchronize roles' };
+          console.error("Failed to update user role in database:", updateError);
+          toast.error("Failed to update role in database");
+        } else {
+          toast.success("User role synchronized in database");
         }
-        
-        console.log('Auth diagnosis: Updated database role to match auth', authRole);
-        return { success: true, message: 'Synchronized roles to admin', fixed: true };
       }
     }
     
+    // If user doesn't have admin role in metadata but should be admin, update it
+    if (metadataRole !== 'admin' && userData?.role === 'admin') {
+      console.log("Setting admin role in user metadata");
+      
+      const { error: metadataError } = await supabase.auth.updateUser({
+        data: { role: 'admin' }
+      });
+      
+      if (metadataError) {
+        console.error("Failed to update user metadata role:", metadataError);
+        toast.error("Failed to update role in user metadata");
+      } else {
+        toast.success("User metadata role updated to admin");
+      }
+    }
+    
+    // Refresh session to ensure changes are picked up
+    const { error: refreshError } = await supabase.auth.refreshSession();
+    
+    if (refreshError) {
+      console.error("Error refreshing session:", refreshError);
+      toast.error("Failed to refresh session. Please try logging out and back in.");
+      return { success: false, message: "Session refresh failed" };
+    }
+    
+    const { data: { user: refreshedUser } } = await supabase.auth.getUser();
+    
+    console.log("Auth diagnosis complete. Current state:", {
+      dbRole: userData?.role || 'Not in DB',
+      metadataRole: refreshedUser?.user_metadata?.role || 'No role in metadata'
+    });
+    
+    toast.success("Auth diagnosis completed");
     return { 
       success: true, 
-      message: 'User authentication appears correct',
-      roles: { authRole, dbRole }
+      message: "Auth diagnostics complete",
+      userInDb: !!userData,
+      dbRole: userData?.role || null,
+      metadataRole: refreshedUser?.user_metadata?.role || null
     };
     
   } catch (error) {
-    console.error('Auth diagnosis: Unexpected error', error);
-    return { success: false, message: 'Unexpected error during diagnosis' };
+    console.error("Unexpected error during auth diagnosis:", error);
+    toast.error("Error during auth diagnostics");
+    return { success: false, message: "Unexpected error" };
+  }
+};
+
+/**
+ * Explicitly grants admin role to current user in both auth metadata and public.users
+ */
+export const grantAdminRole = async () => {
+  try {
+    // Get current session
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user) {
+      toast.error("Not logged in. Please sign in first.");
+      return { success: false, message: "Not authenticated" };
+    }
+    
+    const userId = session.user.id;
+    const userEmail = session.user.email;
+    const metadataName = session.user.user_metadata?.full_name;
+    
+    console.log("Granting admin role to user:", userId);
+    
+    // Update or create user in public.users with admin role
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', userId)
+      .single();
+      
+    if (existingUser) {
+      // Update existing user
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ role: 'admin' })
+        .eq('id', userId);
+        
+      if (updateError) {
+        console.error("Failed to update user role:", updateError);
+        toast.error("Failed to update role in database");
+        return { success: false, message: "Database update failed" };
+      }
+    } else {
+      // Insert new user
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert({
+          id: userId,
+          email: userEmail || '',
+          full_name: metadataName || 'User',
+          role: 'admin'
+        });
+        
+      if (insertError) {
+        console.error("Failed to create admin user:", insertError);
+        toast.error("Failed to create admin user in database");
+        return { success: false, message: "Database insert failed" };
+      }
+    }
+    
+    // Update user metadata with admin role
+    const { error: metadataError } = await supabase.auth.updateUser({
+      data: { role: 'admin' }
+    });
+    
+    if (metadataError) {
+      console.error("Failed to update user metadata:", metadataError);
+      toast.error("Failed to update role in user metadata");
+      return { success: false, message: "Metadata update failed" };
+    }
+    
+    // Refresh session
+    const { error: refreshError } = await supabase.auth.refreshSession();
+    
+    if (refreshError) {
+      console.error("Error refreshing session:", refreshError);
+      toast.error("Failed to refresh session. Please try logging out and back in.");
+      return { success: false, message: "Session refresh failed" };
+    }
+    
+    toast.success("Admin role granted! You can now access the admin dashboard.");
+    return { success: true, message: "Admin role granted" };
+    
+  } catch (error) {
+    console.error("Error granting admin role:", error);
+    toast.error("Error granting admin role");
+    return { success: false, message: "Unexpected error" };
   }
 };

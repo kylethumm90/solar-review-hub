@@ -5,7 +5,8 @@ import { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import AdminSidebar from '@/components/AdminSidebar';
 import { supabase } from '@/integrations/supabase/client';
-import { toast as sonnerToast } from 'sonner';
+import { toast } from 'sonner';
+import { diagnoseAuthIssues } from '@/utils/authDebug';
 
 const AdminLayout = () => {
   const { user, isLoading, setUser } = useAuth();
@@ -24,6 +25,15 @@ const AdminLayout = () => {
       }
 
       try {
+        // First check if the user has admin role in their metadata
+        const isAdminInMetadata = user.user_metadata?.role === 'admin';
+        
+        if (isAdminInMetadata) {
+          setAdminVerified(true);
+          setVerificationLoading(false);
+          return;
+        }
+        
         // Double check admin status by querying the users table directly
         const { data, error } = await supabase
           .from('users')
@@ -33,23 +43,17 @@ const AdminLayout = () => {
           
         if (error) {
           console.error('Error verifying admin role:', error);
-          // If there's no record found, try to create one
+          
+          // If we're in development and the error is "No rows found", run auto-diagnose
           if (error.message.includes('No rows found')) {
-            const { error: insertError } = await supabase
-              .from('users')
-              .insert({
-                id: user.id,
-                email: user.email || '',
-                full_name: user.user_metadata?.full_name || 'User',
-                role: user.user_metadata?.role || 'user'
-              });
-              
-            if (insertError) {
-              console.error('Failed to create user record:', insertError);
-              setAdminVerified(false);
+            console.log('Running auto-diagnosis for missing user record...');
+            const result = await diagnoseAuthIssues();
+            
+            // If diagnosis was successful and created the user with admin role, verify again
+            if (result.success && result.dbRole === 'admin') {
+              setAdminVerified(true);
             } else {
-              // If user metadata has admin role, respect that
-              setAdminVerified(user.user_metadata?.role === 'admin');
+              setAdminVerified(false);
             }
           } else {
             setAdminVerified(false);
@@ -61,24 +65,29 @@ const AdminLayout = () => {
           
           // Update user metadata if it doesn't match the database
           if (isAdmin && user.user_metadata?.role !== 'admin') {
-            await supabase.auth.updateUser({
-              data: { role: 'admin' }
-            });
-            
-            // Update the user in the local state to reflect the admin role
-            setUser(prevUser => {
-              if (!prevUser) return null;
-              return {
-                ...prevUser,
-                user_metadata: {
-                  ...prevUser.user_metadata,
-                  role: 'admin'
-                }
-              };
-            });
-            
-            // Refresh the session to ensure role persistence
-            await supabase.auth.refreshSession();
+            try {
+              await supabase.auth.updateUser({
+                data: { role: 'admin' }
+              });
+              
+              // Update the user in the local state to reflect the admin role
+              setUser(prevUser => {
+                if (!prevUser) return null;
+                return {
+                  ...prevUser,
+                  user_metadata: {
+                    ...prevUser.user_metadata,
+                    role: 'admin'
+                  }
+                };
+              });
+              
+              // Refresh the session to ensure role persistence
+              await supabase.auth.refreshSession();
+              
+            } catch (updateError) {
+              console.error('Error updating user metadata:', updateError);
+            }
           }
         }
       } catch (err) {
@@ -111,7 +120,7 @@ const AdminLayout = () => {
 
   // Redirect if not authenticated or not admin
   if (!user || adminVerified === false) {
-    sonnerToast.error("Access Denied", {
+    toast.error("Access Denied", {
       description: "You do not have admin privileges for this area."
     });
     return <Navigate to="/dashboard" state={{ from: location }} replace />;

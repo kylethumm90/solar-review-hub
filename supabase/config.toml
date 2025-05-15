@@ -1,1 +1,6 @@
+
 project_id = "cmmposdobssorzcfduvl"
+
+# Handle new user function - ensures proper role synchronization
+[functions.handle_new_user]
+verify_jwt = false

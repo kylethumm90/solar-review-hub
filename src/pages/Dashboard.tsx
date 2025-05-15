@@ -6,6 +6,7 @@ import RecentReviews from '@/components/dashboard/RecentReviews';
 import UserProfile from '@/components/dashboard/UserProfile';
 import ClaimRequests from '@/components/dashboard/ClaimRequests';
 import AdminUpgrade from '@/components/dashboard/AdminUpgrade';
+import AdminDiagnostics from '@/components/dashboard/AdminDiagnostics';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -39,8 +40,8 @@ const Dashboard = () => {
               isLoading={false}
             />
             
-            {/* Admin Upgrade Section */}
-            <AdminUpgrade />
+            {/* Admin Diagnostic Section */}
+            <AdminDiagnostics />
           </div>
           
           {/* Sidebar Column */}
@@ -50,6 +51,7 @@ const Dashboard = () => {
               claims={claims as any[]}
               isLoading={false}
             />
+            <AdminUpgrade />
           </div>
         </div>
       )}

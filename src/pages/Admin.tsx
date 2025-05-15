@@ -2,6 +2,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { useAuth } from '@/context/AuthContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ReviewQueueTable from '@/components/admin/ReviewQueueTable';
+import ClaimRequestsTable from '@/components/admin/ClaimRequestsTable';
+import { toast } from 'sonner';
 
 const Admin = () => {
   const { user } = useAuth();
@@ -44,6 +48,7 @@ const Admin = () => {
         });
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
+        toast.error('Failed to load dashboard statistics');
       }
     }
 
@@ -80,27 +85,21 @@ const Admin = () => {
         </div>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h3 className="text-xl font-medium mb-4">Recent Activity</h3>
-          <p className="text-gray-600 dark:text-gray-400">No recent activity to display.</p>
-          {/* Here you would map over recent activity data */}
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h3 className="text-xl font-medium mb-4">System Status</h3>
-          <div className="flex items-center mb-4">
-            <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-            <span className="text-gray-700 dark:text-gray-200">Database: Operational</span>
-          </div>
-          <div className="flex items-center mb-4">
-            <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-            <span className="text-gray-700 dark:text-gray-200">Authentication: Operational</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-            <span className="text-gray-700 dark:text-gray-200">Storage: Operational</span>
-          </div>
-        </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <Tabs defaultValue="claims" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="claims" className="text-base">🏷️ Claim Requests</TabsTrigger>
+            <TabsTrigger value="reviews" className="text-base">📝 Review Queue</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="claims">
+            <ClaimRequestsTable />
+          </TabsContent>
+          
+          <TabsContent value="reviews">
+            <ReviewQueueTable />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

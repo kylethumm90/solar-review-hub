@@ -46,6 +46,7 @@ const App = () => (
             {/* Admin Routes */}
             <Route element={<AdminLayout />}>
               <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/users/:userId" element={<div>User Details Page</div>} />
             </Route>
 
             {/* 404 Route */}

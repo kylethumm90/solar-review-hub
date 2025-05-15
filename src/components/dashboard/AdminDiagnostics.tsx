@@ -46,7 +46,7 @@ const AdminDiagnostics = () => {
       
       <CardContent>
         {user?.user_metadata?.role !== 'admin' && (
-          <Alert variant="warning" className="mb-4">
+          <Alert variant="destructive" className="mb-4">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Not an Admin</AlertTitle>
             <AlertDescription>

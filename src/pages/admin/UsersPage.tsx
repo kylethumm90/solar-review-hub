@@ -17,7 +17,7 @@ const UsersPage = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('users')
-        .select('*, reviews(count)');
+        .select('*, reviews:reviews(count)');
         
       if (error) {
         throw new Error(error.message);
@@ -25,7 +25,7 @@ const UsersPage = () => {
       
       return data.map(user => ({
         ...user,
-        review_count: user.reviews?.[0]?.count || 0
+        review_count: user.reviews?.[0]?.count ?? 0
       })) as User[];
     }
   });

@@ -20,15 +20,32 @@ const AdminUpgrade = () => {
     setIsLoading(true);
     
     try {
-      // Update the user's role in the database
+      // First, update the user's role in the public.users table
       const { error: updateError } = await supabase
         .from('users')
         .update({ role: 'admin' })
         .eq('id', user.id);
         
-      if (updateError) throw updateError;
+      if (updateError) {
+        // If the user doesn't exist in the users table, insert them
+        if (updateError.message.includes('No rows found')) {
+          const { error: insertError } = await supabase
+            .from('users')
+            .insert({
+              id: user.id,
+              email: user.email,
+              full_name: user.user_metadata?.full_name || 'User',
+              role: 'admin'
+            });
+          
+          if (insertError) throw insertError;
+          console.log('Created missing user record with admin role');
+        } else {
+          throw updateError;
+        }
+      }
       
-      // Also update the user_metadata in auth.users to ensure persistence
+      // Next, update the user_metadata in auth.users
       const { error: metadataError } = await supabase.auth.updateUser({
         data: { role: 'admin' }
       });
@@ -52,16 +69,48 @@ const AdminUpgrade = () => {
       
       // Force session refresh to ensure the role change is picked up on next page load
       const { data, error } = await supabase.auth.refreshSession();
-      if (error) console.error("Error refreshing session:", error);
-      if (data) console.log("Session refreshed");
+      if (error) {
+        console.error("Error refreshing session:", error);
+        toast.error("Failed to refresh session. Please try logging out and back in.");
+      } else {
+        console.log("Session refreshed successfully with new role");
+      }
       
       // Give user feedback that they should now be able to access admin features
-      toast.info('Please try accessing the admin area again', {
-        duration: 5000
+      toast.info('Admin access granted! Navigate to /admin to access the admin dashboard', {
+        duration: 8000
       });
     } catch (error: any) {
       console.error('Error upgrading role:', error);
       toast.error(error.message || 'Failed to upgrade your account');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const forceSessionRefresh = async () => {
+    try {
+      setIsLoading(true);
+      toast.info('Refreshing session...');
+      
+      // Force session refresh
+      const { data, error } = await supabase.auth.refreshSession();
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Update the user state with the refreshed session data
+      if (data.session && data.user) {
+        setUser(data.user as any);
+        toast.success('Session refreshed successfully');
+        toast.info(`Current role: ${data.user.user_metadata?.role || 'user'}`, { 
+          duration: 5000 
+        });
+      }
+    } catch (error: any) {
+      console.error('Error refreshing session:', error);
+      toast.error(error.message || 'Failed to refresh session');
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +134,7 @@ const AdminUpgrade = () => {
           </div>
         </div>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex flex-col gap-3">
         <Button 
           onClick={upgradeToAdmin} 
           disabled={isLoading || user?.user_metadata?.role === 'admin'}
@@ -93,6 +142,28 @@ const AdminUpgrade = () => {
         >
           {isLoading ? 'Upgrading...' : user?.user_metadata?.role === 'admin' ? 'Already Admin' : 'Upgrade to Admin'}
         </Button>
+        
+        {user?.user_metadata?.role === 'admin' && (
+          <Button 
+            variant="outline" 
+            onClick={forceSessionRefresh}
+            disabled={isLoading}
+            className="w-full"
+          >
+            {isLoading ? 'Working...' : 'Refresh Session'}
+          </Button>
+        )}
+        
+        {user?.user_metadata?.role === 'admin' && (
+          <div className="text-center mt-2 text-sm text-gray-600 dark:text-gray-400">
+            <a 
+              href="/admin" 
+              className="text-primary hover:underline"
+            >
+              Go to Admin Dashboard
+            </a>
+          </div>
+        )}
       </CardFooter>
     </Card>
   );

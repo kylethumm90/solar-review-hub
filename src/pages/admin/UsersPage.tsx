@@ -15,35 +15,31 @@ const UsersPage = () => {
   const { data: users, isLoading, error, refetch } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      // Fetch users with a count of their reviews using Supabase's built-in count aggregation
-      const { data, error } = await supabase
+      // Modified query to count reviews differently to avoid schema cache issues
+      const { data: usersData, error: usersError } = await supabase
         .from('users')
-        .select(`
-          *,
-          reviews:reviews(count)
-        `);
+        .select('*');
         
-      if (error) {
-        throw new Error(error.message);
+      if (usersError) {
+        throw new Error(usersError.message);
       }
       
-      // Process the data to correctly extract the reviews count
-      return data.map(user => {
-        // Parse the review count safely
-        let reviewCount = 0;
-        if (user.reviews && Array.isArray(user.reviews) && user.reviews.length > 0) {
-          const countValue = user.reviews[0]?.count;
-          // Check if count is a number or can be converted to a number
-          reviewCount = typeof countValue === 'number' 
-            ? countValue 
-            : (typeof countValue === 'string' ? parseInt(countValue, 10) || 0 : 0);
-        }
-        
-        return {
-          ...user,
-          review_count: reviewCount
-        } as User;
-      });
+      // Fetch review counts separately for each user
+      const enhancedUsers = await Promise.all(
+        usersData.map(async (user) => {
+          const { count, error: countError } = await supabase
+            .from('reviews')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id);
+            
+          return {
+            ...user,
+            review_count: countError ? 0 : (count || 0)
+          } as User;
+        })
+      );
+      
+      return enhancedUsers;
     }
   });
 

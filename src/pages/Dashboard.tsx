@@ -5,6 +5,7 @@ import ActivitySummary from '@/components/dashboard/ActivitySummary';
 import RecentReviews from '@/components/dashboard/RecentReviews';
 import UserProfile from '@/components/dashboard/UserProfile';
 import ClaimRequests from '@/components/dashboard/ClaimRequests';
+import AdminUpgrade from '@/components/dashboard/AdminUpgrade';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -37,6 +38,9 @@ const Dashboard = () => {
               reviews={reviews as any[]}
               isLoading={false}
             />
+            
+            {/* Admin Upgrade Section */}
+            <AdminUpgrade />
           </div>
           
           {/* Sidebar Column */}

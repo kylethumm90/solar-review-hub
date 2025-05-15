@@ -3,6 +3,9 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import ReviewInfoHeader from './review/ReviewInfoHeader';
+import ReviewFeedbackSection from './review/ReviewFeedbackSection';
+import AnswersByCategory from './review/AnswersByCategory';
 
 type Answer = {
   id: string;
@@ -79,7 +82,7 @@ const ViewReviewModal = ({ reviewId, isOpen, onClose }: ViewReviewModalProps) =>
 
       if (answersError) throw answersError;
 
-      // Extract the nested company and user data correctly
+      // Transform the nested data properly
       const formattedReview: ReviewDetails = {
         id: reviewData.id,
         review_title: reviewData.review_title,
@@ -93,7 +96,16 @@ const ViewReviewModal = ({ reviewId, isOpen, onClose }: ViewReviewModalProps) =>
           full_name: reviewData.user ? reviewData.user.full_name : 'Unknown User',
           email: reviewData.user ? reviewData.user.email : 'unknown@email.com'
         },
-        answers: answersData as Answer[]
+        // Transform the answers data to ensure it matches the expected type
+        answers: (answersData || []).map(answer => ({
+          id: answer.id,
+          rating: answer.rating,
+          notes: answer.notes,
+          question: {
+            category: answer.question ? answer.question.category : 'Uncategorized',
+            question: answer.question ? answer.question.question : 'Unknown Question'
+          }
+        }))
       };
 
       setReview(formattedReview);
@@ -104,16 +116,6 @@ const ViewReviewModal = ({ reviewId, isOpen, onClose }: ViewReviewModalProps) =>
       setLoading(false);
     }
   };
-
-  // Group answers by category
-  const groupedAnswers = review?.answers?.reduce((groups, answer) => {
-    const category = answer.question?.category || 'Uncategorized';
-    if (!groups[category]) {
-      groups[category] = [];
-    }
-    groups[category].push(answer);
-    return groups;
-  }, {} as Record<string, Answer[]>) || {};
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -131,72 +133,19 @@ const ViewReviewModal = ({ reviewId, isOpen, onClose }: ViewReviewModalProps) =>
           </div>
         ) : review ? (
           <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Company</h3>
-                <p className="mt-1">{review.company?.name || 'Unknown'}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Reviewer</h3>
-                <p className="mt-1">{review.user?.full_name || review.user?.email || 'Unknown'}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Average Score</h3>
-                <p className="mt-1">{review.average_score?.toFixed(1) || 'N/A'}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Title</h3>
-                <p className="mt-1">{review.review_title || 'Untitled'}</p>
-              </div>
-            </div>
+            <ReviewInfoHeader 
+              companyName={review.company?.name} 
+              reviewerName={review.user?.full_name || review.user?.email} 
+              score={review.average_score} 
+              title={review.review_title} 
+            />
 
-            <div>
-              <h3 className="text-sm font-medium text-gray-500">Feedback</h3>
-              <p className="mt-1 whitespace-pre-line">{review.text_feedback}</p>
-            </div>
+            <ReviewFeedbackSection 
+              feedback={review.text_feedback} 
+              details={review.review_details} 
+            />
 
-            {review.review_details && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Additional Details</h3>
-                <p className="mt-1 whitespace-pre-line">{review.review_details}</p>
-              </div>
-            )}
-
-            <div>
-              <h3 className="text-md font-medium mb-3">Question Responses</h3>
-
-              {Object.entries(groupedAnswers).map(([category, answers]) => (
-                <div key={category} className="mb-4">
-                  <h4 className="text-sm font-medium text-primary mb-2">{category}</h4>
-                  
-                  <div className="space-y-3">
-                    {answers.map((answer) => (
-                      <div key={answer.id} className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
-                        <p className="text-sm font-medium">{answer.question?.question}</p>
-                        <div className="flex items-center mt-2">
-                          <span className="text-sm font-bold mr-2">Rating: {answer.rating}/5</span>
-                          <div className="flex">
-                            {[...Array(5)].map((_, i) => (
-                              <span
-                                key={i}
-                                className={`text-lg ${i < answer.rating ? 'text-yellow-500' : 'text-gray-300'}`}
-                              >
-                                ★
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                        {answer.notes && (
-                          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                            Notes: {answer.notes}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <AnswersByCategory answers={review.answers} />
           </div>
         ) : (
           <p className="text-center">Failed to load review details.</p>

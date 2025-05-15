@@ -4,3 +4,7 @@ project_id = "cmmposdobssorzcfduvl"
 # Handle new user function - ensures proper role synchronization
 [functions.handle_new_user]
 verify_jwt = false
+
+# Make sure user creation properly syncs with public.users table
+[auth.hooks.post_signup]
+handler = "handle_new_user"

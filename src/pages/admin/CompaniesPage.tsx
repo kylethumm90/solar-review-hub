@@ -20,6 +20,12 @@ type CompanyFilter = {
   grade: string | null;
 };
 
+// Define an interface that matches the actual data returned from Supabase
+interface CompanyWithReviewCount extends Omit<Company, 'reviews'> {
+  reviews?: { count: number }[];
+  review_count?: number;
+}
+
 const CompaniesPage = () => {
   const [filters, setFilters] = useState<CompanyFilter>({
     name: "",
@@ -67,17 +73,31 @@ const CompaniesPage = () => {
         throw new Error(error.message);
       }
 
-      // Process the data to extract review counts
-      return data.map((company) => {
+      // Process the data to extract review counts and transform to Company type
+      return (data as CompanyWithReviewCount[]).map((company) => {
         let reviewCount = 0;
         if (company.reviews && Array.isArray(company.reviews)) {
           reviewCount = company.reviews.length > 0 ? company.reviews[0].count : 0;
         }
 
-        return {
-          ...company,
-          review_count: reviewCount
-        } as Company;
+        // Create a proper Company object with the review_count property
+        const processedCompany: Company = {
+          id: company.id,
+          name: company.name,
+          description: company.description,
+          website: company.website,
+          logo_url: company.logo_url,
+          type: company.type,
+          is_verified: company.is_verified,
+          grade: company.grade,
+          last_verified: company.last_verified,
+          created_at: company.created_at,
+          review_count: reviewCount,
+          // We don't have the full Review[] objects here, so we just set it to undefined
+          reviews: undefined
+        };
+
+        return processedCompany;
       });
     },
   });

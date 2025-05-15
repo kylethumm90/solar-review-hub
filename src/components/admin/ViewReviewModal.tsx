@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { toast } from 'sonner';
@@ -80,7 +79,7 @@ const ViewReviewModal = ({ reviewId, isOpen, onClose }: ViewReviewModalProps) =>
       if (answersError) throw answersError;
 
       // Fix the type mismatch by extracting company and user information properly
-      // Supabase returns company and user as arrays when using nested selects
+      // Supabase returns nested objects in a specific format
       const formattedReview: ReviewDetails = {
         id: reviewData.id,
         review_title: reviewData.review_title,

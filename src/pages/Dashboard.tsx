@@ -1,87 +1,104 @@
+
 import { useState, useEffect } from 'react';
-import { supabase } from '@/utils/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Review, Claim } from '@/types';
 import { Calendar, Star, File, Building } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [claims, setClaims] = useState<Claim[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchUserData() {
-      if (!user) return;
-      
-      setIsLoading(true);
-      
-      try {
-        // Fetch user's reviews
-        const { data: reviewsData, error: reviewsError } = await supabase
-          .from('reviews')
-          .select(`
-            *,
-            company:companies(id, name)
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+  // Use React Query for data fetching to prevent unnecessary re-renders
+  const fetchReviews = async () => {
+    if (!user) return [];
+    
+    const { data, error } = await supabase
+      .from('reviews')
+      .select(`
+        *,
+        company:companies(id, name)
+      `)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
+  };
 
-        if (reviewsError) throw reviewsError;
-        setReviews(reviewsData);
-
-        // Fetch user's claims - Fixed query to avoid joins that don't exist
-        const { data: claimsData, error: claimsError } = await supabase
-          .from('claims')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (claimsError) {
-          console.error('Error fetching claims:', claimsError);
-          // Continue execution even if claims fetch fails
-          setClaims([]);
-        } else {
-          // If claims fetch succeeded, get company names in a separate query
-          const claimsWithCompanies = [];
+  const fetchClaims = async () => {
+    if (!user) return [];
+    
+    const { data: claimsData, error } = await supabase
+      .from('claims')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    // If claims fetch succeeded, get company names in a separate query
+    const claimsWithCompanies = [];
+    
+    for (const claim of claimsData || []) {
+      if (claim.company_id) {
+        // Fetch company for this claim
+        const { data: companyData } = await supabase
+          .from('companies')
+          .select('id, name')
+          .eq('id', claim.company_id)
+          .single();
           
-          for (const claim of claimsData || []) {
-            if (claim.company_id) {
-              // Fetch company for this claim
-              const { data: companyData } = await supabase
-                .from('companies')
-                .select('id, name')
-                .eq('id', claim.company_id)
-                .single();
-                
-              claimsWithCompanies.push({
-                ...claim,
-                company: companyData
-              });
-            } else {
-              claimsWithCompanies.push(claim);
-            }
-          }
-          
-          setClaims(claimsWithCompanies);
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        toast.custom({
-          title: "Error loading dashboard data",
-          description: "Please try again later"
+        claimsWithCompanies.push({
+          ...claim,
+          company: companyData
         });
-      } finally {
-        setIsLoading(false);
+      } else {
+        claimsWithCompanies.push(claim);
       }
     }
+    
+    return claimsWithCompanies;
+  };
 
-    fetchUserData();
-  }, [user]);
+  // Use React Query hooks for data fetching
+  const { 
+    data: reviews = [], 
+    isLoading: isReviewsLoading 
+  } = useQuery({
+    queryKey: ['dashboard-reviews', user?.id],
+    queryFn: fetchReviews,
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    onError: (err) => {
+      console.error('Error fetching reviews:', err);
+      toast('Error loading reviews', {
+        description: "Please try again later"
+      });
+    }
+  });
+
+  const { 
+    data: claims = [], 
+    isLoading: isClaimsLoading 
+  } = useQuery({
+    queryKey: ['dashboard-claims', user?.id],
+    queryFn: fetchClaims,
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    onError: (err) => {
+      console.error('Error fetching claims:', err);
+      toast('Error loading claims', {
+        description: "Please try again later"
+      });
+    }
+  });
+
+  const isLoading = isReviewsLoading || isClaimsLoading;
 
   return (
     <div className="container mx-auto py-6">

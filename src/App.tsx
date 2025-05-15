@@ -18,6 +18,7 @@ import ClaimVendor from "./pages/ClaimVendor";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import UsersPage from "./pages/admin/UsersPage";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
             {/* Admin Routes */}
             <Route element={<AdminLayout />}>
               <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/users" element={<UsersPage />} />
               <Route path="/admin/users/:userId" element={<div>User Details Page</div>} />
             </Route>
 

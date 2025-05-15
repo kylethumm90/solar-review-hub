@@ -1,9 +1,11 @@
+
 export interface User {
   id: string;
   email: string;
   full_name: string;
   role: 'user' | 'verified_rep' | 'admin';
   created_at: string;
+  review_count?: number;
 }
 
 export interface Company {

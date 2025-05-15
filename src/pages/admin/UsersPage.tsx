@@ -15,18 +15,34 @@ const UsersPage = () => {
   const { data: users, isLoading, error, refetch } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
+      // We need to specifically handle the reviews count with a proper structure
       const { data, error } = await supabase
         .from('users')
-        .select('*, reviews:reviews(count)');
+        .select(`
+          *,
+          reviews:reviews(count)
+        `);
         
       if (error) {
         throw new Error(error.message);
       }
       
-      return data.map(user => ({
-        ...user,
-        review_count: user.reviews?.[0]?.count ?? 0
-      })) as User[];
+      // Process the data to ensure review_count is handled correctly
+      return data.map(user => {
+        // Check if reviews exists and has a proper count structure
+        let reviewCount = 0;
+        if (user.reviews && Array.isArray(user.reviews) && user.reviews[0]) {
+          // Ensure we're safely accessing the count property
+          reviewCount = typeof user.reviews[0].count === 'number' 
+            ? user.reviews[0].count 
+            : 0;
+        }
+        
+        return {
+          ...user,
+          review_count: reviewCount
+        } as User;
+      });
     }
   });
 

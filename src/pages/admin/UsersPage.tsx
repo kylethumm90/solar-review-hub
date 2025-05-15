@@ -15,7 +15,7 @@ const UsersPage = () => {
   const { data: users, isLoading, error, refetch } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      // We need to specifically handle the reviews count with a proper structure
+      // Fetch users with a count of their reviews using Supabase's built-in count aggregation
       const { data, error } = await supabase
         .from('users')
         .select(`
@@ -27,15 +27,16 @@ const UsersPage = () => {
         throw new Error(error.message);
       }
       
-      // Process the data to ensure review_count is handled correctly
+      // Process the data to correctly extract the reviews count
       return data.map(user => {
-        // Check if reviews exists and has a proper count structure
+        // Parse the review count safely
         let reviewCount = 0;
-        if (user.reviews && Array.isArray(user.reviews) && user.reviews[0]) {
-          // Ensure we're safely accessing the count property
-          reviewCount = typeof user.reviews[0].count === 'number' 
-            ? user.reviews[0].count 
-            : 0;
+        if (user.reviews && Array.isArray(user.reviews) && user.reviews.length > 0) {
+          const countValue = user.reviews[0]?.count;
+          // Check if count is a number or can be converted to a number
+          reviewCount = typeof countValue === 'number' 
+            ? countValue 
+            : (typeof countValue === 'string' ? parseInt(countValue, 10) || 0 : 0);
         }
         
         return {

@@ -21,12 +21,19 @@ const AdminUpgrade = () => {
     
     try {
       // Update the user's role in the database
-      const { error } = await supabase
+      const { error: updateError } = await supabase
         .from('users')
         .update({ role: 'admin' })
         .eq('id', user.id);
         
-      if (error) throw error;
+      if (updateError) throw updateError;
+      
+      // Also update the user_metadata in auth.users to ensure persistence
+      const { error: metadataError } = await supabase.auth.updateUser({
+        data: { role: 'admin' }
+      });
+      
+      if (metadataError) throw metadataError;
       
       // Update the user in the local state
       setUser(prevUser => {
@@ -42,6 +49,16 @@ const AdminUpgrade = () => {
       });
       
       toast.success('Your account has been upgraded to admin!');
+      
+      // Force session refresh to ensure the role change is picked up on next page load
+      const { data, error } = await supabase.auth.refreshSession();
+      if (error) console.error("Error refreshing session:", error);
+      if (data) console.log("Session refreshed");
+      
+      // Give user feedback that they should now be able to access admin features
+      toast.info('Please try accessing the admin area again', {
+        duration: 5000
+      });
     } catch (error: any) {
       console.error('Error upgrading role:', error);
       toast.error(error.message || 'Failed to upgrade your account');

@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -81,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     id: session.user.id,
                     email: session.user.email,
                     full_name: session.user.user_metadata?.full_name || 'User',
-                    role: 'user'
+                    role: session.user.user_metadata?.role || 'user'
                   });
                   
                 if (!insertError && isMounted) {
@@ -109,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 }
               }
             } else if (userData && isMounted) {
-              // Update user with role information
+              // Prioritize role from database over metadata
               setUser(prevUser => {
                 if (!prevUser) return null;
                 return {
@@ -168,7 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                       id: newSession.user.id,
                       email: newSession.user.email,
                       full_name: newSession.user.user_metadata?.full_name || 'User',
-                      role: 'user'
+                      role: newSession.user.user_metadata?.role || 'user'
                     });
                     
                   if (insertError) {
@@ -176,6 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   }
                 }
               } else if (userData && isMounted) {
+                // Always prioritize the database role over metadata
                 setUser(prevUser => {
                   if (!prevUser) return null;
                   return {

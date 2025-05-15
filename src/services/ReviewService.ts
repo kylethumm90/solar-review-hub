@@ -1,5 +1,5 @@
 
-import { supabase } from '@/utils/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 import { ReviewQuestion } from '@/types';
 
 export interface VendorInfo {

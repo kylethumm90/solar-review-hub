@@ -29,12 +29,12 @@ const Dashboard = () => {
           {/* Activity Summary and Recent Reviews Column */}
           <div className="lg:col-span-2 space-y-6">
             <ActivitySummary 
-              reviews={reviews} 
-              claims={claims}
+              reviews={reviews as any[]} 
+              claims={claims as any[]}
               isLoading={false}
             />
             <RecentReviews 
-              reviews={reviews}
+              reviews={reviews as any[]}
               isLoading={false}
             />
           </div>
@@ -43,7 +43,7 @@ const Dashboard = () => {
           <div className="space-y-6">
             <UserProfile isLoading={false} />
             <ClaimRequests 
-              claims={claims}
+              claims={claims as any[]}
               isLoading={false}
             />
           </div>

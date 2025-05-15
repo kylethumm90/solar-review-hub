@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -101,10 +100,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         ...prevUser,
                         user_metadata: {
                           ...prevUser.user_metadata,
-                          role: newUserData.role,
+                          role: newUserData.role as 'user' | 'verified_rep' | 'admin',
                           full_name: newUserData.full_name
                         }
-                      };
+                      } as UserWithRole;
                     });
                   }
                 }
@@ -117,10 +116,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   ...prevUser,
                   user_metadata: {
                     ...prevUser.user_metadata,
-                    role: userData.role,
+                    role: userData.role as 'user' | 'verified_rep' | 'admin',
                     full_name: userData.full_name
                   }
-                };
+                } as UserWithRole;
               });
             }
           } catch (err) {
@@ -183,10 +182,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     ...prevUser,
                     user_metadata: {
                       ...prevUser.user_metadata,
-                      role: userData.role,
+                      role: userData.role as 'user' | 'verified_rep' | 'admin',
                       full_name: userData.full_name
                     }
-                  };
+                  } as UserWithRole;
                 });
               }
             } catch (err) {

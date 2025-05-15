@@ -61,7 +61,7 @@ export const useDashboardData = () => {
     return claimsWithCompanies;
   };
 
-  // Use React Query hooks for data fetching
+  // Use React Query hooks for data fetching with improved configuration
   const { 
     data: reviews = [], 
     isLoading: isReviewsLoading,

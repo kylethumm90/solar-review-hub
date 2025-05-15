@@ -26,6 +26,14 @@ const toast = {
     });
   },
   
+  // Add the custom method back for backward compatibility
+  custom: ({ title, description, ...props }: ToastProps) => {
+    return sonnerToast(title || "", { 
+      description, 
+      ...props 
+    });
+  },
+  
   // Standard sonner methods
   message: sonnerToast,
   success: sonnerToast.success,

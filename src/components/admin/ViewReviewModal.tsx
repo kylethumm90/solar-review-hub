@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import ReviewInfoHeader from './review/ReviewInfoHeader';
 import ReviewFeedbackSection from './review/ReviewFeedbackSection';
@@ -90,11 +90,13 @@ const ViewReviewModal = ({ reviewId, isOpen, onClose }: ViewReviewModalProps) =>
         review_details: reviewData.review_details,
         average_score: reviewData.average_score,
         company: {
-          name: reviewData.company ? reviewData.company.name : 'Unknown Company'
+          // Access name property from company object, not array
+          name: reviewData.company?.name || 'Unknown Company'
         },
         user: {
-          full_name: reviewData.user ? reviewData.user.full_name : 'Unknown User',
-          email: reviewData.user ? reviewData.user.email : 'unknown@email.com'
+          // Access user properties from user object, not array
+          full_name: reviewData.user?.full_name || 'Unknown User',
+          email: reviewData.user?.email || 'unknown@email.com'
         },
         // Transform the answers data to ensure it matches the expected type
         answers: (answersData || []).map(answer => ({
@@ -102,8 +104,9 @@ const ViewReviewModal = ({ reviewId, isOpen, onClose }: ViewReviewModalProps) =>
           rating: answer.rating,
           notes: answer.notes,
           question: {
-            category: answer.question ? answer.question.category : 'Uncategorized',
-            question: answer.question ? answer.question.question : 'Unknown Question'
+            // Access question properties from question object, not array
+            category: answer.question?.category || 'Uncategorized',
+            question: answer.question?.question || 'Unknown Question'
           }
         }))
       };

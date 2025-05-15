@@ -79,7 +79,8 @@ const ViewReviewModal = ({ reviewId, isOpen, onClose }: ViewReviewModalProps) =>
 
       if (answersError) throw answersError;
 
-      // Fix the type mismatch by extracting the first (and only) element from company and user arrays
+      // Fix the type mismatch by extracting company and user information properly
+      // Supabase returns company and user as arrays when using nested selects
       const formattedReview: ReviewDetails = {
         id: reviewData.id,
         review_title: reviewData.review_title,

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,7 +57,9 @@ const ReviewsPage = () => {
         `);
       
       // Apply status filter based on active tab
-      if (activeTab !== "all") {
+      if (activeTab === "pending") {
+        query = query.or('verification_status.eq.pending,verification_status.is.null');
+      } else if (activeTab !== "all") {
         query = query.eq("verification_status", activeTab);
       }
       

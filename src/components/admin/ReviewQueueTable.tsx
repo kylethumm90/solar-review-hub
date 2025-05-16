@@ -8,19 +8,26 @@ import ViewReviewModal from './ViewReviewModal';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 
+type User = {
+  id: string;
+  email: string;
+  full_name: string;
+};
+
+type Company = {
+  name: string;
+};
+
 type Review = {
   id: string;
   review_title: string | null;
   average_score: number | null;
   verification_status: string | null;
   created_at: string;
-  user: {
-    email: string;
-    full_name: string;
-  };
-  company: {
-    name: string;
-  };
+  user_id: string;
+  company_id: string;
+  user?: User;
+  company?: Company;
 };
 
 const ReviewQueueTable = () => {
@@ -54,7 +61,7 @@ const ReviewQueueTable = () => {
       
       setTotalPages(Math.ceil((count || 0) / pageSize));
 
-      // Fetch the reviews with company and user data
+      // Step 1: Fetch reviews without joining with users
       let query = supabase
         .from('reviews')
         .select(`
@@ -64,8 +71,7 @@ const ReviewQueueTable = () => {
           verification_status,
           created_at,
           user_id,
-          company:companies(name),
-          user:users(email, full_name)
+          company_id
         `);
         
       if (status) {
@@ -80,13 +86,55 @@ const ReviewQueueTable = () => {
       query = query.order('created_at', { ascending: false })
         .range((page - 1) * pageSize, page * pageSize - 1);
 
-      const { data, error } = await query;
+      const { data: reviewsData, error: reviewsError } = await query;
 
-      if (error) {
-        throw error;
+      if (reviewsError) throw reviewsError;
+      
+      if (!reviewsData || reviewsData.length === 0) {
+        setReviews([]);
+        setLoading(false);
+        return;
       }
+      
+      // Step 2: Fetch company data for all reviews
+      const companyIds = reviewsData.map(review => review.company_id);
+      const { data: companiesData, error: companiesError } = await supabase
+        .from('companies')
+        .select('id, name')
+        .in('id', companyIds);
+      
+      if (companiesError) {
+        console.error('Error fetching companies:', companiesError);
+      }
+      
+      // Step 3: Fetch user data for all reviews
+      const userIds = reviewsData.map(review => review.user_id);
+      const { data: usersData, error: usersError } = await supabase
+        .from('users')
+        .select('id, email, full_name')
+        .in('id', userIds);
+      
+      if (usersError) {
+        console.error('Error fetching users:', usersError);
+      }
+      
+      // Step 4: Combine the data
+      const combinedReviews = reviewsData.map(review => {
+        const company = companiesData?.find(c => c.id === review.company_id);
+        const user = usersData?.find(u => u.id === review.user_id);
+        
+        return {
+          ...review,
+          company: company ? { name: company.name } : undefined,
+          user: user ? { 
+            id: user.id,
+            email: user.email, 
+            full_name: user.full_name
+          } : undefined
+        };
+      });
 
-      setReviews(data as unknown as Review[]);
+      setReviews(combinedReviews);
     } catch (error) {
       console.error('Error fetching reviews:', error);
       toast.error('Failed to load reviews');

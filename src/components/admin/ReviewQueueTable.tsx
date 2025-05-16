@@ -1,9 +1,9 @@
 
 import { useState } from 'react';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import ReviewsTableContent from './reviews/ReviewsTableContent';
 import ReviewTableState from './reviews/ReviewTableState';
 import ReviewFilterBar from './reviews/ReviewFilterBar';
+import ReviewPagination from './reviews/ReviewPagination';
 import ViewReviewModal from './ViewReviewModal';
 import { useReviewQueue } from '@/hooks/useReviewQueue';
 
@@ -37,7 +37,7 @@ const ReviewQueueTable = () => {
       />
       
       <ReviewTableState 
-        loading={loading} 
+        isLoading={loading} 
         isEmpty={reviews.length === 0 && !loading} 
       />
 
@@ -49,51 +49,11 @@ const ReviewQueueTable = () => {
             onActionComplete={handleActionComplete}
           />
 
-          {totalPages > 1 && (
-            <Pagination className="mt-4">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious 
-                    href="#" 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (currentPage > 1) handlePageChange(currentPage - 1);
-                    }} 
-                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
-                  />
-                </PaginationItem>
-                
-                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                  const pageNum = i + 1;
-                  return (
-                    <PaginationItem key={pageNum}>
-                      <PaginationLink 
-                        href="#" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handlePageChange(pageNum);
-                        }}
-                        isActive={pageNum === currentPage}
-                      >
-                        {pageNum}
-                      </PaginationLink>
-                    </PaginationItem>
-                  );
-                })}
-                
-                <PaginationItem>
-                  <PaginationNext 
-                    href="#" 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (currentPage < totalPages) handlePageChange(currentPage + 1);
-                    }}
-                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          )}
+          <ReviewPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
         </>
       )}
 

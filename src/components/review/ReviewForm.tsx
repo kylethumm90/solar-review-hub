@@ -14,7 +14,7 @@ interface ReviewFormProps {
     type?: string;
   };
   reviewQuestions: ReviewQuestion[];
-  onSubmit: (title: string, details: string, ratings: Record<string, { rating: number; notes?: string; question: ReviewQuestion }>) => void;
+  onSubmit: (title: string, details: string, ratings: Record<string, { rating: number; question: ReviewQuestion }>) => void;
   submitting: boolean;
 }
 
@@ -22,16 +22,16 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
   const [reviewTitle, setReviewTitle] = useState('');
   const [reviewDetails, setReviewDetails] = useState('');
   const [questionRatings, setQuestionRatings] = useState<
-    Record<string, { rating: number; notes?: string; question: ReviewQuestion }>
+    Record<string, { rating: number; question: ReviewQuestion }>
   >({});
 
-  const handleQuestionChange = (questionId: string, rating: number, notes?: string) => {
+  const handleQuestionChange = (questionId: string, rating: number) => {
     const question = reviewQuestions.find(q => q.id === questionId);
     if (!question) return;
     
     setQuestionRatings(prev => ({
       ...prev,
-      [questionId]: { rating, notes, question }
+      [questionId]: { rating, question }
     }));
   };
 
@@ -81,17 +81,6 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
           />
         </div>
         
-        <div>
-          <Label htmlFor="review-details">Overall Experience</Label>
-          <Textarea
-            id="review-details"
-            className="min-h-[120px] mt-1"
-            value={reviewDetails}
-            onChange={(e) => setReviewDetails(e.target.value)}
-            placeholder="Share details about your overall experience working with this vendor..."
-          />
-        </div>
-        
         {reviewQuestions.length > 0 ? (
           <ReviewCategoryGroup
             title={`Rate Your Experience with this ${formattedCompanyType}`}
@@ -103,6 +92,17 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
             No review questions available for this vendor type.
           </div>
         )}
+        
+        <div>
+          <Label htmlFor="review-details">Additional Comments (Optional)</Label>
+          <Textarea
+            id="review-details"
+            className="min-h-[120px] mt-1"
+            value={reviewDetails}
+            onChange={(e) => setReviewDetails(e.target.value)}
+            placeholder="Share anything else about your experience..."
+          />
+        </div>
         
         <div className="flex justify-end">
           <Button 

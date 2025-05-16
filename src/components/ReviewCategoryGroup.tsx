@@ -5,7 +5,7 @@ import ReviewQuestionItem from './ReviewQuestionItem';
 interface ReviewCategoryGroupProps {
   title: string;
   questions: ReviewQuestion[];
-  onQuestionChange: (questionId: string, rating: number, notes?: string) => void;
+  onQuestionChange: (questionId: string, rating: number) => void;
 }
 
 const ReviewCategoryGroup = ({ title, questions, onQuestionChange }: ReviewCategoryGroupProps) => {

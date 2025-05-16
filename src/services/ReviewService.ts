@@ -49,7 +49,7 @@ export const ReviewService = {
         user_id: userId,
         review_title: title,
         review_details: details,
-        text_feedback: details,
+        text_feedback: details, // Use the same details for both fields
         average_score: averageScore,
         // Add legacy fields for backward compatibility
         rating_communication: 5,
@@ -63,12 +63,12 @@ export const ReviewService = {
       
     if (reviewError) throw reviewError;
     
-    // Insert individual answers
-    const reviewAnswers = Object.entries(questionRatings).map(([questionId, { rating, notes }]) => ({
+    // Insert individual answers (without notes now)
+    const reviewAnswers = Object.entries(questionRatings).map(([questionId, { rating }]) => ({
       review_id: review.id,
       question_id: questionId,
       rating,
-      notes
+      notes: null // We no longer collect per-question notes
     }));
     
     const { error: answersError } = await supabase

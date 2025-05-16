@@ -52,7 +52,7 @@ const Reviews = () => {
   const handleSubmitReview = async (
     title: string, 
     details: string, 
-    questionRatings: Record<string, { rating: number; notes?: string; question: ReviewQuestion }>
+    questionRatings: Record<string, { rating: number; question: ReviewQuestion }>
   ) => {
     if (!user) {
       toast.custom({
@@ -84,11 +84,11 @@ const Reviews = () => {
       // Calculate average score
       const averageScore = calculateWeightedAverage(questionRatings);
       
-      // Format question ratings for API
-      const formattedRatings: Record<string, { rating: number; notes?: string }> = {};
+      // Format question ratings for API - without notes since we removed them
+      const formattedRatings: Record<string, { rating: number }> = {};
       Object.keys(questionRatings).forEach(key => {
-        const { rating, notes } = questionRatings[key];
-        formattedRatings[key] = { rating, notes };
+        const { rating } = questionRatings[key];
+        formattedRatings[key] = { rating };
       });
       
       await ReviewService.submitReview(

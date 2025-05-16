@@ -23,6 +23,7 @@ import CompaniesPage from "./pages/admin/CompaniesPage";
 import PermissionsPage from "./pages/admin/PermissionsPage";
 import ClaimsPage from "./pages/admin/ClaimsPage";
 import ReviewsPage from "./pages/admin/ReviewsPage";
+import SettingsPage from "./pages/admin/SettingsPage";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,7 @@ const App = () => (
               <Route path="/admin/permissions" element={<PermissionsPage />} />
               <Route path="/admin/claims" element={<ClaimsPage />} />
               <Route path="/admin/reviews" element={<ReviewsPage />} />
+              <Route path="/admin/settings" element={<SettingsPage />} />
               <Route path="/admin/users/:userId" element={<div>User Details Page</div>} />
             </Route>
 

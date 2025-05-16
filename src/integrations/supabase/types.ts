@@ -89,6 +89,36 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_settings: {
+        Row: {
+          category: string
+          id: string
+          key: string
+          label: string | null
+          type: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          category: string
+          id?: string
+          key: string
+          label?: string | null
+          type: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          category?: string
+          id?: string
+          key?: string
+          label?: string | null
+          type?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       review_answers: {
         Row: {
           created_at: string

@@ -1,30 +1,77 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
+import { RefreshCw } from 'lucide-react';
+import { logAdminAction } from '@/utils/adminLogUtils';
 
 const LogsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [actionTypeFilter, setActionTypeFilter] = useState<string>('');
   
-  const { data: logs, isLoading, error } = useQuery({
+  const { 
+    data: logs, 
+    isLoading, 
+    error, 
+    refetch,
+    isFetching 
+  } = useQuery({
     queryKey: ['adminLogs'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('admin_logs')
-        .select(`
-          *,
-          admin:admin_user_id (email, full_name)
-        `)
-        .order('timestamp', { ascending: false });
+      try {
+        console.log('Fetching admin logs...');
+        const { data, error } = await supabase
+          .from('admin_logs')
+          .select(`
+            *,
+            admin:admin_user_id (email, full_name)
+          `)
+          .order('timestamp', { ascending: false });
+          
+        if (error) {
+          console.error('Error fetching admin logs:', error);
+          throw error;
+        }
         
-      if (error) throw error;
-      return data;
-    }
+        console.log('Admin logs fetched:', data);
+        
+        // If there are no logs, let's create a sample one for testing
+        if (data && data.length === 0) {
+          console.log('No logs found, creating a test log...');
+          // Log the page view as an admin action
+          await logAdminAction({
+            action_type: 'VIEW_LOGS',
+            target_entity: 'admin_logs',
+            target_id: 'page_view',
+            details: { page: 'admin/logs', timestamp: new Date().toISOString() }
+          });
+          
+          // Refetch the logs after adding the test log
+          const { data: refreshedData, error: refreshError } = await supabase
+            .from('admin_logs')
+            .select(`
+              *,
+              admin:admin_user_id (email, full_name)
+            `)
+            .order('timestamp', { ascending: false });
+            
+          if (refreshError) throw refreshError;
+          return refreshedData;
+        }
+        
+        return data;
+      } catch (err) {
+        console.error('Error in logs query function:', err);
+        throw err;
+      }
+    },
+    staleTime: 30000, // Consider data stale after 30 seconds
+    refetchOnWindowFocus: true
   });
   
   // Get unique action types for filtering
@@ -44,19 +91,72 @@ const LogsPage = () => {
     return matchesSearch && matchesActionType;
   });
   
+  const handleRefresh = () => {
+    toast.info('Refreshing logs...');
+    refetch();
+  };
+  
+  const handleCreateTestLog = async () => {
+    toast.info('Creating test log entry...');
+    try {
+      const result = await logAdminAction({
+        action_type: 'TEST_LOG',
+        target_entity: 'admin_logs',
+        target_id: 'manual_test',
+        details: { 
+          created_by: 'admin_user', 
+          timestamp: new Date().toISOString(),
+          purpose: 'Testing admin logs functionality'
+        }
+      });
+      
+      if (result.error) {
+        toast.error(`Failed to create test log: ${result.error.message}`);
+      } else {
+        toast.success('Test log created successfully');
+        refetch();
+      }
+    } catch (err) {
+      console.error('Error creating test log:', err);
+      toast.error(`Error creating test log: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+  };
+  
   if (error) {
     return (
       <div className="p-6 max-w-full">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          Error loading logs: {error.message}
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="font-bold">Error loading logs</div>
+          <div>{error instanceof Error ? error.message : 'Unknown error occurred'}</div>
         </div>
+        <Button onClick={() => refetch()} className="mt-2">
+          <RefreshCw className="h-4 w-4 mr-2" /> Try Again
+        </Button>
       </div>
     );
   }
   
   return (
     <div className="p-6 max-w-full">
-      <h1 className="text-2xl font-bold mb-6">Admin Action Logs</h1>
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Admin Action Logs</h1>
+        <div className="flex gap-2 mt-2 md:mt-0">
+          <Button 
+            variant="outline" 
+            onClick={handleRefresh}
+            disabled={isFetching}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} /> 
+            Refresh Logs
+          </Button>
+          <Button
+            variant="default"
+            onClick={handleCreateTestLog}
+          >
+            Create Test Log
+          </Button>
+        </div>
+      </div>
       
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="flex-grow">
@@ -104,7 +204,7 @@ const LogsPage = () => {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {isLoading ? (
+              {isLoading || isFetching ? (
                 [...Array(5)].map((_, i) => (
                   <tr key={i}>
                     {[...Array(6)].map((_, j) => (
@@ -119,14 +219,28 @@ const LogsPage = () => {
                   <tr key={log.id}>
                     <td className="px-4 py-3">{log.action_type.replace(/_/g, ' ')}</td>
                     <td className="px-4 py-3">{log.admin?.email || 'Unknown'}</td>
-                    <td className="px-4 py-3">{log.target_id.slice(0, 8)}...</td>
+                    <td className="px-4 py-3">
+                      {log.target_id.length > 16 
+                        ? `${log.target_id.slice(0, 8)}...${log.target_id.slice(-8)}`
+                        : log.target_id}
+                    </td>
                     <td className="px-4 py-3">{log.target_entity}</td>
                     <td className="px-4 py-3">{format(new Date(log.timestamp), 'MMM d, yyyy HH:mm')}</td>
                     <td className="px-4 py-3">
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        onClick={() => alert(JSON.stringify(log.details, null, 2))}
+                        onClick={() => {
+                          toast.info(
+                            <pre className="whitespace-pre-wrap font-mono text-xs">
+                              {JSON.stringify(log.details, null, 2)}
+                            </pre>,
+                            {
+                              duration: 10000,
+                              id: `log-details-${log.id}`
+                            }
+                          );
+                        }}
                       >
                         View
                       </Button>
@@ -136,7 +250,7 @@ const LogsPage = () => {
               ) : (
                 <tr>
                   <td colSpan={6} className="px-4 py-3 text-center">
-                    No logs found.
+                    No logs found. Try creating a test log with the button above.
                   </td>
                 </tr>
               )}

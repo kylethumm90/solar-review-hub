@@ -95,6 +95,14 @@ export function useAdminReviews() {
           review_details: review.review_details || null,
           verification_status: review.verification_status || null,
           average_score: review.average_score || null,
+          // Ensure text_feedback has a default value if it's null
+          text_feedback: review.text_feedback || "",
+          // Ensure rating fields have default values if they're null
+          rating_communication: review.rating_communication || 0,
+          rating_install_quality: review.rating_install_quality || 0,
+          rating_payment_reliability: review.rating_payment_reliability || 0,
+          rating_timeliness: review.rating_timeliness || 0,
+          rating_post_install_support: review.rating_post_install_support || 0
         } as Review;
       });
       setReviews(combinedReviews);

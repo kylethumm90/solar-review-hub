@@ -9,6 +9,7 @@ import {
 } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Dashboard from './pages/Dashboard';
+import Home from './pages/Home';
 import LandingPage from './pages/LandingPage';
 import CompanyDetailsPage from './pages/CompanyDetailsPage';
 import ReviewPage from './pages/ReviewPage';
@@ -28,6 +29,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import CookiePolicy from './pages/CookiePolicy';
 import NotFound from './pages/NotFound';
 import { useToast } from '@/components/ui/use-toast';
+import PublicLayout from './layouts/PublicLayout';
 
 // Import the LogsPage
 import LogsPage from './pages/admin/LogsPage';
@@ -61,10 +63,13 @@ const App = () => {
     <>
       <Router>
         <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/terms" element={<TermsOfService />} />
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/cookies" element={<CookiePolicy />} />
+          {/* Public routes wrapped in PublicLayout */}
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/cookies" element={<CookiePolicy />} />
+          </Route>
           
           {/* Public routes that require authentication */}
           <Route

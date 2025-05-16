@@ -1,286 +1,53 @@
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useState } from 'react';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import ModerationActions from './ModerationActions';
+import ReviewsTableContent from './reviews/ReviewsTableContent';
+import ReviewTableState from './reviews/ReviewTableState';
+import ReviewFilterBar from './reviews/ReviewFilterBar';
 import ViewReviewModal from './ViewReviewModal';
-import { toast } from 'sonner';
-import { formatDistanceToNow } from 'date-fns';
-
-type User = {
-  id: string;
-  email: string;
-  full_name: string;
-};
-
-type Company = {
-  name: string;
-};
-
-type Review = {
-  id: string;
-  review_title: string | null;
-  average_score: number | null;
-  verification_status: string | null;
-  created_at: string;
-  user_id: string;
-  company_id: string;
-  user?: User;
-  company?: Company;
-};
+import { useReviewQueue } from '@/hooks/useReviewQueue';
 
 const ReviewQueueTable = () => {
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
   const [selectedReview, setSelectedReview] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const pageSize = 10;
-
-  const fetchReviews = async (page: number, status: string | null = null) => {
-    setLoading(true);
-    try {
-      // Get total count for pagination
-      let countQuery = supabase
-        .from('reviews')
-        .select('*', { count: 'exact', head: true });
-      
-      if (status) {
-        if (status === 'pending') {
-          // Include both 'pending' and NULL values for pending filter
-          countQuery = countQuery.or(`verification_status.eq.${status},verification_status.is.null`);
-        } else {
-          countQuery = countQuery.eq('verification_status', status);
-        }
-      }
-      
-      const { count } = await countQuery;
-      
-      setTotalPages(Math.ceil((count || 0) / pageSize));
-
-      // Step 1: Fetch reviews without joining with users
-      let query = supabase
-        .from('reviews')
-        .select(`
-          id,
-          review_title,
-          average_score,
-          verification_status,
-          created_at,
-          user_id,
-          company_id
-        `);
-        
-      if (status) {
-        if (status === 'pending') {
-          // Include both 'pending' and NULL values for pending filter
-          query = query.or(`verification_status.eq.${status},verification_status.is.null`);
-        } else {
-          query = query.eq('verification_status', status);
-        }
-      }
-      
-      query = query.order('created_at', { ascending: false })
-        .range((page - 1) * pageSize, page * pageSize - 1);
-
-      const { data: reviewsData, error: reviewsError } = await query;
-
-      if (reviewsError) throw reviewsError;
-      
-      if (!reviewsData || reviewsData.length === 0) {
-        setReviews([]);
-        setLoading(false);
-        return;
-      }
-      
-      // Step 2: Fetch company data for all reviews
-      const companyIds = reviewsData.map(review => review.company_id);
-      const { data: companiesData, error: companiesError } = await supabase
-        .from('companies')
-        .select('id, name')
-        .in('id', companyIds);
-      
-      if (companiesError) {
-        console.error('Error fetching companies:', companiesError);
-      }
-      
-      // Step 3: Fetch user data for all reviews
-      const userIds = reviewsData.map(review => review.user_id);
-      const { data: usersData, error: usersError } = await supabase
-        .from('users')
-        .select('id, email, full_name')
-        .in('id', userIds);
-      
-      if (usersError) {
-        console.error('Error fetching users:', usersError);
-      }
-      
-      // Step 4: Combine the data
-      const combinedReviews = reviewsData.map(review => {
-        const company = companiesData?.find(c => c.id === review.company_id);
-        const user = usersData?.find(u => u.id === review.user_id);
-        
-        return {
-          ...review,
-          company: company ? { name: company.name } : undefined,
-          user: user ? { 
-            id: user.id,
-            email: user.email, 
-            full_name: user.full_name
-          } : undefined
-        };
-      });
-
-      setReviews(combinedReviews);
-    } catch (error) {
-      console.error('Error fetching reviews:', error);
-      toast.error('Failed to load reviews');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchReviews(currentPage, activeFilter);
-  }, [currentPage, activeFilter]);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
+  
+  const {
+    reviews,
+    loading,
+    currentPage,
+    totalPages,
+    activeFilter,
+    handlePageChange,
+    handleFilterChange,
+    handleActionComplete
+  } = useReviewQueue(1, 'pending');
 
   const handleViewDetails = (reviewId: string) => {
     setSelectedReview(reviewId);
     setIsModalOpen(true);
   };
 
-  const handleActionComplete = () => {
-    fetchReviews(currentPage, activeFilter);
-  };
-  
-  const handleFilterChange = (status: string | null) => {
-    setActiveFilter(status);
-    setCurrentPage(1);
-  };
-
-  const getStatusBadge = (status: string | null) => {
-    switch (status) {
-      case "pending":
-      case null: // Treat null as pending
-        return (
-          <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">
-            Pending
-          </span>
-        );
-      case "approved":
-        return (
-          <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-            Approved
-          </span>
-        );
-      case "rejected":
-        return (
-          <span className="px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">
-            Rejected
-          </span>
-        );
-      default:
-        return (
-          <span className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
-            Unknown
-          </span>
-        );
-    }
-  };
-
   return (
     <div>
       <h3 className="text-xl font-semibold mb-4">Review Queue</h3>
       
-      <div className="flex space-x-2 mb-4">
-        <button 
-          onClick={() => handleFilterChange(null)}
-          className={`px-3 py-1 rounded text-sm ${activeFilter === null ? 'bg-primary text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
-        >
-          All
-        </button>
-        <button 
-          onClick={() => handleFilterChange('pending')}
-          className={`px-3 py-1 rounded text-sm ${activeFilter === 'pending' ? 'bg-primary text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
-        >
-          Pending
-        </button>
-        <button 
-          onClick={() => handleFilterChange('approved')}
-          className={`px-3 py-1 rounded text-sm ${activeFilter === 'approved' ? 'bg-primary text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
-        >
-          Approved
-        </button>
-        <button 
-          onClick={() => handleFilterChange('rejected')}
-          className={`px-3 py-1 rounded text-sm ${activeFilter === 'rejected' ? 'bg-primary text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
-        >
-          Rejected
-        </button>
-      </div>
+      <ReviewFilterBar 
+        activeFilter={activeFilter} 
+        onFilterChange={handleFilterChange} 
+      />
       
-      {loading ? (
-        <div className="flex justify-center p-8">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-        </div>
-      ) : reviews.length === 0 ? (
-        <div className="text-center p-8 bg-gray-50 dark:bg-gray-900 rounded-md">
-          <p className="text-gray-600 dark:text-gray-400">No reviews found.</p>
-        </div>
-      ) : (
+      <ReviewTableState 
+        loading={loading} 
+        isEmpty={reviews.length === 0 && !loading} 
+      />
+
+      {!loading && reviews.length > 0 && (
         <>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Review Title</TableHead>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Submitted By</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Score</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {reviews.map((review) => (
-                  <TableRow key={review.id}>
-                    <TableCell className="font-medium">{review.review_title || 'Untitled'}</TableCell>
-                    <TableCell>{review.company?.name || 'Unknown'}</TableCell>
-                    <TableCell>{review.user?.full_name || review.user?.email || 'Unknown'}</TableCell>
-                    <TableCell>{formatDistanceToNow(new Date(review.created_at), { addSuffix: true })}</TableCell>
-                    <TableCell>{review.average_score?.toFixed(1) || 'N/A'}</TableCell>
-                    <TableCell>{getStatusBadge(review.verification_status)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        {(review.verification_status === 'pending' || review.verification_status === null) && (
-                          <ModerationActions 
-                            id={review.id} 
-                            type="review" 
-                            onActionComplete={handleActionComplete}
-                          />
-                        )}
-                        <button
-                          onClick={() => handleViewDetails(review.id)}
-                          className="px-2 py-1 text-sm text-blue-600 hover:text-blue-800"
-                          title="View Details"
-                        >
-                          🔍
-                        </button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <ReviewsTableContent 
+            reviews={reviews} 
+            onViewDetails={handleViewDetails}
+            onActionComplete={handleActionComplete}
+          />
 
           {totalPages > 1 && (
             <Pagination className="mt-4">

@@ -42,7 +42,12 @@ const ReviewQueueTable = () => {
         .select('*', { count: 'exact', head: true });
       
       if (status) {
-        countQuery = countQuery.eq('verification_status', status);
+        if (status === 'pending') {
+          // Include both 'pending' and NULL values for pending filter
+          countQuery = countQuery.or(`verification_status.eq.${status},verification_status.is.null`);
+        } else {
+          countQuery = countQuery.eq('verification_status', status);
+        }
       }
       
       const { count } = await countQuery;
@@ -64,7 +69,12 @@ const ReviewQueueTable = () => {
         `);
         
       if (status) {
-        query = query.eq('verification_status', status);
+        if (status === 'pending') {
+          // Include both 'pending' and NULL values for pending filter
+          query = query.or(`verification_status.eq.${status},verification_status.is.null`);
+        } else {
+          query = query.eq('verification_status', status);
+        }
       }
       
       query = query.order('created_at', { ascending: false })
@@ -110,6 +120,7 @@ const ReviewQueueTable = () => {
   const getStatusBadge = (status: string | null) => {
     switch (status) {
       case "pending":
+      case null: // Treat null as pending
         return (
           <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">
             Pending
@@ -201,7 +212,7 @@ const ReviewQueueTable = () => {
                     <TableCell>{getStatusBadge(review.verification_status)}</TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
-                        {review.verification_status === 'pending' && (
+                        {(review.verification_status === 'pending' || review.verification_status === null) && (
                           <ModerationActions 
                             id={review.id} 
                             type="review" 

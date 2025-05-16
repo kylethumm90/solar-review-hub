@@ -38,6 +38,7 @@ const ReviewsTable = ({
   const renderStatusBadge = (status: string | null) => {
     switch (status) {
       case "pending":
+      case null: // Treat null as pending
         return (
           <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">
             Pending
@@ -120,7 +121,7 @@ const ReviewsTable = ({
                 <TableCell>{renderStatusBadge(review.verification_status)}</TableCell>
                 <TableCell>
                   <div className="flex items-center space-x-2">
-                    {review.verification_status === "pending" && (
+                    {(review.verification_status === "pending" || review.verification_status === null) && (
                       <>
                         <Button
                           size="sm"

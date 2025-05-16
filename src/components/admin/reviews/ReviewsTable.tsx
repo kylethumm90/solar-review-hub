@@ -13,6 +13,9 @@ import { Review } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Check, X, Eye } from "lucide-react";
 import ReviewModal from "./ReviewModal";
+import { logAdminAction } from "@/utils/adminLogUtils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface ReviewsTableProps {
   reviews: Review[];
@@ -33,6 +36,60 @@ const ReviewsTable = ({
   const handleViewReview = (reviewId: string) => {
     setSelectedReview(reviewId);
     setIsModalOpen(true);
+  };
+
+  const handleApprove = async (reviewId: string) => {
+    try {
+      // Get previous status for logging
+      const { data: reviewData } = await supabase
+        .from('reviews')
+        .select('verification_status')
+        .eq('id', reviewId)
+        .single();
+        
+      const previousStatus = reviewData?.verification_status || null;
+      
+      // Call the original onApprove function
+      onApprove(reviewId);
+      
+      // Log the admin action
+      await logAdminAction({
+        action_type: 'approve_review',
+        target_entity: 'review',
+        target_id: reviewId,
+        details: { previous_status: previousStatus, new_status: 'approved' }
+      });
+    } catch (error) {
+      console.error('Error processing review approval:', error);
+      toast.error('Failed to log review approval action');
+    }
+  };
+
+  const handleReject = async (reviewId: string) => {
+    try {
+      // Get previous status for logging
+      const { data: reviewData } = await supabase
+        .from('reviews')
+        .select('verification_status')
+        .eq('id', reviewId)
+        .single();
+        
+      const previousStatus = reviewData?.verification_status || null;
+      
+      // Call the original onReject function
+      onReject(reviewId);
+      
+      // Log the admin action
+      await logAdminAction({
+        action_type: 'reject_review',
+        target_entity: 'review',
+        target_id: reviewId,
+        details: { previous_status: previousStatus, new_status: 'rejected' }
+      });
+    } catch (error) {
+      console.error('Error processing review rejection:', error);
+      toast.error('Failed to log review rejection action');
+    }
   };
 
   const renderStatusBadge = (status: string | null) => {
@@ -127,7 +184,7 @@ const ReviewsTable = ({
                           size="sm"
                           variant="outline"
                           className="h-8 px-2 text-green-600 hover:text-green-800 hover:bg-green-50"
-                          onClick={() => onApprove(review.id)}
+                          onClick={() => handleApprove(review.id)}
                         >
                           <Check className="h-4 w-4 mr-1" />
                           Approve
@@ -136,7 +193,7 @@ const ReviewsTable = ({
                           size="sm"
                           variant="outline"
                           className="h-8 px-2 text-red-600 hover:text-red-800 hover:bg-red-50"
-                          onClick={() => onReject(review.id)}
+                          onClick={() => handleReject(review.id)}
                         >
                           <X className="h-4 w-4 mr-1" />
                           Reject

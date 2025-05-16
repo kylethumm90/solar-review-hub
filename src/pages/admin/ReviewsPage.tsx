@@ -6,15 +6,35 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { toast } from "sonner";
-import { Review } from "@/types";
+import { Review, User } from "@/types";
 import ReviewsTable from "@/components/admin/reviews/ReviewsTable";
+
+interface EnhancedReviewData {
+  id: string;
+  company_id: string;
+  user_id: string;
+  review_title: string | null;
+  review_details: string | null;
+  text_feedback: string;
+  average_score: number | null;
+  verification_status: string | null;
+  created_at: string;
+  company?: { id: string; name: string };
+  rating_communication: number;
+  rating_install_quality: number;
+  rating_payment_reliability: number;
+  rating_timeliness: number;
+  rating_post_install_support: number;
+  user?: User;
+}
 
 const ReviewsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("pending");
+  const [reviews, setReviews] = useState<Review[]>([]);
   
-  // Fetch reviews with company and user details
-  const { data: reviews, isLoading, refetch: refetchReviews } = useQuery({
+  // Fetch reviews with company details
+  const { data: reviewsData, isLoading, refetch: refetchReviews } = useQuery({
     queryKey: ["admin", "reviews", activeTab],
     queryFn: async () => {
       let query = supabase
@@ -29,8 +49,12 @@ const ReviewsPage = () => {
           average_score,
           verification_status,
           created_at,
-          company:companies(id, name),
-          user:users(id, full_name, email)
+          rating_communication,
+          rating_install_quality,
+          rating_payment_reliability,
+          rating_timeliness,
+          rating_post_install_support,
+          company:companies(id, name)
         `);
       
       // Apply status filter based on active tab
@@ -48,9 +72,45 @@ const ReviewsPage = () => {
         throw error;
       }
       
-      return data as Review[];
+      return data as EnhancedReviewData[];
     },
   });
+
+  // Fetch users for each review
+  const { data: usersData, isLoading: isUsersLoading } = useQuery({
+    queryKey: ["admin", "users", reviewsData?.map(r => r.user_id).join(',')],
+    queryFn: async () => {
+      if (!reviewsData || reviewsData.length === 0) return [];
+
+      const userIds = reviewsData.map(review => review.user_id);
+      const { data, error } = await supabase
+        .from("users")
+        .select("id, full_name, email")
+        .in("id", userIds);
+      
+      if (error) {
+        console.error("Error fetching users:", error);
+        return [];
+      }
+      
+      return data as User[];
+    },
+    enabled: !!reviewsData && reviewsData.length > 0,
+  });
+
+  // Combine review data with user data
+  useEffect(() => {
+    if (reviewsData && usersData) {
+      const combinedReviews: Review[] = reviewsData.map(review => {
+        const user = usersData.find(u => u.id === review.user_id);
+        return {
+          ...review,
+          user
+        };
+      });
+      setReviews(combinedReviews);
+    }
+  }, [reviewsData, usersData]);
   
   // Filter reviews based on search query
   const filteredReviews = reviews?.filter(review => {
@@ -127,7 +187,7 @@ const ReviewsPage = () => {
         <TabsContent value={activeTab} className="space-y-4">
           <ReviewsTable 
             reviews={filteredReviews || []} 
-            isLoading={isLoading}
+            isLoading={isLoading || isUsersLoading}
             onApprove={(reviewId) => handleReviewAction(reviewId, 'approve')}
             onReject={(reviewId) => handleReviewAction(reviewId, 'reject')}
           />

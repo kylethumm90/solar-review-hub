@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import ReviewInfoHeader from "../review/ReviewInfoHeader";
 import ReviewFeedbackSection from "../review/ReviewFeedbackSection";
 import AnswersByCategory from "../review/AnswersByCategory";
+import { User } from "@/types";
 
 interface ReviewModalProps {
   reviewId: string;
@@ -36,8 +37,8 @@ const ReviewModal = ({ reviewId, isOpen, onClose }: ReviewModalProps) => {
           average_score, 
           verification_status,
           created_at,
-          company:companies(id, name),
-          user:users(id, full_name, email)
+          user_id,
+          company:companies(id, name)
         `)
         .eq("id", reviewId)
         .single();
@@ -50,6 +51,26 @@ const ReviewModal = ({ reviewId, isOpen, onClose }: ReviewModalProps) => {
       return data;
     },
     enabled: isOpen && !!reviewId,
+  });
+
+  // Fetch user separately
+  const { data: user, isLoading: isUserLoading } = useQuery({
+    queryKey: ["review-user", review?.user_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("users")
+        .select("id, full_name, email")
+        .eq("id", review?.user_id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching user:", error);
+        return null;
+      }
+
+      return data as User;
+    },
+    enabled: isOpen && !!review?.user_id,
   });
 
   // Fetch review answers
@@ -76,7 +97,7 @@ const ReviewModal = ({ reviewId, isOpen, onClose }: ReviewModalProps) => {
     enabled: isOpen && !!reviewId,
   });
 
-  const isLoading = isReviewLoading || isAnswersLoading;
+  const isLoading = isReviewLoading || isAnswersLoading || isUserLoading;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -93,7 +114,7 @@ const ReviewModal = ({ reviewId, isOpen, onClose }: ReviewModalProps) => {
           <div className="space-y-6">
             <ReviewInfoHeader
               companyName={review?.company?.name}
-              reviewerName={review?.user?.full_name || review?.user?.email}
+              reviewerName={user?.full_name || user?.email || "Unknown User"}
               score={review?.average_score}
               title={review?.review_title}
             />

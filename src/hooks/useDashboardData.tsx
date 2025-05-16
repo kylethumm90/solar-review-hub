@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Review, Claim } from '@/types';
+import { Review, Claim, Company } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 
 export const useDashboardData = () => {
@@ -16,7 +16,7 @@ export const useDashboardData = () => {
       .from('reviews')
       .select(`
         *,
-        company:companies(id, name)
+        company:companies(*)
       `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
@@ -26,7 +26,16 @@ export const useDashboardData = () => {
       throw error;
     }
     
-    return data || [];
+    // Transform data to match Review type
+    const typedReviews: Review[] = (data || []).map(item => {
+      const { company, ...review } = item;
+      return {
+        ...review,
+        company: company as Company
+      };
+    });
+    
+    return typedReviews;
   };
 
   // Fetch claims for the dashboard
@@ -37,7 +46,7 @@ export const useDashboardData = () => {
       .from('claims')
       .select(`
         *,
-        company:companies(id, name)
+        company:companies(*)
       `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
@@ -47,7 +56,17 @@ export const useDashboardData = () => {
       throw error;
     }
     
-    return claimsData || [];
+    // Transform data to match Claim type
+    const typedClaims: Claim[] = (claimsData || []).map(item => {
+      const { company, status, ...claim } = item;
+      return {
+        ...claim,
+        status: status as "pending" | "approved" | "rejected",
+        company: company as Company
+      };
+    });
+    
+    return typedClaims;
   };
 
   // Use React Query hooks for data fetching with improved configuration

@@ -13,6 +13,8 @@ const Admin = () => {
     totalUsers: 0,
     totalCompanies: 0,
     totalReviews: 0,
+    pendingReviews: 0,
+    totalClaims: 0,
     pendingClaims: 0
   });
 
@@ -33,7 +35,18 @@ const Admin = () => {
         const { count: reviewsCount } = await supabase
           .from('reviews')
           .select('id', { count: 'exact', head: true });
+          
+        // Fetch pending reviews count
+        const { count: pendingReviewsCount } = await supabase
+          .from('reviews')
+          .select('id', { count: 'exact', head: true })
+          .eq('verification_status', 'pending');
 
+        // Fetch total claims count
+        const { count: claimsCount } = await supabase
+          .from('claims')
+          .select('id', { count: 'exact', head: true });
+          
         // Fetch pending claims count
         const { count: pendingClaimsCount } = await supabase
           .from('claims')
@@ -44,6 +57,8 @@ const Admin = () => {
           totalUsers: usersCount || 0,
           totalCompanies: companiesCount || 0,
           totalReviews: reviewsCount || 0,
+          pendingReviews: pendingReviewsCount || 0,
+          totalClaims: claimsCount || 0,
           pendingClaims: pendingClaimsCount || 0
         });
       } catch (error) {
@@ -76,12 +91,22 @@ const Admin = () => {
           <p className="text-3xl font-bold text-primary">{stats.totalCompanies}</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">Total Reviews</h3>
+          <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">Reviews</h3>
           <p className="text-3xl font-bold text-primary">{stats.totalReviews}</p>
+          {stats.pendingReviews > 0 && (
+            <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full ml-2">
+              {stats.pendingReviews} pending
+            </span>
+          )}
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">Pending Claims</h3>
-          <p className="text-3xl font-bold text-primary">{stats.pendingClaims}</p>
+          <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">Claims</h3>
+          <p className="text-3xl font-bold text-primary">{stats.totalClaims}</p>
+          {stats.pendingClaims > 0 && (
+            <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full ml-2">
+              {stats.pendingClaims} pending
+            </span>
+          )}
         </div>
       </div>
       

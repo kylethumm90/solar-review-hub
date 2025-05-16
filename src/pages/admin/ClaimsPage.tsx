@@ -11,7 +11,7 @@ import { Claim } from "@/types";
 
 const ClaimsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("pending");
+  const [activeTab, setActiveTab] = useState("all");
   
   // Fetch claims with company details
   const { data: claims, isLoading, refetch: refetchClaims } = useQuery({
@@ -46,31 +46,39 @@ const ClaimsPage = () => {
         throw error;
       }
       
-      // Separately fetch user details to avoid relation errors
-      if (data && data.length > 0) {
-        const userIds = data.map(claim => claim.user_id);
-        const { data: userData, error: userError } = await supabase
-          .from("users")
-          .select("id, full_name, email, role, created_at")
-          .in("id", userIds);
-        
-        if (userError) {
-          console.error("Error fetching users:", userError);
-        }
-        
-        // Map user data to claims
-        const claimsWithUsers = data.map(claim => {
-          const user = userData?.find(u => u.id === claim.user_id);
-          return {
+      // Separately fetch user details for each claim
+      const claimsWithUsers = [];
+      
+      for (const claim of data || []) {
+        try {
+          const { data: userData, error: userError } = await supabase
+            .from("users")
+            .select("id, full_name, email, role")
+            .eq("id", claim.user_id)
+            .single();
+          
+          if (userError) {
+            console.error("Error fetching user for claim:", userError);
+            claimsWithUsers.push({
+              ...claim,
+              user: null
+            });
+          } else {
+            claimsWithUsers.push({
+              ...claim,
+              user: userData
+            });
+          }
+        } catch (error) {
+          console.error("Error processing claim user data:", error);
+          claimsWithUsers.push({
             ...claim,
-            user: user || null
-          } as Claim;
-        });
-        
-        return claimsWithUsers;
+            user: null
+          });
+        }
       }
       
-      return (data || []) as Claim[];
+      return claimsWithUsers as Claim[];
     },
   });
   
@@ -83,7 +91,9 @@ const ClaimsPage = () => {
       claim.full_name?.toLowerCase().includes(searchTerm) ||
       claim.company_email?.toLowerCase().includes(searchTerm) ||
       claim.job_title?.toLowerCase().includes(searchTerm) ||
-      claim.company?.name?.toLowerCase().includes(searchTerm)
+      claim.company?.name?.toLowerCase().includes(searchTerm) ||
+      claim.user?.full_name?.toLowerCase().includes(searchTerm) ||
+      claim.user?.email?.toLowerCase().includes(searchTerm)
     );
   });
   
@@ -157,10 +167,10 @@ const ClaimsPage = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex items-center justify-between mb-4">
           <TabsList>
+            <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="pending">Pending</TabsTrigger>
             <TabsTrigger value="approved">Approved</TabsTrigger>
             <TabsTrigger value="rejected">Rejected</TabsTrigger>
-            <TabsTrigger value="all">All</TabsTrigger>
           </TabsList>
           
           <div className="relative">

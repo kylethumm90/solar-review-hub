@@ -6,6 +6,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import ModerationActions from './ModerationActions';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type ClaimRequest = {
   id: string;
@@ -30,22 +31,25 @@ const ClaimRequestsTable = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState<string | null>("pending");
   const pageSize = 10;
 
-  const fetchClaims = async (page: number) => {
+  const fetchClaims = async (page: number, status: string | null = null) => {
     setLoading(true);
     try {
       // Get total count for pagination
-      const { count } = await supabase
-        .from('claims')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending');
+      let countQuery = supabase.from('claims').select('*', { count: 'exact', head: true });
+      
+      if (status) {
+        countQuery = countQuery.eq('status', status);
+      }
+      
+      const { count } = await countQuery;
       
       setTotalPages(Math.ceil((count || 0) / pageSize));
 
-      // Fetch the claims with company and user data
-      const { data, error } = await supabase
-        .from('claims')
+      // Fetch the claims with company data
+      let query = supabase.from('claims')
         .select(`
           id,
           full_name,
@@ -53,18 +57,62 @@ const ClaimRequestsTable = () => {
           company_email,
           created_at,
           status,
-          company:companies(id, name),
-          user:users(id, email, full_name)
-        `)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false })
+          company:companies(id, name)
+        `);
+        
+      if (status) {
+        query = query.eq('status', status);
+      }
+        
+      query = query.order('created_at', { ascending: false })
         .range((page - 1) * pageSize, page * pageSize - 1);
+
+      const { data: claimsData, error } = await query;
 
       if (error) {
         throw error;
       }
+      
+      // Fetch user data separately for each claim
+      const claimsWithUsers = [];
+      
+      for (const claim of claimsData || []) {
+        if (claim.user_id) {
+          try {
+            const { data: userData, error: userError } = await supabase
+              .from('users')
+              .select('id, email, full_name')
+              .eq('id', claim.user_id)
+              .single();
+            
+            if (userError) {
+              console.error('Error fetching user for claim:', userError);
+              claimsWithUsers.push({
+                ...claim,
+                user: { id: claim.user_id, email: 'Unknown', full_name: 'Unknown User' }
+              });
+            } else {
+              claimsWithUsers.push({
+                ...claim,
+                user: userData
+              });
+            }
+          } catch (error) {
+            console.error('Error processing user data for claim:', error);
+            claimsWithUsers.push({
+              ...claim,
+              user: { id: claim.user_id, email: 'Unknown', full_name: 'Unknown User' }
+            });
+          }
+        } else {
+          claimsWithUsers.push({
+            ...claim,
+            user: { id: 'unknown', email: 'Unknown', full_name: 'Unknown User' }
+          });
+        }
+      }
 
-      setClaims(data as unknown as ClaimRequest[]);
+      setClaims(claimsWithUsers as ClaimRequest[]);
     } catch (error) {
       console.error('Error fetching claims:', error);
       toast.error('Failed to load claim requests');
@@ -74,20 +122,87 @@ const ClaimRequestsTable = () => {
   };
 
   useEffect(() => {
-    fetchClaims(currentPage);
-  }, [currentPage]);
+    fetchClaims(currentPage, activeFilter);
+  }, [currentPage, activeFilter]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
+  const handleFilterChange = (status: string | null) => {
+    setActiveFilter(status);
+    setCurrentPage(1);
+  };
+
   const handleActionComplete = () => {
-    fetchClaims(currentPage);
+    fetchClaims(currentPage, activeFilter);
+  };
+  
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "pending":
+        return (
+          <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">
+            Pending
+          </span>
+        );
+      case "approved":
+        return (
+          <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+            Approved
+          </span>
+        );
+      case "rejected":
+        return (
+          <span className="px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">
+            Rejected
+          </span>
+        );
+      default:
+        return (
+          <span className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
+            Unknown
+          </span>
+        );
+    }
   };
 
   return (
     <div>
       <h3 className="text-xl font-semibold mb-4">Claim Requests</h3>
+      
+      <div className="mb-4">
+        <TabsList>
+          <TabsTrigger 
+            value="all" 
+            onClick={() => handleFilterChange(null)}
+            className={activeFilter === null ? "bg-primary text-primary-foreground" : ""}
+          >
+            All
+          </TabsTrigger>
+          <TabsTrigger 
+            value="pending" 
+            onClick={() => handleFilterChange("pending")}
+            className={activeFilter === "pending" ? "bg-primary text-primary-foreground" : ""}
+          >
+            Pending
+          </TabsTrigger>
+          <TabsTrigger 
+            value="approved" 
+            onClick={() => handleFilterChange("approved")}
+            className={activeFilter === "approved" ? "bg-primary text-primary-foreground" : ""}
+          >
+            Approved
+          </TabsTrigger>
+          <TabsTrigger 
+            value="rejected" 
+            onClick={() => handleFilterChange("rejected")}
+            className={activeFilter === "rejected" ? "bg-primary text-primary-foreground" : ""}
+          >
+            Rejected
+          </TabsTrigger>
+        </TabsList>
+      </div>
       
       {loading ? (
         <div className="flex justify-center p-8">
@@ -95,7 +210,11 @@ const ClaimRequestsTable = () => {
         </div>
       ) : claims.length === 0 ? (
         <div className="text-center p-8 bg-gray-50 dark:bg-gray-900 rounded-md">
-          <p className="text-gray-600 dark:text-gray-400">No pending claim requests found.</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            {activeFilter 
+              ? `No ${activeFilter} claim requests found.` 
+              : "No claim requests found."}
+          </p>
         </div>
       ) : (
         <>
@@ -116,24 +235,22 @@ const ClaimRequestsTable = () => {
                 {claims.map((claim) => (
                   <TableRow key={claim.id}>
                     <TableCell className="font-medium">{claim.company?.name || 'Unknown'}</TableCell>
-                    <TableCell>{claim.user?.full_name || claim.full_name || 'Unknown'}</TableCell>
+                    <TableCell>{claim.full_name}</TableCell>
                     <TableCell>{claim.job_title}</TableCell>
                     <TableCell>{claim.company_email}</TableCell>
                     <TableCell>{formatDistanceToNow(new Date(claim.created_at), { addSuffix: true })}</TableCell>
-                    <TableCell>
-                      <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">
-                        Pending
-                      </span>
-                    </TableCell>
+                    <TableCell>{getStatusBadge(claim.status)}</TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
-                        <ModerationActions 
-                          id={claim.id} 
-                          type="claim" 
-                          companyId={claim.company?.id}
-                          userId={claim.user?.id}
-                          onActionComplete={handleActionComplete} 
-                        />
+                        {claim.status === 'pending' && (
+                          <ModerationActions 
+                            id={claim.id} 
+                            type="claim" 
+                            companyId={claim.company?.id}
+                            userId={claim.user?.id}
+                            onActionComplete={handleActionComplete} 
+                          />
+                        )}
                         <a 
                           href={`/admin/users/${claim.user?.id}`} 
                           className="px-2 py-1 text-sm text-blue-600 hover:text-blue-800"
@@ -163,20 +280,23 @@ const ClaimRequestsTable = () => {
                   />
                 </PaginationItem>
                 
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <PaginationItem key={page}>
-                    <PaginationLink 
-                      href="#" 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(page);
-                      }}
-                      isActive={page === currentPage}
-                    >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  const pageNum = i + 1;
+                  return (
+                    <PaginationItem key={pageNum}>
+                      <PaginationLink 
+                        href="#" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlePageChange(pageNum);
+                        }}
+                        isActive={pageNum === currentPage}
+                      >
+                        {pageNum}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
                 
                 <PaginationItem>
                   <PaginationNext 

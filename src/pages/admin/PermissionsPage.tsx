@@ -8,6 +8,7 @@ import AdminsTable from "@/components/admin/permissions/AdminsTable";
 import VerifiedRepsTable from "@/components/admin/permissions/VerifiedRepsTable";
 import { User } from "@/types";
 import { useAuth } from "@/context/AuthContext";
+import { logAdminAction } from "@/utils/adminLogUtils";
 
 const PermissionsPage = () => {
   const { user: currentUser } = useAuth();
@@ -89,6 +90,19 @@ const PermissionsPage = () => {
         return;
       }
 
+      // Get the current role for logging
+      const { data: userData, error: getUserError } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', userId)
+        .single();
+        
+      if (getUserError) {
+        throw getUserError;
+      }
+      
+      const previousRole = userData.role;
+
       // Update the user role
       const { error } = await supabase
         .from("users")
@@ -99,6 +113,24 @@ const PermissionsPage = () => {
         toast.error("Failed to update user role");
         throw error;
       }
+
+      // Log the role change with the appropriate action type
+      let actionType: string;
+      
+      if (newRole === 'admin') {
+        actionType = 'promote_user';
+      } else if (previousRole === 'admin' && newRole !== 'admin') {
+        actionType = 'revoke_admin';
+      } else {
+        actionType = 'change_user_role';
+      }
+      
+      await logAdminAction({
+        action_type: actionType,
+        target_entity: 'user',
+        target_id: userId,
+        details: { previous_role: previousRole, new_role: newRole }
+      });
 
       toast.success(`User role updated to ${newRole}`);
       refetchUsers();
@@ -111,6 +143,15 @@ const PermissionsPage = () => {
   // Handle removing a verified rep from a company
   const handleRemoveVerifiedRep = async (claimId: string, companyId: string) => {
     try {
+      // Get previous status for logging
+      const { data: claimData } = await supabase
+        .from("claims")
+        .select("status")
+        .eq("id", claimId)
+        .single();
+        
+      const previousStatus = claimData?.status || 'approved';
+      
       // First update the claim status
       const { error: claimError } = await supabase
         .from("claims")
@@ -123,6 +164,12 @@ const PermissionsPage = () => {
       }
 
       // Then update the company verification status
+      const { data: companyData } = await supabase
+        .from('companies')
+        .select('is_verified, last_verified')
+        .eq('id', companyId)
+        .single();
+        
       const { error: companyError } = await supabase
         .from("companies")
         .update({ is_verified: false })
@@ -132,6 +179,25 @@ const PermissionsPage = () => {
         toast.error("Failed to update company verification");
         throw companyError;
       }
+
+      // Log the action
+      await logAdminAction({
+        action_type: 'edit_vendor_metadata', // Using this as the closest match
+        target_entity: 'company',
+        target_id: companyId,
+        details: { 
+          previous_status: {
+            is_verified: companyData?.is_verified || true,
+            last_verified: companyData?.last_verified || null
+          }, 
+          new_status: {
+            is_verified: false,
+            last_verified: null
+          },
+          related_claim_id: claimId,
+          claim_status_change: { from: previousStatus, to: 'revoked' }
+        }
+      });
 
       toast.success("Verified representative removed successfully");
       refetchClaims();

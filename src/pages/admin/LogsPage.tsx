@@ -5,7 +5,6 @@ import LogsHeader from "@/components/admin/logs/LogsHeader";
 import LogsFilterBar from "@/components/admin/logs/LogsFilterBar";
 import LogsTable from "@/components/admin/logs/LogsTable";
 import LogsErrorDisplay from "@/components/admin/logs/LogsErrorDisplay";
-import { logAdminAction } from "@/utils/adminLogUtils";
 import { toast } from "sonner";
 
 const LogsPage = () => {
@@ -31,23 +30,6 @@ const LogsPage = () => {
     window.location.reload();
   };
 
-  // Create a test log entry (for debugging)
-  const handleCreateTestLog = async () => {
-    try {
-      await logAdminAction({
-        action_type: 'test_action',
-        target_entity: 'test',
-        target_id: '00000000-0000-0000-0000-000000000000',
-        details: { test: true, timestamp: new Date().toISOString() }
-      });
-      toast.success("Test log created successfully");
-      handleRefresh();
-    } catch (error) {
-      console.error("Error creating test log:", error);
-      toast.error("Failed to create test log");
-    }
-  };
-
   return (
     <div className="p-6 space-y-6">
       {error && (
@@ -60,7 +42,6 @@ const LogsPage = () => {
       <LogsHeader 
         isFetching={isLoading} 
         handleRefresh={handleRefresh}
-        handleCreateTestLog={handleCreateTestLog}
       />
 
       <LogsFilterBar 

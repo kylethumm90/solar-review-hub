@@ -79,9 +79,19 @@ const UsersPage = () => {
         throw error;
       }
       
-      // Log the role change
+      // Log the role change with the appropriate action type
+      let actionType: string;
+      
+      if (newRole === 'admin') {
+        actionType = 'promote_user';
+      } else if (previousRole === 'admin' && newRole !== 'admin') {
+        actionType = 'revoke_admin';
+      } else {
+        actionType = 'change_user_role';
+      }
+      
       await logAdminAction({
-        action_type: 'change_user_role',
+        action_type: actionType,
         target_entity: 'user',
         target_id: userId,
         details: { previous_role: previousRole, new_role: newRole }

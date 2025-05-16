@@ -4,6 +4,24 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminLog } from '@/types/admin';
 
+// List of allowed action types to display
+const ALLOWED_ACTION_TYPES = [
+  'approve_vendor',
+  'deny_vendor',
+  'edit_vendor',
+  'delete_vendor',
+  'approve_review',
+  'reject_review',
+  'edit_review',
+  'approve_claim',
+  'reject_claim',
+  'promote_user',
+  'revoke_admin',
+  'change_user_role', 
+  'edit_vendor_metadata',
+  'verify_company'
+];
+
 export function useAdminLogs() {
   const [searchQuery, setSearchQuery] = useState("");
   const [actionType, setActionType] = useState<string | null>(null);
@@ -26,7 +44,10 @@ export function useAdminLogs() {
         `)
         .order("timestamp", { ascending: false });
       
-      // Apply filters
+      // Only fetch allowed action types
+      query = query.in("action_type", ALLOWED_ACTION_TYPES);
+      
+      // Apply additional filters
       if (actionType) {
         query = query.eq("action_type", actionType);
       }

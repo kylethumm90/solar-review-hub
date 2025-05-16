@@ -78,7 +78,7 @@ const PermissionsPage = () => {
           throw countError;
         }
           
-        if ((count === 1) && elevatedUsers?.find(u => u.id === userId)?.role === 'admin') {
+        if ((count === 1) && elevatedUsers?.some(u => u.id === userId && u.role === 'admin')) {
           toast.error("Cannot demote the only admin user");
           return;
         }

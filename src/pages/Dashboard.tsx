@@ -10,7 +10,7 @@ import AdminDiagnostics from '@/components/dashboard/AdminDiagnostics';
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { reviews, claims, isLoading } = useDashboardData();
+  const { reviews, claims, isLoading, hasErrors } = useDashboardData();
 
   return (
     <div className="container mx-auto py-6">
@@ -31,13 +31,13 @@ const Dashboard = () => {
           {/* Activity Summary and Recent Reviews Column */}
           <div className="lg:col-span-2 space-y-6">
             <ActivitySummary 
-              reviews={reviews as any[]} 
-              claims={claims as any[]}
-              isLoading={false}
+              reviews={reviews} 
+              claims={claims}
+              isLoading={isLoading}
             />
             <RecentReviews 
-              reviews={reviews as any[]}
-              isLoading={false}
+              reviews={reviews}
+              isLoading={isLoading}
             />
             
             {/* Admin Diagnostic Section */}
@@ -46,10 +46,10 @@ const Dashboard = () => {
           
           {/* Sidebar Column */}
           <div className="space-y-6">
-            <UserProfile isLoading={false} />
+            <UserProfile isLoading={isLoading} />
             <ClaimRequests 
-              claims={claims as any[]}
-              isLoading={false}
+              claims={claims}
+              isLoading={isLoading}
             />
             <AdminUpgrade />
           </div>

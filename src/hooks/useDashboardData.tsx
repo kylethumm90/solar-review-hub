@@ -21,7 +21,11 @@ export const useDashboardData = () => {
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching reviews:", error);
+      throw error;
+    }
+    
     return data || [];
   };
 
@@ -31,34 +35,19 @@ export const useDashboardData = () => {
     
     const { data: claimsData, error } = await supabase
       .from('claims')
-      .select('*')
+      .select(`
+        *,
+        company:companies(id, name)
+      `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
     
-    if (error) throw error;
-    
-    // If claims fetch succeeded, get company names in a separate query
-    const claimsWithCompanies = [];
-    
-    for (const claim of claimsData || []) {
-      if (claim.company_id) {
-        // Fetch company for this claim
-        const { data: companyData } = await supabase
-          .from('companies')
-          .select('id, name')
-          .eq('id', claim.company_id)
-          .single();
-          
-        claimsWithCompanies.push({
-          ...claim,
-          company: companyData
-        });
-      } else {
-        claimsWithCompanies.push(claim);
-      }
+    if (error) {
+      console.error("Error fetching claims:", error);
+      throw error;
     }
     
-    return claimsWithCompanies;
+    return claimsData || [];
   };
 
   // Use React Query hooks for data fetching with improved configuration

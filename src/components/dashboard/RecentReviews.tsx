@@ -36,6 +36,9 @@ const RecentReviews = ({ reviews, isLoading }: RecentReviewsProps) => {
       </div>
     );
   }
+
+  // Log reviews to help debug
+  console.log("Reviews in RecentReviews component:", reviews);
   
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
@@ -46,7 +49,7 @@ const RecentReviews = ({ reviews, isLoading }: RecentReviewsProps) => {
         </Button>
       </div>
       
-      {reviews.length > 0 ? (
+      {reviews && reviews.length > 0 ? (
         <div className="space-y-4">
           {reviews.slice(0, 3).map((review) => (
             <div key={review.id} className="border-b border-gray-200 dark:border-gray-700 pb-4 last:border-0">

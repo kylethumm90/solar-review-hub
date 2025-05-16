@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { Database } from '@supabase/supabase-js';
 
 export interface AdminLogPayload {
   action_type: string;

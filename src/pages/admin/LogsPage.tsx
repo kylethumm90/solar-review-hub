@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { useAdminLogs } from "@/hooks/useAdminLogs";
 import LogsHeader from "@/components/admin/logs/LogsHeader";
 import LogsFilterBar from "@/components/admin/logs/LogsFilterBar";

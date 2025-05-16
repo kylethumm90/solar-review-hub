@@ -9,6 +9,44 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_logs: {
+        Row: {
+          action_type: string
+          admin_user_id: string | null
+          details: Json | null
+          id: string
+          target_entity: string
+          target_id: string
+          timestamp: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_user_id?: string | null
+          details?: Json | null
+          id?: string
+          target_entity: string
+          target_id: string
+          timestamp?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_user_id?: string | null
+          details?: Json | null
+          id?: string
+          target_entity?: string
+          target_id?: string
+          timestamp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_logs_admin_user_id_fkey"
+            columns: ["admin_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       claims: {
         Row: {
           company_email: string
@@ -276,7 +314,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

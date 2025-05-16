@@ -1,73 +1,112 @@
+import React, { useEffect, useState } from 'react';
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+  useLocation,
+} from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
+import Dashboard from './pages/Dashboard';
+import LandingPage from './pages/LandingPage';
+import CompanyDetailsPage from './pages/CompanyDetailsPage';
+import ReviewPage from './pages/ReviewPage';
+import ProfilePage from './pages/ProfilePage';
+import PricingPage from './pages/PricingPage';
+import AdminLayout from './layouts/AdminLayout';
+import Admin from './pages/Admin';
+import UsersPage from './pages/admin/UsersPage';
+import CompaniesPage from './pages/admin/CompaniesPage';
+import ReviewsPage from './pages/admin/ReviewsPage';
+import ClaimsPage from './pages/admin/ClaimsPage';
+import SettingsPage from './pages/admin/SettingsPage';
+import PermissionsPage from './pages/admin/PermissionsPage';
+import { Toaster } from 'sonner';
+import TermsOfService from './pages/TermsOfService';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import CookiePolicy from './pages/CookiePolicy';
+import NotFound from './pages/NotFound';
+import { useToast } from "@/components/ui/use-toast"
+import { ToastAction } from "@/components/ui/toast"
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { Toaster } from "@/components/ui/toaster";
-import { ThemeProvider } from "@/context/ThemeContext";
-import { AuthProvider } from "@/context/AuthContext";
+// Import the new LogsPage
+import LogsPage from './pages/admin/LogsPage';
 
-import PublicLayout from "./layouts/PublicLayout";
-import ProtectedLayout from "./layouts/ProtectedLayout";
-import AdminLayout from "./layouts/AdminLayout";
+const App = () => {
+  const { user, isLoading } = useAuth();
+  const { toast } = useToast()
 
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Vendors from "./pages/Vendors";
-import VendorDetails from "./pages/VendorDetails";
-import Reviews from "./pages/Reviews";
-import ClaimVendor from "./pages/ClaimVendor";
-import Dashboard from "./pages/Dashboard";
-import Admin from "./pages/Admin";
-import NotFound from "./pages/NotFound";
-import UsersPage from "./pages/admin/UsersPage";
-import CompaniesPage from "./pages/admin/CompaniesPage";
-import PermissionsPage from "./pages/admin/PermissionsPage";
-import ClaimsPage from "./pages/admin/ClaimsPage";
-import ReviewsPage from "./pages/admin/ReviewsPage";
-import SettingsPage from "./pages/admin/SettingsPage";
+  useEffect(() => {
+    if (!isLoading && !user && window.location.pathname !== '/') {
+      // toast({
+      //   title: "You must be logged in to view this page.",
+      //   description: "Redirecting to landing page...",
+      //   action: <ToastAction altText="Goto schedule">Schedule</ToastAction>,
+      // })
+    }
+  }, [user, isLoading, toast]);
 
-const queryClient = new QueryClient();
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <p className="mt-4">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <Toaster />
-          <Routes>
-            {/* Public Routes */}
-            <Route element={<PublicLayout />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/vendors" element={<Vendors />} />
-              <Route path="/vendors/:id" element={<VendorDetails />} />
-              <Route path="/reviews/:vendorId" element={<Reviews />} />
-              <Route path="/claim/:vendorId" element={<ClaimVendor />} />
-            </Route>
-            
-            {/* Protected Routes (requires auth) */}
-            <Route element={<ProtectedLayout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-            </Route>
-            
-            {/* Admin Routes */}
-            <Route element={<AdminLayout />}>
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/admin/users" element={<UsersPage />} />
-              <Route path="/admin/companies" element={<CompaniesPage />} />
-              <Route path="/admin/permissions" element={<PermissionsPage />} />
-              <Route path="/admin/claims" element={<ClaimsPage />} />
-              <Route path="/admin/reviews" element={<ReviewsPage />} />
-              <Route path="/admin/settings" element={<SettingsPage />} />
-              <Route path="/admin/users/:userId" element={<div>User Details Page</div>} />
-            </Route>
+  return (
+    <>
+      <Router>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/cookies" element={<CookiePolicy />} />
+          
+          {/* Public routes that require authentication */}
+          <Route
+            path="/dashboard"
+            element={user ? <Dashboard /> : <Navigate to="/" />}
+          />
+          <Route
+            path="/companies/:companyId"
+            element={user ? <CompanyDetailsPage /> : <Navigate to="/" />}
+          />
+          <Route
+            path="/review/:companyId"
+            element={user ? <ReviewPage /> : <Navigate to="/" />}
+          />
+           <Route
+            path="/profile"
+            element={user ? <ProfilePage /> : <Navigate to="/" />}
+          />
+          <Route
+            path="/pricing"
+            element={user ? <PricingPage /> : <Navigate to="/" />}
+          />
 
-            {/* 404 Route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+          {/* Admin routes */}
+          <Route element={<AdminLayout />}>
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/users" element={<UsersPage />} />
+            <Route path="/admin/companies" element={<CompaniesPage />} />
+            <Route path="/admin/reviews" element={<ReviewsPage />} />
+            <Route path="/admin/claims" element={<ClaimsPage />} />
+            <Route path="/admin/settings" element={<SettingsPage />} />
+            <Route path="/admin/permissions" element={<PermissionsPage />} />
+            <Route path="/admin/logs" element={<LogsPage />} />
+          </Route>
+
+          {/* Catch-all route for 404 Not Found */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Router>
+      <Toaster />
+    </>
+  );
+};
 
 export default App;

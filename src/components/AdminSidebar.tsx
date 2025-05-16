@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Users, Building, Bell, Settings, Shield, FileText } from 'lucide-react';
+import { Home, Users, Building, Bell, Settings, Shield, FileText, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const AdminSidebar = () => {
@@ -31,6 +31,11 @@ const AdminSidebar = () => {
       name: "Reviews",
       href: "/admin/reviews",
       icon: FileText
+    },
+    {
+      name: "Logs",
+      href: "/admin/logs",
+      icon: Clock
     },
     {
       name: "Permissions",

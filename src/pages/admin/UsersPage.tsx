@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import UserTable from '@/components/admin/users/UserTable';
 import { Search } from 'lucide-react';
 import { toast } from 'sonner';
+import { logAdminAction } from '@/utils/adminLogUtils';
 
 const UsersPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -55,6 +56,20 @@ const UsersPage = () => {
 
   const handleRoleChange = async (userId: string, newRole: 'user' | 'verified_rep' | 'admin') => {
     try {
+      // Get the current role for logging
+      const { data: userData, error: getUserError } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', userId)
+        .single();
+        
+      if (getUserError) {
+        throw getUserError;
+      }
+      
+      const previousRole = userData.role;
+      
+      // Update the role
       const { error } = await supabase
         .from('users')
         .update({ role: newRole })
@@ -63,6 +78,14 @@ const UsersPage = () => {
       if (error) {
         throw error;
       }
+      
+      // Log the role change
+      await logAdminAction({
+        action_type: 'change_user_role',
+        target_entity: 'user',
+        target_id: userId,
+        details: { previous_role: previousRole, new_role: newRole }
+      });
       
       toast.success(`User role updated successfully to ${newRole}`);
       refetch();

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Company } from "@/types";
@@ -14,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { logAdminAction } from "@/utils/adminLogUtils";
 
 interface EditCompanyModalProps {
   company: Company;
@@ -52,6 +52,17 @@ const EditCompanyModal = ({
     setIsSubmitting(true);
 
     try {
+      // Capture original data for logging
+      const originalData = {
+        name: company.name,
+        type: company.type,
+        website: company.website,
+        description: company.description,
+        grade: company.grade,
+        logo_url: company.logo_url
+      };
+      
+      // Update the company
       const { error } = await supabase
         .from("companies")
         .update({
@@ -67,6 +78,17 @@ const EditCompanyModal = ({
       if (error) {
         throw error;
       }
+      
+      // Log the edit action
+      await logAdminAction({
+        action_type: 'edit_company',
+        target_entity: 'company',
+        target_id: company.id,
+        details: {
+          previous_values: originalData,
+          new_values: formData
+        }
+      });
 
       toast.success("Company updated successfully");
       onSave();

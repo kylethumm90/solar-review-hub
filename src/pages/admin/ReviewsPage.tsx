@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,7 +24,6 @@ interface EnhancedReviewData {
   rating_payment_reliability: number;
   rating_timeliness: number;
   rating_post_install_support: number;
-  user?: User;
 }
 
 const ReviewsPage = () => {
@@ -101,12 +99,18 @@ const ReviewsPage = () => {
   // Combine review data with user data
   useEffect(() => {
     if (reviewsData && usersData) {
-      const combinedReviews: Review[] = reviewsData.map(review => {
+      const combinedReviews = reviewsData.map(review => {
         const user = usersData.find(u => u.id === review.user_id);
+        // Convert to Review type explicitly
         return {
           ...review,
-          user
-        };
+          user,
+          // Ensure these are typed properly for the Review interface
+          review_title: review.review_title || undefined,
+          review_details: review.review_details || undefined,
+          verification_status: review.verification_status || undefined,
+          average_score: review.average_score || undefined,
+        } as Review;
       });
       setReviews(combinedReviews);
     }

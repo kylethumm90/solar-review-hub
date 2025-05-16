@@ -99,6 +99,12 @@ const ReviewModal = ({ reviewId, isOpen, onClose }: ReviewModalProps) => {
 
   const isLoading = isReviewLoading || isAnswersLoading || isUserLoading;
 
+  // Determine the reviewer name safely
+  const getReviewerName = () => {
+    if (!user) return "Unknown User";
+    return user.full_name || user.email || "Unknown User";
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -114,7 +120,7 @@ const ReviewModal = ({ reviewId, isOpen, onClose }: ReviewModalProps) => {
           <div className="space-y-6">
             <ReviewInfoHeader
               companyName={review?.company?.name}
-              reviewerName={user?.full_name || user?.email || "Unknown User"}
+              reviewerName={getReviewerName()}
               score={review?.average_score}
               title={review?.review_title}
             />

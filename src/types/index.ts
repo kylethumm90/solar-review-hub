@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   email: string;
@@ -37,7 +36,7 @@ export interface Review {
   review_title?: string;
   review_details?: string;
   average_score?: number;
-  verification_status?: 'pending' | 'approved' | 'rejected';
+  verification_status?: string; // Changed from specific union type to string to match database
   created_at: string;
   user?: User;
   company?: Company;

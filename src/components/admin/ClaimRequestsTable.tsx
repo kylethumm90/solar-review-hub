@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -15,6 +14,7 @@ type ClaimRequest = {
   company_email: string;
   created_at: string;
   status: string;
+  user_id: string; // Added this property to fix the TypeScript errors
   company: {
     id: string;
     name: string;
@@ -57,6 +57,7 @@ const ClaimRequestsTable = () => {
           company_email,
           created_at,
           status,
+          user_id,
           company:companies(id, name)
         `);
         
@@ -172,36 +173,34 @@ const ClaimRequestsTable = () => {
       <h3 className="text-xl font-semibold mb-4">Claim Requests</h3>
       
       <div className="mb-4">
-        <TabsList>
-          <TabsTrigger 
-            value="all" 
-            onClick={() => handleFilterChange(null)}
-            className={activeFilter === null ? "bg-primary text-primary-foreground" : ""}
-          >
-            All
-          </TabsTrigger>
-          <TabsTrigger 
-            value="pending" 
-            onClick={() => handleFilterChange("pending")}
-            className={activeFilter === "pending" ? "bg-primary text-primary-foreground" : ""}
-          >
-            Pending
-          </TabsTrigger>
-          <TabsTrigger 
-            value="approved" 
-            onClick={() => handleFilterChange("approved")}
-            className={activeFilter === "approved" ? "bg-primary text-primary-foreground" : ""}
-          >
-            Approved
-          </TabsTrigger>
-          <TabsTrigger 
-            value="rejected" 
-            onClick={() => handleFilterChange("rejected")}
-            className={activeFilter === "rejected" ? "bg-primary text-primary-foreground" : ""}
-          >
-            Rejected
-          </TabsTrigger>
-        </TabsList>
+        <Tabs value={activeFilter || "all"}>
+          <TabsList>
+            <TabsTrigger 
+              value="all" 
+              onClick={() => handleFilterChange(null)}
+            >
+              All
+            </TabsTrigger>
+            <TabsTrigger 
+              value="pending" 
+              onClick={() => handleFilterChange("pending")}
+            >
+              Pending
+            </TabsTrigger>
+            <TabsTrigger 
+              value="approved" 
+              onClick={() => handleFilterChange("approved")}
+            >
+              Approved
+            </TabsTrigger>
+            <TabsTrigger 
+              value="rejected" 
+              onClick={() => handleFilterChange("rejected")}
+            >
+              Rejected
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
       
       {loading ? (
@@ -247,12 +246,12 @@ const ClaimRequestsTable = () => {
                             id={claim.id} 
                             type="claim" 
                             companyId={claim.company?.id}
-                            userId={claim.user?.id}
+                            userId={claim.user_id}
                             onActionComplete={handleActionComplete} 
                           />
                         )}
                         <a 
-                          href={`/admin/users/${claim.user?.id}`} 
+                          href={`/admin/users/${claim.user_id}`} 
                           className="px-2 py-1 text-sm text-blue-600 hover:text-blue-800"
                           title="View User Profile"
                         >

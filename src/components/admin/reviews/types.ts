@@ -19,4 +19,12 @@ export type Review = {
   company_id: string;
   user?: ReviewUser;
   company?: ReviewCompany;
+  // Add other review fields as needed
+  rating_communication?: number;
+  rating_install_quality?: number;
+  rating_payment_reliability?: number;
+  rating_timeliness?: number;
+  rating_post_install_support?: number;
+  review_details?: string | null;
+  text_feedback?: string;
 };

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,7 +30,7 @@ export function useAdminReviews() {
           rating_payment_reliability,
           rating_timeliness,
           rating_post_install_support,
-          company:companies(id, name)
+          company:companies(id, name, description, website, type, is_verified, logo_url, grade, last_verified, created_at)
         `);
       
       // Apply status filter based on active tab
@@ -89,8 +88,20 @@ export function useAdminReviews() {
             id: user.id,
             email: user.email,
             full_name: user.full_name,
-            role: user.role || 'user', // Ensure role is always provided
-            created_at: user.created_at || new Date().toISOString() // Ensure created_at is always provided
+            role: user.role || 'user',
+            created_at: user.created_at || new Date().toISOString()
+          } : undefined,
+          company: review.company ? {
+            id: review.company.id,
+            name: review.company.name,
+            description: review.company.description || "",
+            website: review.company.website || "",
+            type: review.company.type || "",
+            is_verified: review.company.is_verified || false,
+            logo_url: review.company.logo_url,
+            grade: review.company.grade,
+            last_verified: review.company.last_verified,
+            created_at: review.company.created_at || new Date().toISOString()
           } : undefined,
           // Ensure these are typed properly for the Review interface
           review_title: review.review_title || null,

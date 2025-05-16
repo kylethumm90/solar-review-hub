@@ -77,7 +77,7 @@ export const useReviewQueue = (initialPage: number = 1, initialFilter: string | 
       const companyIds = reviewsData.map(review => review.company_id);
       const { data: companiesData, error: companiesError } = await supabase
         .from('companies')
-        .select('id, name')
+        .select('id, name, description, website, type, is_verified, logo_url, grade, last_verified, created_at')
         .in('id', companyIds);
       
       if (companiesError) {
@@ -102,13 +102,24 @@ export const useReviewQueue = (initialPage: number = 1, initialFilter: string | 
         
         return {
           ...review,
-          company: company ? { name: company.name } : undefined,
+          company: company ? { 
+            id: company.id,
+            name: company.name,
+            description: company.description || "",
+            website: company.website || "",
+            type: company.type || "",
+            is_verified: company.is_verified || false,
+            logo_url: company.logo_url,
+            grade: company.grade,
+            last_verified: company.last_verified,
+            created_at: company.created_at || new Date().toISOString()
+          } : undefined,
           user: user ? { 
             id: user.id,
             email: user.email, 
             full_name: user.full_name,
-            role: user.role || 'user', // Ensure role is always provided
-            created_at: user.created_at || new Date().toISOString() // Ensure created_at is always provided
+            role: user.role || 'user',
+            created_at: user.created_at || new Date().toISOString()
           } : undefined,
           // Ensure all required fields have default values if they're null
           text_feedback: review.text_feedback || "",

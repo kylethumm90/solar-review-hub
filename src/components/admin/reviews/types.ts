@@ -8,7 +8,16 @@ export type ReviewUser = {
 };
 
 export type ReviewCompany = {
+  id: string;
   name: string;
+  description: string;
+  website: string;
+  type: string;
+  is_verified: boolean;
+  logo_url?: string;
+  grade?: string;
+  last_verified?: string;
+  created_at: string;
 };
 
 export type Review = {

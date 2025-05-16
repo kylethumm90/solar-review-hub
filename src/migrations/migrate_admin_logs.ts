@@ -15,13 +15,16 @@ export const migrateAdminLogsConstraints = async () => {
       .limit(1)
       .then(async () => {
         // After a successful query to verify table access, run raw SQL
-        // Use a plain fetch request since we don't have the appropriate RPC methods in our type definitions
-        const response = await fetch(`${supabase.supabaseUrl}/rest/v1/rpc/exec_sql`, {
+        // Use a plain fetch request since we don't have direct access to protected properties
+        const SUPABASE_URL = "https://cmmposdobssorzcfduvl.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtbXBvc2RvYnNzb3J6Y2ZkdXZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNDk3OTMsImV4cCI6MjA2MjgyNTc5M30.cfPoWssxEEJy__11BTIPtinsqxeoOsLQ0sHoJ8ZAc80";
+        
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/exec_sql`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'apikey': supabase.supabaseKey,
-            'Authorization': `Bearer ${supabase.supabaseKey}`
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`
           },
           body: JSON.stringify({
             sql_query: `
@@ -63,13 +66,16 @@ export const migrateAdminLogsConstraints = async () => {
     }
 
     // Then, update the column to use the enum type
-    // Use a plain fetch request since we don't have the appropriate RPC methods in our type definitions
-    const alterResponse = await fetch(`${supabase.supabaseUrl}/rest/v1/rpc/exec_sql`, {
+    // Use a plain fetch request since we don't have direct access to protected properties
+    const SUPABASE_URL = "https://cmmposdobssorzcfduvl.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtbXBvc2RvYnNzb3J6Y2ZkdXZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNDk3OTMsImV4cCI6MjA2MjgyNTc5M30.cfPoWssxEEJy__11BTIPtinsqxeoOsLQ0sHoJ8ZAc80";
+    
+    const alterResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/exec_sql`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': supabase.supabaseKey,
-        'Authorization': `Bearer ${supabase.supabaseKey}`
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`
       },
       body: JSON.stringify({
         sql_query: `

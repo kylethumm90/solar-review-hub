@@ -43,7 +43,13 @@ export const useReviewQueue = (initialPage: number = 1, initialFilter: string | 
           verification_status,
           created_at,
           user_id,
-          company_id
+          company_id,
+          rating_communication,
+          rating_install_quality,
+          rating_payment_reliability,
+          rating_timeliness,
+          rating_post_install_support,
+          text_feedback
         `);
         
       if (status) {
@@ -102,11 +108,18 @@ export const useReviewQueue = (initialPage: number = 1, initialFilter: string | 
             id: user.id,
             email: user.email, 
             full_name: user.full_name
-          } : undefined
+          } : undefined,
+          // Ensure all required fields have default values if they're null
+          text_feedback: review.text_feedback || "",
+          rating_communication: review.rating_communication || 0,
+          rating_install_quality: review.rating_install_quality || 0,
+          rating_payment_reliability: review.rating_payment_reliability || 0,
+          rating_timeliness: review.rating_timeliness || 0,
+          rating_post_install_support: review.rating_post_install_support || 0
         };
       });
 
-      setReviews(combinedReviews);
+      setReviews(combinedReviews as Review[]);
     } catch (error) {
       console.error('Error fetching reviews:', error);
       toast.error('Failed to load reviews');

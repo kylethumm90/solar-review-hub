@@ -1,7 +1,7 @@
 
 import { useAdminSettings } from "@/hooks/useAdminSettings";
 import { SettingsGroup } from "@/components/admin/settings/SettingsGroup";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function SettingsPage() {
   const { 

@@ -1,7 +1,10 @@
+
 export type ReviewUser = {
   id: string;
   email: string;
   full_name: string;
+  role?: string;
+  created_at?: string;
 };
 
 export type ReviewCompany = {

@@ -1,219 +1,150 @@
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, RefreshCw, Eye } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter 
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-
-interface AdminLog {
-  id: string;
-  admin_user_id: string;
-  action_type: string;
-  target_entity: string;
-  target_id: string;
-  details: any;
-  timestamp: string;
-  admin_email?: string;
-  admin_name?: string;
-}
 
 const LogsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedLog, setSelectedLog] = useState<AdminLog | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const { data: logs, isLoading, refetch } = useQuery({
-    queryKey: ['admin-logs'],
+  const [actionTypeFilter, setActionTypeFilter] = useState<string>('');
+  
+  const { data: logs, isLoading, error } = useQuery({
+    queryKey: ['adminLogs'],
     queryFn: async () => {
-      // Fetch logs
-      const { data: logsData, error } = await supabase
+      const { data, error } = await supabase
         .from('admin_logs')
-        .select('*')
+        .select(`
+          *,
+          admin:admin_user_id (email, full_name)
+        `)
         .order('timestamp', { ascending: false });
         
       if (error) throw error;
-      
-      if (!logsData || logsData.length === 0) {
-        return [];
-      }
-      
-      // Get unique admin user IDs
-      const adminUserIds = [...new Set(logsData.map(log => log.admin_user_id))];
-      
-      // Fetch admin user details
-      const { data: adminUsers } = await supabase
-        .from('users')
-        .select('id, email, full_name')
-        .in('id', adminUserIds);
-      
-      // Combine logs with admin user details
-      const enhancedLogs = logsData.map(log => {
-        const adminUser = adminUsers?.find(user => user.id === log.admin_user_id);
-        return {
-          ...log,
-          admin_email: adminUser?.email,
-          admin_name: adminUser?.full_name
-        };
-      });
-      
-      return enhancedLogs as AdminLog[];
+      return data;
     }
   });
-
-  const filteredLogs = logs?.filter(log => {
-    if (!searchTerm) return true;
-    
-    const searchTermLower = searchTerm.toLowerCase();
-    return (
-      log.action_type.toLowerCase().includes(searchTermLower) ||
-      log.target_entity.toLowerCase().includes(searchTermLower) ||
-      log.admin_email?.toLowerCase().includes(searchTermLower) ||
-      log.admin_name?.toLowerCase().includes(searchTermLower)
-    );
-  });
-
-  const handleViewDetails = (log: AdminLog) => {
-    setSelectedLog(log);
-    setIsModalOpen(true);
-  };
   
-  const getActionColor = (action: string) => {
-    if (action.startsWith('approve')) return 'green';
-    if (action.startsWith('reject')) return 'red';
-    if (action.startsWith('edit')) return 'blue';
-    if (action.startsWith('change')) return 'orange';
-    if (action.startsWith('verify')) return 'green';
-    return 'gray';
-  };
-
-  return (
-    <div className="p-6">
-      <div className="mb-6 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Admin Action Logs</h1>
-        <div className="flex items-center space-x-4">
-          <div className="relative w-64">
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search logs..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8"
-            />
-          </div>
-          <Button variant="outline" onClick={() => refetch()} title="Refresh Logs">
-            <RefreshCw className="h-4 w-4" />
-          </Button>
+  // Get unique action types for filtering
+  const actionTypes = logs ? [...new Set(logs.map(log => log.action_type))] : [];
+  
+  // Filter logs based on search term and action type
+  const filteredLogs = logs?.filter(log => {
+    const matchesSearch = !searchTerm || 
+      log.action_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.target_entity.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.target_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (log.admin?.email && log.admin.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (log.admin?.full_name && log.admin.full_name.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+    const matchesActionType = !actionTypeFilter || log.action_type === actionTypeFilter;
+    
+    return matchesSearch && matchesActionType;
+  });
+  
+  if (error) {
+    return (
+      <div className="p-6 max-w-full">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          Error loading logs: {error.message}
         </div>
       </div>
+    );
+  }
+  
+  return (
+    <div className="p-6 max-w-full">
+      <h1 className="text-2xl font-bold mb-6">Admin Action Logs</h1>
       
-      {isLoading ? (
-        <div className="flex justify-center my-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="flex-grow">
+          <Input
+            placeholder="Search logs..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full"
+          />
         </div>
-      ) : filteredLogs?.length === 0 ? (
-        <div className="text-center py-12 border rounded-md">
-          <p className="text-gray-500">No admin logs found</p>
+        <div className="w-full md:w-64">
+          <select
+            value={actionTypeFilter}
+            onChange={(e) => setActionTypeFilter(e.target.value)}
+            className="w-full border rounded px-3 py-2 bg-background"
+          >
+            <option value="">All Action Types</option>
+            {actionTypes.map((type) => (
+              <option key={type} value={type}>{type.replace(/_/g, ' ')}</option>
+            ))}
+          </select>
         </div>
-      ) : (
-        <div className="border rounded-md overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Action</TableHead>
-                <TableHead>Admin</TableHead>
-                <TableHead>Target Entity</TableHead>
-                <TableHead>Target ID</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Details</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredLogs?.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell>
-                    <Badge variant="outline" className={`text-${getActionColor(log.action_type)}-600 bg-${getActionColor(log.action_type)}-50 border-${getActionColor(log.action_type)}-200`}>
-                      {log.action_type.replace(/_/g, ' ')}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{log.admin_name || log.admin_email || log.admin_user_id}</TableCell>
-                  <TableCell>{log.target_entity}</TableCell>
-                  <TableCell>
-                    <span className="text-xs font-mono truncate max-w-[120px] inline-block">
-                      {log.target_id}
-                    </span>
-                  </TableCell>
-                  <TableCell>{format(new Date(log.timestamp), 'MMM d, yyyy HH:mm')}</TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="sm" onClick={() => handleViewDetails(log)}>
-                      <Eye className="h-4 w-4 mr-1" />
-                      View
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+        <Button 
+          variant="outline"
+          onClick={() => {
+            setSearchTerm('');
+            setActionTypeFilter('');
+          }}
+        >
+          Reset Filters
+        </Button>
+      </div>
       
-      {/* Details Modal */}
-      {selectedLog && (
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Admin Action Details</DialogTitle>
-            </DialogHeader>
-            
-            <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Action</p>
-                  <p className="text-lg font-semibold">{selectedLog.action_type.replace(/_/g, ' ')}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Date</p>
-                  <p>{format(new Date(selectedLog.timestamp), 'MMM d, yyyy HH:mm:ss')}</p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Admin</p>
-                  <p>{selectedLog.admin_name || selectedLog.admin_email || selectedLog.admin_user_id}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Target</p>
-                  <p>{selectedLog.target_entity} ({selectedLog.target_id})</p>
-                </div>
-              </div>
-              
-              <div>
-                <p className="text-sm font-medium text-gray-500 mb-2">Details</p>
-                <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-md overflow-auto max-h-96">
-                  <pre className="text-xs whitespace-pre-wrap">
-                    {JSON.stringify(selectedLog.details, null, 2)}
-                  </pre>
-                </div>
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button onClick={() => setIsModalOpen(false)}>Close</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+      <div className="rounded-md border">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50">
+              <tr>
+                <th className="px-4 py-3 text-left font-medium">Action Type</th>
+                <th className="px-4 py-3 text-left font-medium">Admin</th>
+                <th className="px-4 py-3 text-left font-medium">Target</th>
+                <th className="px-4 py-3 text-left font-medium">Entity</th>
+                <th className="px-4 py-3 text-left font-medium">Date</th>
+                <th className="px-4 py-3 text-left font-medium">Details</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {isLoading ? (
+                [...Array(5)].map((_, i) => (
+                  <tr key={i}>
+                    {[...Array(6)].map((_, j) => (
+                      <td key={j} className="px-4 py-3">
+                        <Skeleton className="h-5 w-full" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : filteredLogs && filteredLogs.length > 0 ? (
+                filteredLogs.map((log) => (
+                  <tr key={log.id}>
+                    <td className="px-4 py-3">{log.action_type.replace(/_/g, ' ')}</td>
+                    <td className="px-4 py-3">{log.admin?.email || 'Unknown'}</td>
+                    <td className="px-4 py-3">{log.target_id.slice(0, 8)}...</td>
+                    <td className="px-4 py-3">{log.target_entity}</td>
+                    <td className="px-4 py-3">{format(new Date(log.timestamp), 'MMM d, yyyy HH:mm')}</td>
+                    <td className="px-4 py-3">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => alert(JSON.stringify(log.details, null, 2))}
+                      >
+                        View
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-4 py-3 text-center">
+                    No logs found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };

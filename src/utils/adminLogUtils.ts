@@ -1,12 +1,13 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { Database } from '@supabase/supabase-js';
 
 export interface AdminLogPayload {
   action_type: string;
   target_entity: string;
   target_id: string;
-  details?: object;
+  details?: Record<string, any>;
 }
 
 /**
@@ -25,13 +26,13 @@ export const logAdminAction = async ({
     return { error: new Error('No user found') };
   }
   
-  return supabase.from('admin_logs').insert([{
+  return supabase.from('admin_logs').insert({
     admin_user_id: user.id,
     action_type,
     target_entity,
     target_id,
     details
-  }]);
+  });
 };
 
 /**
@@ -51,13 +52,13 @@ export const useAdminLogger = () => {
       return { error: new Error('No user found') };
     }
     
-    return supabase.from('admin_logs').insert([{
+    return supabase.from('admin_logs').insert({
       admin_user_id: user.id,
       action_type,
       target_entity,
       target_id,
       details
-    }]);
+    });
   };
   
   return { logAction };

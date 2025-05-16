@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import {
   BrowserRouter as Router,
@@ -26,15 +27,14 @@ import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import CookiePolicy from './pages/CookiePolicy';
 import NotFound from './pages/NotFound';
-import { useToast } from "@/components/ui/use-toast"
-import { ToastAction } from "@/components/ui/toast"
+import { useToast } from '@/components/ui/use-toast';
 
-// Import the new LogsPage
+// Import the LogsPage
 import LogsPage from './pages/admin/LogsPage';
 
 const App = () => {
   const { user, isLoading } = useAuth();
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!isLoading && !user && window.location.pathname !== '/') {

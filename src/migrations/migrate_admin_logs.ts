@@ -8,45 +8,52 @@ import { supabase } from '@/integrations/supabase/client';
 export const migrateAdminLogsConstraints = async () => {
   try {
     // First, let's create an enum type for allowed action types
-    const { error: createEnumError } = await supabase.rpc('execute_sql', {
-      sql: `
-        DO $$
-        BEGIN
-          IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'admin_action_type') THEN
-            CREATE TYPE admin_action_type AS ENUM (
-              'approve_vendor',
-              'deny_vendor',
-              'edit_vendor',
-              'delete_vendor',
-              'approve_review',
-              'reject_review',
-              'edit_review',
-              'approve_claim',
-              'reject_claim',
-              'promote_user',
-              'revoke_admin',
-              'change_user_role',
-              'edit_vendor_metadata',
-              'verify_company'
-            );
-          END IF;
-        END
-        $$;
-      `
-    });
+    // We need to use raw SQL since this is a complex database operation
+    const { error: createEnumError } = await supabase
+      .from('_migrations')
+      .insert({
+        name: 'create_admin_action_type_enum',
+        sql: `
+          DO $$
+          BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'admin_action_type') THEN
+              CREATE TYPE admin_action_type AS ENUM (
+                'approve_vendor',
+                'deny_vendor',
+                'edit_vendor',
+                'delete_vendor',
+                'approve_review',
+                'reject_review',
+                'edit_review',
+                'approve_claim',
+                'reject_claim',
+                'promote_user',
+                'revoke_admin',
+                'change_user_role',
+                'edit_vendor_metadata',
+                'verify_company'
+              );
+            END IF;
+          END
+          $$;
+        `
+      });
 
     if (createEnumError) {
       throw new Error(`Failed to create admin_action_type enum: ${createEnumError.message}`);
     }
 
     // Then, update the column to use the enum type
-    const { error: alterTableError } = await supabase.rpc('execute_sql', {
-      sql: `
-        ALTER TABLE admin_logs
-        ALTER COLUMN action_type TYPE admin_action_type 
-        USING action_type::admin_action_type;
-      `
-    });
+    const { error: alterTableError } = await supabase
+      .from('_migrations')
+      .insert({
+        name: 'alter_admin_logs_action_type',
+        sql: `
+          ALTER TABLE admin_logs
+          ALTER COLUMN action_type TYPE admin_action_type 
+          USING action_type::admin_action_type;
+        `
+      });
 
     if (alterTableError) {
       throw new Error(`Failed to update action_type column: ${alterTableError.message}`);

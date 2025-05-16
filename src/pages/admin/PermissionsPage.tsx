@@ -119,7 +119,7 @@ const PermissionsPage = () => {
       
       if (newRole === 'admin') {
         actionType = 'promote_user';
-      } else if (previousRole === 'admin' && newRole !== 'admin') {
+      } else if (previousRole === 'admin') {
         actionType = 'revoke_admin';
       } else {
         actionType = 'change_user_role';

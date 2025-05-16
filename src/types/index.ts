@@ -34,6 +34,10 @@ export interface Review {
   rating_timeliness: number;
   rating_post_install_support: number;
   text_feedback: string;
+  review_title?: string;
+  review_details?: string;
+  average_score?: number;
+  verification_status?: 'pending' | 'approved' | 'rejected';
   created_at: string;
   user?: User;
   company?: Company;

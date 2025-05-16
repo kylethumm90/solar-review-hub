@@ -4,7 +4,7 @@ export type ReviewUser = {
   email: string;
   full_name: string;
   role: 'user' | 'verified_rep' | 'admin';
-  created_at?: string;
+  created_at: string;
 };
 
 export type ReviewCompany = {

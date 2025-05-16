@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -89,7 +88,7 @@ export const useReviewQueue = (initialPage: number = 1, initialFilter: string | 
       const userIds = reviewsData.map(review => review.user_id);
       const { data: usersData, error: usersError } = await supabase
         .from('users')
-        .select('id, email, full_name, role')
+        .select('id, email, full_name, role, created_at')
         .in('id', userIds);
       
       if (usersError) {
@@ -108,7 +107,8 @@ export const useReviewQueue = (initialPage: number = 1, initialFilter: string | 
             id: user.id,
             email: user.email, 
             full_name: user.full_name,
-            role: user.role || 'user' // Ensure role is always provided
+            role: user.role || 'user', // Ensure role is always provided
+            created_at: user.created_at || new Date().toISOString() // Ensure created_at is always provided
           } : undefined,
           // Ensure all required fields have default values if they're null
           text_feedback: review.text_feedback || "",

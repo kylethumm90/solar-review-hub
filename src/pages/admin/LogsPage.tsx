@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -10,9 +10,49 @@ import { toast } from 'sonner';
 import { RefreshCw } from 'lucide-react';
 import { logAdminAction } from '@/utils/adminLogUtils';
 
+// Type definition for admin log
+interface AdminLog {
+  id: string;
+  admin_user_id: string;
+  action_type: string;
+  target_entity: string;
+  target_id: string;
+  details?: Record<string, any>;
+  timestamp: string;
+  admin?: {
+    email?: string;
+    full_name?: string;
+  };
+}
+
 const LogsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [actionTypeFilter, setActionTypeFilter] = useState<string>('');
+  const [isInitialized, setIsInitialized] = useState(false);
+  
+  // Log page view on component mount
+  useEffect(() => {
+    const logPageView = async () => {
+      if (!isInitialized) {
+        try {
+          await logAdminAction({
+            action_type: 'PAGE_VIEW',
+            target_entity: 'admin_logs',
+            target_id: `logs_page_${Date.now()}`,
+            details: {
+              page: '/admin/logs',
+              timestamp: new Date().toISOString()
+            }
+          });
+          setIsInitialized(true);
+        } catch (error) {
+          console.error('Failed to log page view:', error);
+        }
+      }
+    };
+    
+    logPageView();
+  }, [isInitialized]);
   
   const { 
     data: logs, 
@@ -25,6 +65,15 @@ const LogsPage = () => {
     queryFn: async () => {
       try {
         console.log('Fetching admin logs...');
+        const { data: sessionData } = await supabase.auth.getSession();
+        
+        if (!sessionData.session) {
+          throw new Error('No authenticated session found');
+        }
+        
+        // First, check if the user can access admin logs
+        console.log('Attempting to fetch admin logs as user:', sessionData.session.user.id);
+        
         const { data, error } = await supabase
           .from('admin_logs')
           .select(`
@@ -38,40 +87,17 @@ const LogsPage = () => {
           throw error;
         }
         
-        console.log('Admin logs fetched:', data);
-        
-        // If there are no logs, let's create a sample one for testing
-        if (data && data.length === 0) {
-          console.log('No logs found, creating a test log...');
-          // Log the page view as an admin action
-          await logAdminAction({
-            action_type: 'VIEW_LOGS',
-            target_entity: 'admin_logs',
-            target_id: 'page_view',
-            details: { page: 'admin/logs', timestamp: new Date().toISOString() }
-          });
-          
-          // Refetch the logs after adding the test log
-          const { data: refreshedData, error: refreshError } = await supabase
-            .from('admin_logs')
-            .select(`
-              *,
-              admin:admin_user_id (email, full_name)
-            `)
-            .order('timestamp', { ascending: false });
-            
-          if (refreshError) throw refreshError;
-          return refreshedData;
-        }
-        
-        return data;
+        console.log('Admin logs fetched successfully, count:', data?.length ?? 0);
+        return data as AdminLog[];
       } catch (err) {
         console.error('Error in logs query function:', err);
         throw err;
       }
     },
-    staleTime: 30000, // Consider data stale after 30 seconds
-    refetchOnWindowFocus: true
+    staleTime: 15000, // Consider data stale after 15 seconds
+    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchOnWindowFocus: true,
+    retry: 1
   });
   
   // Get unique action types for filtering
@@ -102,7 +128,7 @@ const LogsPage = () => {
       const result = await logAdminAction({
         action_type: 'TEST_LOG',
         target_entity: 'admin_logs',
-        target_id: 'manual_test',
+        target_id: `manual_test_${Date.now()}`,
         details: { 
           created_by: 'admin_user', 
           timestamp: new Date().toISOString(),
@@ -114,7 +140,7 @@ const LogsPage = () => {
         toast.error(`Failed to create test log: ${result.error.message}`);
       } else {
         toast.success('Test log created successfully');
-        refetch();
+        setTimeout(() => refetch(), 1000); // Wait a moment before refetching
       }
     } catch (err) {
       console.error('Error creating test log:', err);
@@ -128,6 +154,9 @@ const LogsPage = () => {
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
           <div className="font-bold">Error loading logs</div>
           <div>{error instanceof Error ? error.message : 'Unknown error occurred'}</div>
+          <pre className="mt-2 text-xs whitespace-pre-wrap overflow-auto max-h-40">
+            {error instanceof Error && error.stack ? error.stack : 'No stack trace available'}
+          </pre>
         </div>
         <Button onClick={() => refetch()} className="mt-2">
           <RefreshCw className="h-4 w-4 mr-2" /> Try Again
@@ -152,6 +181,7 @@ const LogsPage = () => {
           <Button
             variant="default"
             onClick={handleCreateTestLog}
+            disabled={isFetching}
           >
             Create Test Log
           </Button>

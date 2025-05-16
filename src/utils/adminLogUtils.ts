@@ -20,13 +20,21 @@ export const logAdminAction = async ({
   details,
 }: AdminLogPayload) => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     
-    if (!user) {
-      console.error('No user found when attempting to log admin action');
-      toast.error('Failed to log admin action: No authenticated user found');
-      return { error: new Error('No user found') };
+    if (sessionError) {
+      console.error('Error getting session:', sessionError);
+      toast.error(`Authentication error: ${sessionError.message}`);
+      return { error: sessionError };
     }
+    
+    if (!sessionData.session?.user) {
+      console.error('No authenticated user found when attempting to log admin action');
+      toast.error('Failed to log admin action: No authenticated user found');
+      return { error: new Error('No authenticated user found') };
+    }
+    
+    const user = sessionData.session.user;
     
     console.log('Attempting to log admin action:', {
       admin_user_id: user.id,
@@ -35,13 +43,16 @@ export const logAdminAction = async ({
       target_id,
     });
     
+    // Convert target_id to string if it's not already
+    const stringTargetId = typeof target_id === 'string' ? target_id : String(target_id);
+    
     const { data, error } = await supabase.from('admin_logs').insert({
       admin_user_id: user.id,
       action_type,
       target_entity,
-      target_id,
+      target_id: stringTargetId,
       details
-    });
+    }).select();
     
     if (error) {
       console.error('Error logging admin action:', error);
@@ -50,6 +61,7 @@ export const logAdminAction = async ({
     }
     
     console.log('Admin action logged successfully:', data);
+    toast.success('Admin action logged successfully');
     return { data, error: null };
   } catch (err) {
     console.error('Unexpected error in logAdminAction:', err);
@@ -74,7 +86,7 @@ export const useAdminLogger = () => {
       if (!user) {
         console.error('No user found when attempting to log admin action');
         toast.error('Failed to log admin action: No authenticated user found');
-        return { error: new Error('No user found') };
+        return { error: new Error('No authenticated user found') };
       }
       
       console.log('Attempting to log admin action via hook:', {
@@ -84,13 +96,16 @@ export const useAdminLogger = () => {
         target_id,
       });
       
+      // Convert target_id to string if it's not already
+      const stringTargetId = typeof target_id === 'string' ? target_id : String(target_id);
+      
       const { data, error } = await supabase.from('admin_logs').insert({
         admin_user_id: user.id,
         action_type,
         target_entity,
-        target_id,
+        target_id: stringTargetId,
         details
-      });
+      }).select();
       
       if (error) {
         console.error('Error logging admin action:', error);
@@ -99,6 +114,7 @@ export const useAdminLogger = () => {
       }
       
       console.log('Admin action logged successfully:', data);
+      toast.success('Admin action logged successfully');
       return { data, error: null };
     } catch (err) {
       console.error('Unexpected error in useAdminLogger.logAction:', err);

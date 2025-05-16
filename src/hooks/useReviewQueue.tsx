@@ -89,7 +89,7 @@ export const useReviewQueue = (initialPage: number = 1, initialFilter: string | 
       const userIds = reviewsData.map(review => review.user_id);
       const { data: usersData, error: usersError } = await supabase
         .from('users')
-        .select('id, email, full_name')
+        .select('id, email, full_name, role')
         .in('id', userIds);
       
       if (usersError) {
@@ -107,7 +107,8 @@ export const useReviewQueue = (initialPage: number = 1, initialFilter: string | 
           user: user ? { 
             id: user.id,
             email: user.email, 
-            full_name: user.full_name
+            full_name: user.full_name,
+            role: user.role || 'user' // Ensure role is always provided
           } : undefined,
           // Ensure all required fields have default values if they're null
           text_feedback: review.text_feedback || "",

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,7 +63,7 @@ export function useAdminReviews() {
       const userIds = reviewsData.map(review => review.user_id);
       const { data, error } = await supabase
         .from("users")
-        .select("id, full_name, email")
+        .select("id, full_name, email, role")
         .in("id", userIds);
       
       if (error) {
@@ -88,7 +87,8 @@ export function useAdminReviews() {
           user: user ? {
             id: user.id,
             email: user.email,
-            full_name: user.full_name
+            full_name: user.full_name,
+            role: user.role || 'user' // Ensure role is always provided
           } : undefined,
           // Ensure these are typed properly for the Review interface
           review_title: review.review_title || null,

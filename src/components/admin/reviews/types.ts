@@ -3,7 +3,7 @@ export type ReviewUser = {
   id: string;
   email: string;
   full_name: string;
-  role?: 'user' | 'verified_rep' | 'admin';
+  role: 'user' | 'verified_rep' | 'admin';
   created_at?: string;
 };
 

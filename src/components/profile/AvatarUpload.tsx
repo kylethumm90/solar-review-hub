@@ -81,13 +81,22 @@ const AvatarUpload = ({ onUploadComplete, existingUrl }: AvatarUploadProps) => {
         .getPublicUrl(fileName);
       
       // Update the user's avatar_url in the users table
-      const { error: updateError } = await supabase
+      const { error: updateDbError } = await supabase
         .from('users')
         .update({ avatar_url: publicUrl })
         .eq('id', user.id);
       
-      if (updateError) {
-        throw updateError;
+      if (updateDbError) {
+        throw updateDbError;
+      }
+      
+      // Update the user's metadata with the avatar_url
+      const { error: updateUserError } = await supabase.auth.updateUser({
+        data: { avatar_url: publicUrl }
+      });
+      
+      if (updateUserError) {
+        throw updateUserError;
       }
       
       toast.success('Profile picture uploaded successfully');

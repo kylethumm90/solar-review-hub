@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -54,14 +53,20 @@ export default function DashboardProfilePage() {
 
     try {
       const { data, error } = await supabase.auth.updateUser({
-        data: { full_name: fullName }
+        data: { 
+          full_name: fullName,
+          avatar_url: avatarUrl 
+        }
       });
 
       if (error) throw error;
 
       const { error: updateError } = await supabase
         .from('users')
-        .update({ full_name: fullName })
+        .update({ 
+          full_name: fullName,
+          avatar_url: avatarUrl 
+        })
         .eq('id', user?.id);
 
       if (updateError) throw updateError;
@@ -73,7 +78,8 @@ export default function DashboardProfilePage() {
             ...prevUser,
             user_metadata: {
               ...prevUser.user_metadata,
-              full_name: fullName
+              full_name: fullName,
+              avatar_url: avatarUrl
             }
           };
         });
@@ -128,21 +134,17 @@ export default function DashboardProfilePage() {
   const handleAvatarUploadComplete = async (url: string) => {
     setAvatarUrl(url);
     
-    // Update user metadata
-    try {
-      setUser(prevUser => {
-        if (!prevUser) return null;
-        return {
-          ...prevUser,
-          user_metadata: {
-            ...prevUser.user_metadata,
-            avatar_url: url
-          }
-        };
-      });
-    } catch (error) {
-      console.error("Error updating user avatar metadata:", error);
-    }
+    // Update user metadata in the auth context
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      return {
+        ...prevUser,
+        user_metadata: {
+          ...prevUser.user_metadata,
+          avatar_url: url
+        }
+      };
+    });
   };
 
   return (

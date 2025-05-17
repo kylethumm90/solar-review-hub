@@ -71,7 +71,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     setUser(prevUser => updateUserWithRole(
                       prevUser,
                       newUserData.role as 'user' | 'verified_rep' | 'admin',
-                      newUserData.full_name
+                      newUserData.full_name,
+                      newUserData.avatar_url
                     ));
                   }
                 }
@@ -81,7 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setUser(prevUser => updateUserWithRole(
                 prevUser,
                 userData.role as 'user' | 'verified_rep' | 'admin',
-                userData.full_name
+                userData.full_name,
+                userData.avatar_url
               ));
             }
           } catch (err) {
@@ -132,7 +134,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setUser(prevUser => updateUserWithRole(
                   prevUser,
                   userData.role as 'user' | 'verified_rep' | 'admin',
-                  userData.full_name
+                  userData.full_name,
+                  userData.avatar_url
                 ));
               }
             } catch (err) {

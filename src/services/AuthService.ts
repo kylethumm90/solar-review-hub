@@ -60,7 +60,7 @@ export const fetchUserData = async (userId: string) => {
   try {
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('role, full_name')
+      .select('role, full_name, avatar_url')
       .eq('id', userId)
       .single();
     
@@ -102,7 +102,8 @@ export const createUserInDatabase = async (
 export const updateUserWithRole = (
   user: UserWithRole | null, 
   role: 'user' | 'verified_rep' | 'admin',
-  fullName: string
+  fullName: string,
+  avatarUrl?: string
 ): UserWithRole | null => {
   if (!user) return null;
   
@@ -111,7 +112,8 @@ export const updateUserWithRole = (
     user_metadata: {
       ...user.user_metadata,
       role,
-      full_name: fullName
+      full_name: fullName,
+      avatar_url: avatarUrl || user.user_metadata?.avatar_url
     }
   };
 };

@@ -21,12 +21,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserWithRole | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  // Add this flag to prevent multiple fetch attempts in quick succession
+  const [isProcessingAuth, setIsProcessingAuth] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
 
     async function getSession() {
+      if (isProcessingAuth) return; // Prevent multiple concurrent auth checks
+      
       setIsLoading(true);
+      setIsProcessingAuth(true);
+      
       try {
         // Get the current session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -34,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (sessionError || !session) {
           if (isMounted) {
             setIsLoading(false);
+            setIsProcessingAuth(false);
           }
           return;
         }
@@ -96,6 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } finally {
         if (isMounted) {
           setIsLoading(false);
+          setIsProcessingAuth(false);
         }
       }
     }
@@ -103,7 +111,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     getSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
+      async (event, newSession) => {
+        console.log('Auth state changed:', event);
+        
         if (isMounted) {
           setSession(newSession);
           setUser(newSession?.user as UserWithRole || null);
@@ -112,7 +122,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (newSession?.user && isMounted) {
           // Use setTimeout to avoid Supabase auth deadlock
           setTimeout(async () => {
-            if (!isMounted) return;
+            if (!isMounted || isProcessingAuth) return;
+            
+            setIsProcessingAuth(true);
             
             try {
               // Fetch user data
@@ -141,12 +153,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               }
             } catch (err) {
               console.error('Unexpected error in onAuthStateChange:', err);
+            } finally {
+              if (isMounted) {
+                setIsProcessingAuth(false);
+                setIsLoading(false);
+              }
             }
           }, 0);
-        }
-        
-        if (isMounted) {
-          setIsLoading(false);
+        } else {
+          if (isMounted) {
+            setIsProcessingAuth(false);
+            setIsLoading(false);
+          }
         }
       }
     );

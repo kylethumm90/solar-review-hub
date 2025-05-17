@@ -22,10 +22,11 @@ export const signIn = async (email: string, password: string) => {
 
 export const signInWithProvider = async (provider: 'google') => {
   try {
+    // Use a simpler redirect URL without '/auth/callback' to prevent loops
     const response = await supabase.auth.signInWithOAuth({ 
       provider,
       options: {
-        redirectTo: window.location.origin + '/auth/callback'
+        redirectTo: window.location.origin
       }
     });
     

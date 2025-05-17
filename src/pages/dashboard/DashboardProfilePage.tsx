@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { Mail, User, Lock } from 'lucide-react';
+import AvatarUpload from '@/components/profile/AvatarUpload';
 
 export default function DashboardProfilePage() {
   const { user, isLoading, setUser } = useAuth();
@@ -29,6 +30,7 @@ export default function DashboardProfilePage() {
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [fullName, setFullName] = useState(user?.user_metadata?.full_name || '');
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(user?.user_metadata?.avatar_url);
 
   // Password change states
   const [currentPassword, setCurrentPassword] = useState('');
@@ -123,6 +125,26 @@ export default function DashboardProfilePage() {
     }
   };
 
+  const handleAvatarUploadComplete = async (url: string) => {
+    setAvatarUrl(url);
+    
+    // Update user metadata
+    try {
+      setUser(prevUser => {
+        if (!prevUser) return null;
+        return {
+          ...prevUser,
+          user_metadata: {
+            ...prevUser.user_metadata,
+            avatar_url: url
+          }
+        };
+      });
+    } catch (error) {
+      console.error("Error updating user avatar metadata:", error);
+    }
+  };
+
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">My Profile</h1>
@@ -131,12 +153,12 @@ export default function DashboardProfilePage() {
         <div className="md:w-1/3">
           <Card>
             <CardHeader className="text-center">
-              <Avatar className="w-24 h-24 mx-auto mb-4">
-                <AvatarImage src="" />
-                <AvatarFallback className="text-2xl bg-primary text-white">
-                  {getInitials()}
-                </AvatarFallback>
-              </Avatar>
+              <div className="flex justify-center mb-4">
+                <AvatarUpload
+                  onUploadComplete={handleAvatarUploadComplete}
+                  existingUrl={avatarUrl}
+                />
+              </div>
               <CardTitle>{fullName || 'User'}</CardTitle>
               <CardDescription>{user?.email}</CardDescription>
             </CardHeader>

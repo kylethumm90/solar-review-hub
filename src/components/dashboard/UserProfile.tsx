@@ -2,6 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface UserProfileProps {
   isLoading: boolean;
@@ -9,6 +10,17 @@ interface UserProfileProps {
 
 const UserProfile = ({ isLoading }: UserProfileProps) => {
   const { user } = useAuth();
+
+  // Get user initials for the avatar fallback
+  const getInitials = () => {
+    if (!user?.user_metadata?.full_name) return 'U';
+    return user.user_metadata.full_name
+      .split(' ')
+      .map(name => name[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
 
   if (isLoading) {
     return (
@@ -29,7 +41,17 @@ const UserProfile = ({ isLoading }: UserProfileProps) => {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      <h2 className="text-xl font-semibold mb-4">Your Profile</h2>
+      <div className="flex items-center space-x-4 mb-4">
+        <Avatar className="h-16 w-16">
+          <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.full_name || 'User'} />
+          <AvatarFallback className="text-xl bg-primary text-white">
+            {getInitials()}
+          </AvatarFallback>
+        </Avatar>
+        <div>
+          <h2 className="text-xl font-semibold">Your Profile</h2>
+        </div>
+      </div>
       <div className="space-y-4">
         <div>
           <p className="text-sm text-gray-500 dark:text-gray-400">Name</p>

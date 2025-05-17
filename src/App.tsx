@@ -1,4 +1,3 @@
-import LogsPage from '@/pages/admin/LogsPage';
 import React, { useEffect, useState } from 'react';
 import {
   BrowserRouter as Router,
@@ -23,6 +22,7 @@ import ReviewsPage from './pages/admin/ReviewsPage';
 import ClaimsPage from './pages/admin/ClaimsPage';
 import SettingsPage from './pages/admin/SettingsPage';
 import PermissionsPage from './pages/admin/PermissionsPage';
+import LogsPage from './pages/admin/LogsPage';
 import { Toaster } from 'sonner';
 import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -32,9 +32,6 @@ import { useToast } from '@/components/ui/use-toast';
 import PublicLayout from './layouts/PublicLayout';
 import Vendors from './pages/Vendors';
 import VendorDetails from './pages/VendorDetails';
-
-// Import the LogsPage
-import LogsPage from './pages/admin/LogsPage';
 
 const App = () => {
   const { user, isLoading } = useAuth();
@@ -73,7 +70,6 @@ const App = () => {
             <Route path="/cookies" element={<CookiePolicy />} />
             <Route path="/vendors" element={<Vendors />} />
             <Route path="/vendors/:id" element={<VendorDetails />} />
-            <Route path="/admin/logs" element={<LogsPage />} />
           </Route>
           
           {/* Public routes that require authentication */}

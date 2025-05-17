@@ -1,58 +1,46 @@
+import { useState, useMemo } from 'react';
+import useAdminLogs from '@/hooks/useAdminLogs';
+import LogsContent from '@/components/admin/logs/LogsContent';
+import { AdminLog } from '@/types/admin';
 
-import React from "react";
-import { useAdminLogs } from "@/hooks/useAdminLogs";
-import LogsContent from "@/components/admin/logs/LogsContent";
-import { toast } from "sonner";
+export default function LogsPage() {
+  const { logs, isLoading, error, refetch } = useAdminLogs();
 
-const LogsPage = () => {
-  const {
-    logs,
-    isLoading,
-    error,
-    searchQuery,
-    setSearchQuery,
-    actionType,
-    setActionType,
-    entityType,
-    setEntityType,
-    refetchLogs
-  } = useAdminLogs();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [actionType, setActionType] = useState<string | null>(null);
 
-  // Extract unique action types for filter dropdown
-  const actionTypes = Array.from(new Set(logs?.map(log => log.action_type) || [])).sort();
+  const filteredLogs: AdminLog[] = useMemo(() => {
+    return logs.filter((log) => {
+      const matchesSearch =
+        searchQuery === '' ||
+        log.action_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        log.target_entity.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        log.target_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        log.admin_user_id.toLowerCase().includes(searchQuery.toLowerCase());
 
-  // Handle manual refresh
-  const handleRefresh = () => {
-    toast.info("Refreshing logs...");
-    refetchLogs();
-  };
+      const matchesAction = !actionType || log.action_type === actionType;
 
-  // Apply client-side filtering
-  const filteredLogs = React.useMemo(() => {
-    if (!logs) return [];
-    
-    // Start with logs filtered by search query (already handled in the hook)
-    let filtered = logs;
-    
-    return filtered;
+      return matchesSearch && matchesAction;
+    });
+  }, [logs, searchQuery, actionType]);
+
+  const actionTypes = useMemo(() => {
+    const types = Array.from(new Set(logs.map((log) => log.action_type)));
+    return types.sort();
   }, [logs]);
 
   return (
-    <div className="p-6 space-y-6">
-      <LogsContent
-        logs={logs}
-        isLoading={isLoading}
-        error={error}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        actionType={actionType}
-        setActionType={setActionType}
-        filteredLogs={filteredLogs}
-        handleRefresh={handleRefresh}
-        actionTypes={actionTypes}
-      />
-    </div>
+    <LogsContent
+      logs={logs}
+      isLoading={isLoading}
+      error={error}
+      searchQuery={searchQuery}
+      setSearchQuery={setSearchQuery}
+      actionType={actionType}
+      setActionType={setActionType}
+      filteredLogs={filteredLogs}
+      handleRefresh={refetch}
+      actionTypes={actionTypes}
+    />
   );
-};
-
-export default LogsPage;
+}

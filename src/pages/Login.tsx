@@ -11,16 +11,18 @@ export default function Login() {
   const location = useLocation();
   const { signIn, signUp, user, isLoading } = useAuth();
 
-  const from = (location.state as { from?: string })?.from || '/';
+  const initialMode = location.search === '?signup' ? false : true;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoginMode, setIsLoginMode] = useState(true);
+  const [isLoginMode, setIsLoginMode] = useState(initialMode);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ✅ Prevent early redirect
+  // ✅ Only redirect if they were sent here from a protected route
+  const from = (location.state as { from?: string })?.from;
+
   useEffect(() => {
-    if (!isLoading && user) {
+    if (!isLoading && user && from) {
       navigate(from, { replace: true });
     }
   }, [user, isLoading, from, navigate]);
@@ -34,16 +36,16 @@ export default function Login() {
         const { error } = await signIn(email, password);
         if (error) throw error;
         toast.success('Logged in!');
+        // You can optionally navigate to /dashboard here:
+        // navigate('/dashboard');
       } else {
         const { error } = await signUp(email, password);
         if (error) throw error;
-        toast.success('Account created! Please verify your email.');
+        toast.success('Account created! Please check your email.');
+        // Optionally navigate to a /check-email page here
       }
     } catch (err: any) {
-      const msg =
-        err?.error?.message ||
-        err?.message ||
-        'An unexpected error occurred';
+      const msg = err?.error?.message || err?.message || 'Unexpected error';
       toast.error(msg);
     } finally {
       setIsSubmitting(false);

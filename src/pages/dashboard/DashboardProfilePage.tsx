@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -175,12 +176,14 @@ export default function DashboardProfilePage() {
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={user?.email || ''}
-                        disabled
-                      />
+                      <div className="flex items-center">
+                        <Input
+                          id="email"
+                          type="email"
+                          value={user?.email || ''}
+                          disabled
+                        />
+                      </div>
                       <p className="text-xs text-gray-500">
                         Email cannot be changed
                       </p>

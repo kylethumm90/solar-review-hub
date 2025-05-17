@@ -1,12 +1,10 @@
 
 import { useState } from 'react';
-import useAdminLogs from '@/hooks/useAdminLogs';
-
+import { AdminLog } from '@/types/admin';
 import LogsHeader from './LogsHeader';
 import LogsFilterBar from './LogsFilterBar';
 import LogsTable from './LogsTable';
 import LogsErrorDisplay from './LogsErrorDisplay';
-
 
 // Define props interface to match what LogsPage is sending
 interface LogsContentProps {
@@ -34,13 +32,11 @@ export default function LogsContent({
   handleRefresh,
   actionTypes
 }: LogsContentProps) {
-  // No need to call useAdminLogs or filter logs here - we now use props
-
   return (
     <div className="p-4 space-y-4">
       <LogsHeader 
-        isFetching={isLoading} 
-        handleRefresh={handleRefresh} 
+        isLoading={isLoading} 
+        onRefresh={handleRefresh} 
       />
       <LogsFilterBar
         searchTerm={searchQuery}

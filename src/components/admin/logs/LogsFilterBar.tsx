@@ -1,54 +1,63 @@
-import LogsHeader from './LogsHeader';
-import LogsFilterBar from './LogsFilterBar';
-import LogsTable from './LogsTable';
-import LogsErrorDisplay from './LogsErrorDisplay';
-import { AdminLog } from '@/types/admin';
 
-interface LogsContentProps {
-  logs: AdminLog[];
-  isLoading: boolean;
-  error: Error | null;
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  actionType: string | null;
-  setActionType: (type: string | null) => void;
-  filteredLogs: AdminLog[];
-  handleRefresh: () => void;
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Search, RefreshCw } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+type LogsFilterBarProps = {
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  actionTypeFilter: string | null;
+  setActionTypeFilter: (type: string | null) => void;
   actionTypes: string[];
-}
+  onRefresh: () => void;
+};
 
-export default function LogsContent({
-  logs,
-  isLoading,
-  error,
-  searchQuery,
-  setSearchQuery,
-  actionType,
-  setActionType,
-  filteredLogs,
-  handleRefresh,
-  actionTypes
-}: LogsContentProps) {
+export default function LogsFilterBar({
+  searchTerm,
+  setSearchTerm,
+  actionTypeFilter,
+  setActionTypeFilter,
+  actionTypes,
+  onRefresh
+}: LogsFilterBarProps) {
   return (
-    <div className="p-4 space-y-4">
-      <LogsHeader 
-        isLoading={isLoading} 
-        onRefresh={handleRefresh} 
-      />
-      <LogsFilterBar
-        searchTerm={searchQuery}
-        setSearchTerm={setSearchQuery}
-        actionTypeFilter={actionType}
-        setActionTypeFilter={setActionType}
-        actionTypes={actionTypes}
-        onRefresh={handleRefresh}
-      />
-      {error ? (
-        <LogsErrorDisplay error={error} onRetry={handleRefresh} />
-      ) : (
-        <LogsTable logs={logs} isLoading={isLoading} filteredLogs={filteredLogs} />
-      )}
+    <div className="flex flex-col md:flex-row gap-4 mb-6">
+      <div className="relative flex-grow">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+        <Input
+          placeholder="Search logs..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-8"
+        />
+      </div>
+      
+      <Select
+        value={actionTypeFilter || ''}
+        onValueChange={(value) => setActionTypeFilter(value === '' ? null : value)}
+      >
+        <SelectTrigger className="w-[200px]">
+          <SelectValue placeholder="Filter by action" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="">All actions</SelectItem>
+          {actionTypes.map((type) => (
+            <SelectItem key={type} value={type}>
+              {type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={onRefresh}
+        title="Refresh logs"
+      >
+        <RefreshCw className="h-4 w-4" />
+      </Button>
     </div>
   );
 }
-

@@ -1,4 +1,7 @@
 
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
+
 type LogsHeaderProps = {
   isLoading: boolean;
   onRefresh: () => void;

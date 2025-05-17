@@ -1,35 +1,54 @@
+
+import { useState, useMemo } from 'react';
 import useAdminLogs from '@/hooks/useAdminLogs';
+import LogsContent from '@/components/admin/logs/LogsContent';
 
 export default function LogsPage() {
-  const { logs, isLoading } = useAdminLogs();
+  const { logs, isLoading, error, refetchLogs } = useAdminLogs();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [actionType, setActionType] = useState<string | null>(null);
+  
+  // Extract unique action types for the filter dropdown
+  const actionTypes = useMemo(() => {
+    if (!logs) return [];
+    return Array.from(new Set(logs.map(log => log.action_type)));
+  }, [logs]);
+  
+  // Filter logs based on search query and selected action type
+  const filteredLogs = useMemo(() => {
+    if (!logs) return [];
+    
+    return logs.filter(log => {
+      const matchesSearch = searchQuery === '' || 
+        log.action_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        log.target_entity.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        log.target_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (log.admin?.full_name && log.admin.full_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (log.admin?.email && log.admin.email.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      const matchesActionType = actionType === null || log.action_type === actionType;
+      
+      return matchesSearch && matchesActionType;
+    });
+  }, [logs, searchQuery, actionType]);
 
-  if (isLoading) return <div>Loading logs...</div>;
+  // Handle refresh
+  const handleRefresh = () => {
+    refetchLogs();
+  };
 
   return (
-    <div className="p-4">
-      <table className="min-w-full bg-white text-sm">
-  <thead className="text-left border-b font-medium">
-    <tr>
-      <th className="px-4 py-2">Action</th>
-      <th className="px-4 py-2">Entity</th>
-      <th className="px-4 py-2">Target ID</th>
-      <th className="px-4 py-2">Admin</th>
-      <th className="px-4 py-2">Timestamp</th>
-    </tr>
-  </thead>
-  <tbody>
-    {logs.map((log) => (
-      <tr key={log.id} className="border-b hover:bg-gray-50">
-        <td className="px-4 py-2">{log.action_type}</td>
-        <td className="px-4 py-2">{log.target_entity}</td>
-        <td className="px-4 py-2 truncate max-w-xs">{log.target_id}</td>
-        <td className="px-4 py-2 text-gray-500">{log.admin_user_id}</td>
-        <td className="px-4 py-2 text-gray-500">{new Date(log.timestamp).toLocaleString()}</td>
-      </tr>
-    ))}
-  </tbody>
-</table>
-
-    </div>
+    <LogsContent 
+      logs={logs}
+      isLoading={isLoading}
+      error={error}
+      searchQuery={searchQuery}
+      setSearchQuery={setSearchQuery}
+      actionType={actionType}
+      setActionType={setActionType}
+      filteredLogs={filteredLogs}
+      handleRefresh={handleRefresh}
+      actionTypes={actionTypes}
+    />
   );
 }

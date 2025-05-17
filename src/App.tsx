@@ -34,6 +34,8 @@ import PublicLayout from './layouts/PublicLayout';
 import Vendors from './pages/Vendors';
 import VendorDetails from './pages/VendorDetails';
 import Login from './pages/Login';
+import ProtectedLayout from './layouts/ProtectedLayout';
+import DashboardProfilePage from './pages/dashboard/DashboardProfilePage';
 
 const App = () => {
   const { user, isLoading } = useAuth();
@@ -76,23 +78,14 @@ const App = () => {
             <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
           </Route>
           
-          {/* Public routes that require authentication */}
-          <Route
-            path="/dashboard"
-            element={user ? <Dashboard /> : <Navigate to="/" />}
-          />
-          <Route
-            path="/companies/:companyId"
-            element={user ? <CompanyDetailsPage /> : <Navigate to="/" />}
-          />
-          <Route
-            path="/profile"
-            element={user ? <ProfilePage /> : <Navigate to="/" />}
-          />
-          <Route
-            path="/pricing"
-            element={user ? <PricingPage /> : <Navigate to="/" />}
-          />
+          {/* Protected routes using ProtectedLayout */}
+          <Route element={<ProtectedLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/profile" element={<DashboardProfilePage />} />
+            <Route path="/companies/:companyId" element={<CompanyDetailsPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/pricing" element={<PricingPage />} />
+          </Route>
 
           {/* Admin routes */}
           <Route element={<AdminLayout />}>

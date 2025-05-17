@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -100,7 +101,7 @@ export default function Login() {
       <div className="text-center text-sm text-gray-600 dark:text-gray-400">
         {isLoginMode ? (
           <>
-            Don’t have an account?{' '}
+            Don't have an account?{' '}
             <button
               onClick={() => setIsLoginMode(false)}
               className="text-blue-600 hover:underline"
@@ -123,4 +124,3 @@ export default function Login() {
     </div>
   );
 }
-

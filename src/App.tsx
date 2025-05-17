@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import {
   BrowserRouter as Router,
@@ -32,6 +33,7 @@ import { useToast } from '@/components/ui/use-toast';
 import PublicLayout from './layouts/PublicLayout';
 import Vendors from './pages/Vendors';
 import VendorDetails from './pages/VendorDetails';
+import Login from './pages/Login';
 
 const App = () => {
   const { user, isLoading } = useAuth();
@@ -71,6 +73,7 @@ const App = () => {
             <Route path="/vendors" element={<Vendors />} />
             <Route path="/vendors/:id" element={<VendorDetails />} />
             <Route path="/reviews/:vendorId" element={user ? <Reviews /> : <Navigate to="/" />} />
+            <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
           </Route>
           
           {/* Public routes that require authentication */}

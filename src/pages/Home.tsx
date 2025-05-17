@@ -92,9 +92,16 @@ const Home = () => {
           <p className="text-xl text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
             Join thousands of solar professionals who use SolarGrade to make informed decisions.
           </p>
-          <Button asChild size="lg" variant="secondary">
-            <Link to="/vendors">Start Exploring Now</Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg" variant="secondary">
+              <Link to="/vendors">Start Exploring Now</Link>
+            </Button>
+            {!user && (
+              <Button asChild size="lg" variant="outline" className="bg-white/10 hover:bg-white/20 text-white">
+                <Link to="/login">Sign Up or Sign In</Link>
+              </Button>
+            )}
+          </div>
         </div>
       </section>
     </div>

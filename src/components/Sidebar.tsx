@@ -1,6 +1,5 @@
-
 import { Link, useLocation } from 'react-router-dom';
-import { Home, User, Sun, FileEdit, Building, Star } from 'lucide-react';
+import { Home, User, Sun, FileEdit, Building, Star, Briefcase } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 
@@ -27,7 +26,7 @@ const Sidebar = () => {
     {
       name: "My Claims",
       href: "/dashboard/claims",
-      icon: Building
+      icon: Briefcase
     }
   ];
   

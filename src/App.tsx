@@ -37,6 +37,7 @@ import Login from './pages/Login';
 import ProtectedLayout from './layouts/ProtectedLayout';
 import DashboardProfilePage from './pages/dashboard/DashboardProfilePage';
 import DashboardReviews from './pages/dashboard/DashboardReviews';
+import DashboardClaims from './pages/dashboard/DashboardClaims';
 
 const App = () => {
   const { user, isLoading } = useAuth();
@@ -84,6 +85,7 @@ const App = () => {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/profile" element={<DashboardProfilePage />} />
             <Route path="/dashboard/reviews" element={<DashboardReviews />} />
+            <Route path="/dashboard/claims" element={<DashboardClaims />} />
             <Route path="/companies/:companyId" element={<CompanyDetailsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/pricing" element={<PricingPage />} />

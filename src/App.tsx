@@ -1,4 +1,4 @@
-
+import LogsPage from '@/pages/admin/LogsPage';
 import React, { useEffect, useState } from 'react';
 import {
   BrowserRouter as Router,
@@ -73,6 +73,7 @@ const App = () => {
             <Route path="/cookies" element={<CookiePolicy />} />
             <Route path="/vendors" element={<Vendors />} />
             <Route path="/vendors/:id" element={<VendorDetails />} />
+            <Route path="/admin/logs" element={<LogsPage />} />
           </Route>
           
           {/* Public routes that require authentication */}

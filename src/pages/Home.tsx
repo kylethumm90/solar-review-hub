@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
@@ -28,7 +27,7 @@ const Home = () => {
             </Button>
             {!user ? (
               <Button asChild variant="outline" size="lg">
-                <Link to="/login">Sign Up Free</Link>
+                <Link to="/login?signup">Sign Up Free</Link>
               </Button>
             ) : (
               <Button asChild variant="outline" size="lg">
@@ -98,7 +97,7 @@ const Home = () => {
             </Button>
             {!user && (
               <Button asChild size="lg" variant="outline" className="bg-white/10 hover:bg-white/20 text-white">
-                <Link to="/login">Sign Up or Sign In</Link>
+                <Link to="/login?signup">Sign Up or Sign In</Link>
               </Button>
             )}
           </div>

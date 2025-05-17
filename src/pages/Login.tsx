@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -12,10 +13,11 @@ export default function Login() {
   const { signIn, signUp, user } = useAuth();
 
   const from = (location.state as { from?: string })?.from || '/';
+  const initialMode = location.search === '?signup' ? false : true;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoginMode, setIsLoginMode] = useState(true);
+  const [isLoginMode, setIsLoginMode] = useState(initialMode);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ✅ Safe redirect once auth is loaded

@@ -154,9 +154,15 @@ export function useAdminReviews() {
       }
       
       const previousStatus = reviewData?.verification_status || null;
+      const newStatus = action === 'approve' ? 'approved' : 'rejected';
+      
+      // Only proceed if the status is actually changing
+      if (previousStatus === newStatus) {
+        toast.info(`Review is already ${newStatus}`);
+        return;
+      }
       
       // Update review verification status
-      const newStatus = action === 'approve' ? 'approved' : 'rejected';
       const { error } = await supabase
         .from("reviews")
         .update({ verification_status: newStatus })
@@ -180,7 +186,12 @@ export function useAdminReviews() {
         console.error(`Error logging review ${action}:`, logResult.error);
         toast.error(`Review ${action === 'approve' ? 'approved' : 'rejected'} successfully, but failed to log action`);
       } else {
-        toast.success(`Review ${action === 'approve' ? 'approved' : 'rejected'} successfully`);
+        const isStatusChange = previousStatus === 'approved' || previousStatus === 'rejected';
+        const message = isStatusChange 
+          ? `Review status changed from ${previousStatus} to ${newStatus}` 
+          : `Review ${action === 'approve' ? 'approved' : 'rejected'} successfully`;
+          
+        toast.success(message);
       }
       
       refetchReviews();

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { logAdminAction } from '@/utils/adminLogUtils';
@@ -10,6 +10,22 @@ import { ClaimModerationProps } from './ModerationActionsTypes';
  */
 const ClaimModerationActions = ({ id, companyId, userId, onActionComplete }: ClaimModerationProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState<string | null>(null);
+  
+  // Fetch the current status when the component mounts
+  useEffect(() => {
+    const fetchStatus = async () => {
+      const { data } = await supabase
+        .from('claims')
+        .select('status')
+        .eq('id', id)
+        .single();
+      
+      setCurrentStatus(data?.status);
+    };
+    
+    fetchStatus();
+  }, [id]);
 
   const handleApprove = async () => {
     setIsLoading(true);
@@ -22,6 +38,13 @@ const ClaimModerationActions = ({ id, companyId, userId, onActionComplete }: Cla
         .single();
         
       const previousStatus = claimData?.status || 'pending';
+      
+      // Only proceed if the status is actually changing
+      if (previousStatus === 'approved') {
+        toast.info('Claim is already approved');
+        setIsLoading(false);
+        return;
+      }
       
       // Update claim status to approved
       const { error } = await supabase
@@ -69,10 +92,20 @@ const ClaimModerationActions = ({ id, companyId, userId, onActionComplete }: Cla
             }
           });
           
-          toast.success('Claim request approved and company verified');
+          const isStatusChange = previousStatus === 'rejected';
+          const message = isStatusChange 
+            ? `Claim status changed from ${previousStatus} to approved and company verified` 
+            : 'Claim request approved and company verified';
+            
+          toast.success(message);
         }
       } else {
-        toast.success('Claim request approved');
+        const isStatusChange = previousStatus === 'rejected';
+        const message = isStatusChange 
+          ? `Claim status changed from ${previousStatus} to approved` 
+          : 'Claim request approved';
+          
+        toast.success(message);
       }
       
       // Log the claim approval action
@@ -104,6 +137,13 @@ const ClaimModerationActions = ({ id, companyId, userId, onActionComplete }: Cla
         
       const previousStatus = claimData?.status || 'pending';
       
+      // Only proceed if the status is actually changing
+      if (previousStatus === 'rejected') {
+        toast.info('Claim is already rejected');
+        setIsLoading(false);
+        return;
+      }
+      
       // Update claim status
       const { error } = await supabase
         .from('claims')
@@ -120,7 +160,12 @@ const ClaimModerationActions = ({ id, companyId, userId, onActionComplete }: Cla
         details: { previous_status: previousStatus, new_status: 'rejected' }
       });
       
-      toast.success('Claim request has been rejected');
+      const isStatusChange = previousStatus === 'approved';
+      const message = isStatusChange 
+        ? `Claim status changed from ${previousStatus} to rejected` 
+        : 'Claim request has been rejected';
+        
+      toast.success(message);
       onActionComplete();
     } catch (error) {
       console.error(`Error rejecting claim:`, error);
@@ -130,24 +175,32 @@ const ClaimModerationActions = ({ id, companyId, userId, onActionComplete }: Cla
     }
   };
 
+  // Only show the appropriate action buttons based on current status
+  const showApproveButton = currentStatus !== 'approved';
+  const showRejectButton = currentStatus !== 'rejected';
+
   return (
     <div className="flex space-x-2">
-      <button
-        onClick={handleApprove}
-        disabled={isLoading}
-        className="px-2 py-1 text-sm text-green-600 hover:text-green-800 disabled:opacity-50"
-        title="Approve"
-      >
-        ✅
-      </button>
-      <button
-        onClick={handleReject}
-        disabled={isLoading}
-        className="px-2 py-1 text-sm text-red-600 hover:text-red-800 disabled:opacity-50"
-        title="Reject"
-      >
-        ❌
-      </button>
+      {showApproveButton && (
+        <button
+          onClick={handleApprove}
+          disabled={isLoading}
+          className="px-2 py-1 text-sm text-green-600 hover:text-green-800 disabled:opacity-50"
+          title={currentStatus === 'rejected' ? 'Change to approved' : 'Approve'}
+        >
+          ✅
+        </button>
+      )}
+      {showRejectButton && (
+        <button
+          onClick={handleReject}
+          disabled={isLoading}
+          className="px-2 py-1 text-sm text-red-600 hover:text-red-800 disabled:opacity-50"
+          title={currentStatus === 'approved' ? 'Change to rejected' : 'Reject'}
+        >
+          ❌
+        </button>
+      )}
     </div>
   );
 };

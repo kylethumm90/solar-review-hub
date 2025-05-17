@@ -1,3 +1,4 @@
+
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { UserWithRole } from '@/types/auth';
@@ -15,30 +16,6 @@ export const signIn = async (email: string, password: string) => {
     return response;
   } catch (error: any) {
     toast.error(error.message || 'An error occurred during sign in');
-    return { error, data: null };
-  }
-};
-
-export const signInWithProvider = async (provider: 'google') => {
-  try {
-    console.log('Starting OAuth sign-in with provider:', provider);
-    // Remove the redirectTo option to use the default Site URL from Supabase settings
-    const response = await supabase.auth.signInWithOAuth({ 
-      provider
-    });
-    
-    if (response.error) {
-      toast.error(response.error.message);
-      console.error('OAuth error:', response.error);
-      return { error: response.error, data: null };
-    }
-    
-    // No need for toast success here as the page will redirect to provider
-    console.log('OAuth initiated successfully');
-    return response;
-  } catch (error: any) {
-    toast.error(error.message || `An error occurred during ${provider} sign in`);
-    console.error('OAuth exception:', error);
     return { error, data: null };
   }
 };

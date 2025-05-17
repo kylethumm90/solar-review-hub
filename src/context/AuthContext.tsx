@@ -7,7 +7,6 @@ import {
   signIn as authSignIn,
   signUp as authSignUp,
   signOut as authSignOut,
-  signInWithProvider as authSignInWithProvider,
   fetchUserData,
   createUserInDatabase,
   updateUserWithRole,
@@ -21,45 +20,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserWithRole | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isProcessingAuth, setIsProcessingAuth] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
-    console.log('AuthProvider initialized');
 
     async function getSession() {
-      if (isProcessingAuth) {
-        console.log('Auth processing already in progress, skipping');
-        return;
-      }
-      
+      setIsLoading(true);
       try {
-        console.log('Getting initial session');
-        setIsLoading(true);
-        setIsProcessingAuth(true);
-        
         // Get the current session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-        if (sessionError) {
-          console.error('Session error:', sessionError);
+        if (sessionError || !session) {
           if (isMounted) {
             setIsLoading(false);
-            setIsProcessingAuth(false);
           }
           return;
         }
 
-        if (!session) {
-          console.log('No session found');
-          if (isMounted) {
-            setIsLoading(false);
-            setIsProcessingAuth(false);
-          }
-          return;
-        }
-
-        console.log('Session found, setting state');
         // Set the session and user
         if (isMounted) {
           setSession(session);
@@ -69,14 +46,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Get additional user data from database if needed
         if (isMounted && session?.user?.id) {
           try {
-            console.log('Fetching additional user data');
             const { userData, error: userError } = await fetchUserData(session.user.id);
 
             if (userError) {
-              console.warn('User data error:', userError.message);
+              // If there's an error fetching user data but we have a session,
+              // don't log the user out - they may just need to be inserted into the users table
+              
               // If the error is "No rows found", the user may exist in auth but not in the users table
               if (userError.message.includes('No rows found') && isMounted) {
-                console.log('Creating user in database');
                 // Try to create the user in the users table
                 const { error: insertError } = await createUserInDatabase(
                   session.user.id,
@@ -118,39 +95,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } finally {
         if (isMounted) {
           setIsLoading(false);
-          setIsProcessingAuth(false);
-          console.log('Initial auth processing complete');
         }
       }
     }
 
-    // Set up auth state listener first
+    getSession();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
-        console.log('Auth state changed:', event, newSession?.user?.id ? 'User present' : 'No user');
+        if (isMounted) {
+          setSession(newSession);
+          setUser(newSession?.user as UserWithRole || null);
+        }
         
-        if (!isMounted) return;
-
-        // Immediately update session/user state
-        setSession(newSession);
-        setUser(newSession?.user as UserWithRole || null);
-        
-        // If we have a new session with a user, fetch additional user data
-        if (newSession?.user) {
+        if (newSession?.user && isMounted) {
           // Use setTimeout to avoid Supabase auth deadlock
           setTimeout(async () => {
             if (!isMounted) return;
             
-            // Prevent concurrent processing
-            if (isProcessingAuth) {
-              console.log('Auth already processing, skipping additional data fetch');
-              return;
-            }
-            
             try {
-              console.log('Processing auth state change event:', event);
-              setIsProcessingAuth(true);
-              
               // Fetch user data
               const { userData, error: userError } = await fetchUserData(newSession.user.id);
               
@@ -177,39 +140,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               }
             } catch (err) {
               console.error('Unexpected error in onAuthStateChange:', err);
-            } finally {
-              if (isMounted) {
-                setIsProcessingAuth(false);
-                setIsLoading(false);
-                console.log('Auth state change processing complete');
-              }
             }
           }, 0);
-        } else {
-          // No user in the new session
-          if (isMounted) {
-            setIsProcessingAuth(false);
-            setIsLoading(false);
-            console.log('Auth state changed to signed out');
-          }
+        }
+        
+        if (isMounted) {
+          setIsLoading(false);
         }
       }
     );
 
-    // Then check for existing session
-    getSession();
-
     return () => {
-      console.log('AuthProvider cleanup');
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [isProcessingAuth]);  // Add isProcessingAuth as a dependency
+  }, []);
 
   const signIn = authSignIn;
   const signUp = authSignUp;
   const signOut = authSignOut;
-  const signInWithProvider = authSignInWithProvider;
   
   const isAdmin = () => checkIsAdmin(user);
   const isVerifiedRep = () => checkIsVerifiedRep(user);
@@ -221,7 +170,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn,
     signUp,
     signOut,
-    signInWithProvider,
     isAdmin,
     isVerifiedRep,
     setUser

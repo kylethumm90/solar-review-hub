@@ -40,14 +40,14 @@ export default function LogsFilterBar({
       
       <div className="w-full md:w-64">
         <Select
-          value={actionTypeFilter || ""}
-          onValueChange={(value) => setActionTypeFilter(value === "" ? null : value)}
+          value={actionTypeFilter || "all"}
+          onValueChange={(value) => setActionTypeFilter(value === "all" ? null : value)}
         >
           <SelectTrigger>
             <SelectValue placeholder="Filter by action type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All action types</SelectItem>
+            <SelectItem value="all">All action types</SelectItem>
             {actionTypes.map((type) => (
               <SelectItem key={type} value={type}>
                 {type.replace(/_/g, ' ')}

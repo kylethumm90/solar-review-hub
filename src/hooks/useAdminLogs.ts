@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,8 +19,8 @@ const ALLOWED_ACTION_TYPES = [
   'change_user_role', 
   'edit_vendor_metadata',
   'verify_company',
-  'PAGE_VIEW',  // Include for backward compatibility
-  'TEST_LOG'    // Include for backward compatibility
+  'PAGE_VIEW',
+  'TEST_LOG'
 ];
 
 export function useAdminLogs() {
@@ -44,48 +43,40 @@ export function useAdminLogs() {
           timestamp,
           admin:users(email, full_name)
         `)
-        .order("timestamp", { ascending: false });
-      
-      // Only fetch allowed action types
+        .order("timestamp", { ascending: false })
+        .limit(100); // ✅ Prevent crashing by limiting results
+
       query = query.in("action_type", ALLOWED_ACTION_TYPES);
-      
-      // Apply additional filters
+
       if (actionType) {
         query = query.eq("action_type", actionType);
       }
-      
+
       if (entityType) {
         query = query.eq("target_entity", entityType);
       }
-      
+
       const { data, error } = await query;
-      
       if (error) throw error;
-      
+
       return data as AdminLog[];
     },
   });
 
-  // Filter logs based on search query
   const filteredLogs = data?.filter(log => {
     if (!searchQuery) return true;
-    
+
     const searchTerm = searchQuery.toLowerCase();
-    
+
     return (
       log.action_type.toLowerCase().includes(searchTerm) ||
       log.target_entity.toLowerCase().includes(searchTerm) ||
       log.target_id.toLowerCase().includes(searchTerm) ||
       log.admin?.email?.toLowerCase().includes(searchTerm) ||
       log.admin?.full_name?.toLowerCase().includes(searchTerm) ||
-      JSON.stringify(log.details).toLowerCase().includes(searchTerm)
+      JSON.stringify(log.details || {}).toLowerCase().includes(searchTerm)
     );
   }) || [];
-
-  // Expose the refetch function
-  const refetchLogs = () => {
-    refetch();
-  };
 
   return {
     logs: filteredLogs,
@@ -97,8 +88,9 @@ export function useAdminLogs() {
     setActionType,
     entityType,
     setEntityType,
-    refetchLogs
+    refetchLogs: refetch,
   };
 }
 
 export default useAdminLogs;
+

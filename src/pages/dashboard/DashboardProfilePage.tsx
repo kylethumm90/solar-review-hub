@@ -1,5 +1,5 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,17 +12,29 @@ import { supabase } from '@/integrations/supabase/client';
 import { Mail, User, Lock } from 'lucide-react';
 
 export default function DashboardProfilePage() {
-  const { user, setUser } = useAuth();
+  const { user, isLoading, setUser } = useAuth();
+  const navigate = useNavigate();
+
+  // ✅ Redirect if not authenticated
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate('/login');
+    }
+  }, [user, isLoading, navigate]);
+
+  if (isLoading) {
+    return <div className="p-6 text-center">Checking session...</div>;
+  }
+
   const [isUpdating, setIsUpdating] = useState(false);
   const [fullName, setFullName] = useState(user?.user_metadata?.full_name || '');
-  
+
   // Password change states
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
-  // Get user initials for avatar fallback
   const getInitials = () => {
     if (!fullName) return 'U';
     return fullName
@@ -36,24 +48,21 @@ export default function DashboardProfilePage() {
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUpdating(true);
-    
+
     try {
-      // Update user metadata in Supabase Auth
       const { data, error } = await supabase.auth.updateUser({
         data: { full_name: fullName }
       });
 
       if (error) throw error;
-      
-      // Also update the users table
+
       const { error: updateError } = await supabase
         .from('users')
         .update({ full_name: fullName })
         .eq('id', user?.id);
 
       if (updateError) throw updateError;
-      
-      // Update local user state
+
       if (data.user) {
         setUser(prevUser => {
           if (!prevUser) return null;
@@ -66,7 +75,7 @@ export default function DashboardProfilePage() {
           };
         });
       }
-      
+
       toast.success('Profile updated successfully');
     } catch (error: any) {
       toast.error(error.message || 'Failed to update profile');
@@ -77,33 +86,31 @@ export default function DashboardProfilePage() {
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (newPassword !== confirmPassword) {
       toast.error('New passwords do not match');
       return;
     }
-    
+
     setIsChangingPassword(true);
-    
+
     try {
-      // First validate the current password by trying to sign in
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: user?.email || '',
         password: currentPassword
       });
-      
+
       if (signInError) {
         toast.error('Current password is incorrect');
         return;
       }
-      
-      // Update password
+
       const { error } = await supabase.auth.updateUser({ 
         password: newPassword 
       });
-      
+
       if (error) throw error;
-      
+
       toast.success('Password updated successfully');
       setCurrentPassword('');
       setNewPassword('');
@@ -118,7 +125,7 @@ export default function DashboardProfilePage() {
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">My Profile</h1>
-      
+
       <div className="flex flex-col md:flex-row gap-6">
         <div className="md:w-1/3">
           <Card>
@@ -142,7 +149,7 @@ export default function DashboardProfilePage() {
             </CardContent>
           </Card>
         </div>
-        
+
         <div className="md:w-2/3">
           <Tabs defaultValue="profile" className="w-full">
             <TabsList className="mb-6">
@@ -155,7 +162,7 @@ export default function DashboardProfilePage() {
                 <span>Security</span>
               </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="profile">
               <Card>
                 <CardHeader>
@@ -173,13 +180,12 @@ export default function DashboardProfilePage() {
                         type="email"
                         value={user?.email || ''}
                         disabled
-                        icon={<Mail className="h-4 w-4 text-gray-500" />}
                       />
                       <p className="text-xs text-gray-500">
                         Email cannot be changed
                       </p>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="fullName">Full Name</Label>
                       <Input
@@ -198,7 +204,7 @@ export default function DashboardProfilePage() {
                 </form>
               </Card>
             </TabsContent>
-            
+
             <TabsContent value="security">
               <Card>
                 <CardHeader>
@@ -219,7 +225,7 @@ export default function DashboardProfilePage() {
                         required
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="newPassword">New Password</Label>
                       <Input
@@ -230,7 +236,7 @@ export default function DashboardProfilePage() {
                         required
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="confirmPassword">Confirm New Password</Label>
                       <Input

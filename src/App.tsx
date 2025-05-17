@@ -11,7 +11,7 @@ import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
 import LandingPage from './pages/LandingPage';
 import CompanyDetailsPage from './pages/CompanyDetailsPage';
-import ReviewPage from './pages/ReviewPage';
+import Reviews from './pages/Reviews';
 import ProfilePage from './pages/ProfilePage';
 import PricingPage from './pages/PricingPage';
 import AdminLayout from './layouts/AdminLayout';
@@ -82,10 +82,10 @@ const App = () => {
             element={user ? <CompanyDetailsPage /> : <Navigate to="/" />}
           />
           <Route
-            path="/review/:companyId"
-            element={user ? <ReviewPage /> : <Navigate to="/" />}
+            path="/reviews/:vendorId"
+            element={user ? <Reviews /> : <Navigate to="/" />}
           />
-           <Route
+          <Route
             path="/profile"
             element={user ? <ProfilePage /> : <Navigate to="/" />}
           />

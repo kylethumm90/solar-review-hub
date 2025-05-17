@@ -1,24 +1,31 @@
+
 import React from 'react';
-import { Dialog } from '@headlessui/react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AdminLog } from '@/types/admin';
 
 type LogDetailsModalProps = {
-  open: boolean;
+  isOpen: boolean;
   onClose: () => void;
-  details: object | null;
+  log: AdminLog | null;
 };
 
-export default function LogDetailsModal({ open, onClose, details }: LogDetailsModalProps) {
-  if (!open) return null;
-
+export default function LogDetailsModal({ isOpen, onClose, log }: LogDetailsModalProps) {
   return (
-    <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center">
-      <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 overflow-auto max-h-[80vh]">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold">Log Details</h2>
-          <button onClick={onClose} className="text-sm text-gray-500 hover:underline">Close</button>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+        <DialogHeader>
+          <DialogTitle>Log Details</DialogTitle>
+        </DialogHeader>
+        <div className="mt-4">
+          {log && log.details ? (
+            <pre className="text-xs whitespace-pre-wrap bg-muted p-4 rounded-md overflow-auto">
+              {JSON.stringify(log.details, null, 2)}
+            </pre>
+          ) : (
+            <p className="text-muted-foreground">No details available for this log.</p>
+          )}
         </div>
-        <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(details, null, 2)}</pre>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

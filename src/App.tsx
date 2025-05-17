@@ -30,6 +30,8 @@ import CookiePolicy from './pages/CookiePolicy';
 import NotFound from './pages/NotFound';
 import { useToast } from '@/components/ui/use-toast';
 import PublicLayout from './layouts/PublicLayout';
+import Vendors from './pages/Vendors';
+import VendorDetails from './pages/VendorDetails';
 
 // Import the LogsPage
 import LogsPage from './pages/admin/LogsPage';
@@ -69,6 +71,8 @@ const App = () => {
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/cookies" element={<CookiePolicy />} />
+            <Route path="/vendors" element={<Vendors />} />
+            <Route path="/vendors/:id" element={<VendorDetails />} />
           </Route>
           
           {/* Public routes that require authentication */}

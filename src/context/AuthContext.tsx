@@ -7,6 +7,7 @@ import {
   signIn as authSignIn,
   signUp as authSignUp,
   signOut as authSignOut,
+  signInWithProvider as authSignInWithProvider,
   fetchUserData,
   createUserInDatabase,
   updateUserWithRole,
@@ -159,6 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = authSignIn;
   const signUp = authSignUp;
   const signOut = authSignOut;
+  const signInWithProvider = authSignInWithProvider;
   
   const isAdmin = () => checkIsAdmin(user);
   const isVerifiedRep = () => checkIsVerifiedRep(user);
@@ -170,6 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn,
     signUp,
     signOut,
+    signInWithProvider,
     isAdmin,
     isVerifiedRep,
     setUser

@@ -46,14 +46,22 @@ const SignupForm = ({ onComplete, redirectTo = '/dashboard' }: SignupFormProps) 
   async function onSubmit(values: SignupValues) {
     setLoading(true);
     try {
-      await signUp(values.email, values.password, values.fullName);
+      const { data, error } = await signUp(values.email, values.password, values.fullName);
+      
+      if (error) {
+        toast.error(error.message || 'Failed to create account');
+        return;
+      }
+      
       toast.success('Account created successfully!');
       
-      if (onComplete) {
+      // If email confirmation is required, redirect to check-email page
+      // This is determined by checking if the user is not immediately confirmed
+      if (data && !data.session) {
+        navigate('/check-email');
+      } else if (onComplete) {
         onComplete();
       } else {
-        // If email verification is enabled, redirect to check-email page
-        // Otherwise, redirect to the specified page
         navigate(redirectTo);
       }
     } catch (error: any) {

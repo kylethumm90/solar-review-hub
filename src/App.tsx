@@ -70,6 +70,7 @@ const App = () => {
             <Route path="/cookies" element={<CookiePolicy />} />
             <Route path="/vendors" element={<Vendors />} />
             <Route path="/vendors/:id" element={<VendorDetails />} />
+            <Route path="/reviews/:vendorId" element={user ? <Reviews /> : <Navigate to="/" />} />
           </Route>
           
           {/* Public routes that require authentication */}
@@ -80,10 +81,6 @@ const App = () => {
           <Route
             path="/companies/:companyId"
             element={user ? <CompanyDetailsPage /> : <Navigate to="/" />}
-          />
-          <Route
-            path="/reviews/:vendorId"
-            element={user ? <Reviews /> : <Navigate to="/" />}
           />
           <Route
             path="/profile"

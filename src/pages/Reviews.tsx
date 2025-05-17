@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -124,23 +123,21 @@ const Reviews = () => {
   }
   
   return (
-    <div className="container mx-auto py-8">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold mb-2">Write a Review</h1>
-        <p className="text-muted-foreground mb-6">
-          Share your experience working with {vendor.name}
-        </p>
+    <div className="max-w-3xl mx-auto py-8">
+      <h1 className="text-3xl font-bold mb-2">Write a Review</h1>
+      <p className="text-muted-foreground mb-6">
+        Share your experience working with {vendor.name}
+      </p>
+      
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
+        <VendorHeader vendor={vendor} />
         
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
-          <VendorHeader vendor={vendor} />
-          
-          <ReviewForm 
-            vendor={vendor}
-            reviewQuestions={reviewQuestions}
-            onSubmit={handleSubmitReview}
-            submitting={submitting}
-          />
-        </div>
+        <ReviewForm 
+          vendor={vendor}
+          reviewQuestions={reviewQuestions}
+          onSubmit={handleSubmitReview}
+          submitting={submitting}
+        />
       </div>
     </div>
   );

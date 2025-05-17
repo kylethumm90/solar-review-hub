@@ -6,7 +6,7 @@ import { Search, Filter } from 'lucide-react';
 import { Company } from '@/types';
 import { Button } from '@/components/ui/button';
 import { calculateAverageRating, ratingToGrade } from '@/lib/utils';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 const Vendors = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -14,13 +14,13 @@ const Vendors = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   
-  // Company types for filtering
+  // Company types for filtering with counts
   const companyTypes = [
-    { value: 'all', label: 'All Types' },
-    { value: 'epc', label: 'EPC' },
-    { value: 'sales_org', label: 'Sales Organization' },
-    { value: 'lead_gen', label: 'Lead Generation' },
-    { value: 'software', label: 'Software' }
+    { value: 'all', label: 'All Types', icon: '🏢' },
+    { value: 'epc', label: 'EPC', icon: '🏗️' },
+    { value: 'sales_org', label: 'Sales Organization', icon: '📞' },
+    { value: 'lead_gen', label: 'Lead Generation', icon: '🎯' },
+    { value: 'software', label: 'Software', icon: '💻' }
   ];
 
   useEffect(() => {
@@ -73,8 +73,10 @@ const Vendors = () => {
     return matchesSearch && matchesType;
   });
 
-  const handleTypeChange = (value: string) => {
-    setSelectedType(value);
+  // Get count of companies by type for the filter pills
+  const getCompanyCountByType = (type: string) => {
+    if (type === 'all') return companies.length;
+    return companies.filter(company => company.type === type).length;
   };
 
   return (
@@ -87,8 +89,8 @@ const Vendors = () => {
       </div>
       
       {/* Search and Filter */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8 sticky top-0 z-10">
+        <div className="flex flex-col space-y-4">
           <div className="relative flex-grow">
             <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
             <input
@@ -99,19 +101,28 @@ const Vendors = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="w-full sm:w-auto">
-            <Select value={selectedType} onValueChange={handleTypeChange}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                {companyTypes.map(type => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {type.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          
+          {/* Filter Pills */}
+          <div className="flex overflow-x-auto gap-2 pb-1">
+            {companyTypes.map(type => {
+              const count = getCompanyCountByType(type.value);
+              const isActive = selectedType === type.value;
+              
+              return (
+                <button
+                  key={type.value}
+                  onClick={() => setSelectedType(type.value)}
+                  className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 ${
+                    isActive 
+                    ? 'bg-primary text-white' 
+                    : 'border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600'
+                  }`}
+                  aria-pressed={isActive}
+                >
+                  <span className="mr-1">{type.icon}</span> {type.label} ({count})
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

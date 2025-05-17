@@ -1,38 +1,50 @@
 
-import { useState } from 'react';
-import useAdminLogs from '@/hooks/useAdminLogs';
-import LogsHeader from './LogsHeader';
-import LogsFilterBar from './LogsFilterBar';
-import LogsTable from './LogsTable';
-import LogsErrorDisplay from './LogsErrorDisplay';
+import { AdminLog } from '@/types/admin';
 
-export default function LogsContent() {
-  const { logs, isLoading, isFetching, error, refetch } = useAdminLogs();
-  const [search, setSearch] = useState('');
-  const [actionType, setActionType] = useState('');
+// Define props interface to match what LogsPage is sending
+interface LogsContentProps {
+  logs: AdminLog[];
+  isLoading: boolean;
+  error: Error | null;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  actionType: string | null;
+  setActionType: (type: string | null) => void;
+  filteredLogs: AdminLog[];
+  handleRefresh: () => void;
+  actionTypes: string[];
+}
 
-  const filteredLogs = logs.filter((log) => {
-    const matchesSearch =
-      search === '' ||
-      log.action_type.toLowerCase().includes(search.toLowerCase()) ||
-      log.target_entity.toLowerCase().includes(search.toLowerCase());
-
-    const matchesAction = actionType === '' || log.action_type === actionType;
-
-    return matchesSearch && matchesAction;
-  });
+export default function LogsContent({
+  logs,
+  isLoading,
+  error,
+  searchQuery,
+  setSearchQuery,
+  actionType,
+  setActionType,
+  filteredLogs,
+  handleRefresh,
+  actionTypes
+}: LogsContentProps) {
+  // No need to call useAdminLogs or filter logs here - we now use props
 
   return (
     <div className="p-4 space-y-4">
-      <LogsHeader isFetching={isFetching} onRefresh={refetch} />
+      <LogsHeader 
+        isFetching={isLoading} 
+        handleRefresh={handleRefresh} 
+      />
       <LogsFilterBar
-        search={search}
-        setSearch={setSearch}
-        actionType={actionType}
-        setActionType={setActionType}
+        searchTerm={searchQuery}
+        setSearchTerm={setSearchQuery}
+        actionTypeFilter={actionType}
+        setActionTypeFilter={setActionType}
+        actionTypes={actionTypes}
+        onRefresh={handleRefresh}
       />
       {error ? (
-        <LogsErrorDisplay error={error} onRetry={refetch} />
+        <LogsErrorDisplay error={error} refetch={handleRefresh} />
       ) : (
         <LogsTable logs={logs} isLoading={isLoading} filteredLogs={filteredLogs} />
       )}

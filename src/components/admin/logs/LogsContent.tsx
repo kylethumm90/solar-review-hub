@@ -1,5 +1,11 @@
 
-import { AdminLog } from '@/types/admin';
+import { useState } from 'react';
+import useAdminLogs from '@/hooks/useAdminLogs';
+import LogsHeader from './LogsHeader';
+import LogsFilterBar from './LogsFilterBar';
+import LogsTable from './LogsTable';
+import LogsErrorDisplay from './LogsErrorDisplay';
+
 
 // Define props interface to match what LogsPage is sending
 interface LogsContentProps {

@@ -1,11 +1,9 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   BrowserRouter as Router,
   Route,
   Routes,
   Navigate,
-  useLocation,
 } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Dashboard from './pages/Dashboard';
@@ -41,16 +39,6 @@ const App = () => {
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (!isLoading && !user && window.location.pathname !== '/') {
-      // toast({
-      //   title: "You must be logged in to view this page.",
-      //   description: "Redirecting to landing page...",
-      //   action: <ToastAction altText="Goto schedule">Schedule</ToastAction>,
-      // })
-    }
-  }, [user, isLoading, toast]);
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -75,9 +63,12 @@ const App = () => {
             <Route path="/vendors" element={<Vendors />} />
             <Route path="/vendors/:id" element={<VendorDetails />} />
             <Route path="/reviews/:vendorId" element={user ? <Reviews /> : <Navigate to="/" />} />
-            <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
+            <Route
+              path="/login"
+              element={!isLoading && user ? <Navigate to="/dashboard" /> : <Login />}
+            />
           </Route>
-          
+
           {/* Protected routes using ProtectedLayout */}
           <Route element={<ProtectedLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />

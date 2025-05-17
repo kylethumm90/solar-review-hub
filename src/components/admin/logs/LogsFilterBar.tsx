@@ -1,4 +1,3 @@
-
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, RefreshCw } from 'lucide-react';
@@ -34,14 +33,14 @@ export default function LogsFilterBar({
       </div>
       
       <Select
-        value={actionTypeFilter || ''}
-        onValueChange={(value) => setActionTypeFilter(value === '' ? null : value)}
+        value={actionTypeFilter || 'all'}
+        onValueChange={(value) => setActionTypeFilter(value === 'all' ? null : value)}
       >
         <SelectTrigger className="w-[200px]">
           <SelectValue placeholder="Filter by action" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All actions</SelectItem>
+          <SelectItem value="all">All actions</SelectItem>
           {actionTypes.map((type) => (
             <SelectItem key={type} value={type}>
               {type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
@@ -61,3 +60,4 @@ export default function LogsFilterBar({
     </div>
   );
 }
+

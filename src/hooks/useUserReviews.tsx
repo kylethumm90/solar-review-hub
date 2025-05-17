@@ -27,12 +27,18 @@ export const useUserReviews = () => {
         .from('reviews')
         .select(`
           id,
+          user_id,
           company_id,
           average_score,
           review_title,
           review_details,
           text_feedback,
           verification_status,
+          rating_communication,
+          rating_install_quality,
+          rating_payment_reliability,
+          rating_timeliness,
+          rating_post_install_support,
           created_at
         `)
         .eq('user_id', user.id);
@@ -66,7 +72,7 @@ export const useUserReviews = () => {
             type: '',
             is_verified: false
           }
-        };
+        } as UserReviewWithCompany;
       });
 
       // Sort the reviews

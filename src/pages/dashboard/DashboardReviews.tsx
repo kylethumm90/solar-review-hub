@@ -68,7 +68,7 @@ const DashboardReviews = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {reviews.map((review) => (
-            <ReviewCard key={review.id} review={review} />
+            <ReviewCard key={review.id} review={review} getTruncatedText={getTruncatedText} />
           ))}
         </div>
       )}
@@ -78,9 +78,10 @@ const DashboardReviews = () => {
 
 interface ReviewCardProps {
   review: UserReviewWithCompany;
+  getTruncatedText: (text: string, limit?: number) => string;
 }
 
-const ReviewCard = ({ review }: ReviewCardProps) => {
+const ReviewCard = ({ review, getTruncatedText }: ReviewCardProps) => {
   return (
     <Card className="h-full">
       <CardContent className="p-6 flex flex-col h-full">

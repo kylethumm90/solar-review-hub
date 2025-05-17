@@ -8,6 +8,7 @@ import { Search } from "lucide-react";
 import { toast } from "sonner";
 import ClaimsTable from "@/components/admin/claims/ClaimsTable";
 import { Claim } from "@/types";
+import { logAdminAction } from "@/utils/adminLogUtils";
 
 const ClaimsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -97,7 +98,7 @@ const ClaimsPage = () => {
     );
   });
   
-  // Handle claim action (approve/reject)
+  // Handle claim action (approve/reject) with proper logging
   const handleClaimAction = async (claimId: string, action: 'approve' | 'reject') => {
     try {
       const claim = claims?.find(c => c.id === claimId);
@@ -105,6 +106,9 @@ const ClaimsPage = () => {
         toast.error("Claim not found");
         return;
       }
+      
+      // Get previous status for logging
+      const previousStatus = claim.status;
       
       // Update claim status
       const newStatus = action === 'approve' ? 'approved' : 'rejected';
@@ -120,6 +124,16 @@ const ClaimsPage = () => {
       
       // If approving, update company verification status
       if (action === 'approve') {
+        // Get previous company verification status for logging
+        const { data: companyData } = await supabase
+          .from("companies")
+          .select("is_verified")
+          .eq("id", claim.company_id)
+          .single();
+        
+        const previousCompanyStatus = companyData?.is_verified || false;
+        
+        // Update company verification status
         const { error: companyError } = await supabase
           .from("companies")
           .update({ is_verified: true })
@@ -140,9 +154,36 @@ const ClaimsPage = () => {
           toast.error("Failed to update user role");
           throw userError;
         }
+        
+        // Log company verification action
+        await logAdminAction({
+          action_type: 'verify_company',
+          target_entity: 'company',
+          target_id: claim.company_id,
+          details: { 
+            previous_status: { is_verified: previousCompanyStatus },
+            new_status: { is_verified: true },
+            related_claim_id: claimId
+          }
+        });
       }
       
-      toast.success(`Claim ${action === 'approve' ? 'approved' : 'rejected'} successfully`);
+      // Log the claim action
+      const actionType = action === 'approve' ? 'approve_claim' : 'reject_claim';
+      const logResult = await logAdminAction({
+        action_type: actionType,
+        target_entity: 'claim',
+        target_id: claimId,
+        details: { previous_status: previousStatus, new_status: newStatus }
+      });
+      
+      if (logResult.error) {
+        console.error(`Error logging claim ${action}:`, logResult.error);
+        toast.error(`Claim ${action === 'approve' ? 'approved' : 'rejected'} successfully, but failed to log action`);
+      } else {
+        toast.success(`Claim ${action === 'approve' ? 'approved' : 'rejected'} successfully`);
+      }
+      
       refetchClaims();
     } catch (error) {
       console.error(`Error ${action}ing claim:`, error);

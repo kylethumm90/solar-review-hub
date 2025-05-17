@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button"; 
 import { 
   Select,
   SelectContent,
@@ -8,7 +9,9 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { Search } from "lucide-react";
+import { Search, PlusCircle } from "lucide-react";
+import { logAdminAction } from "@/utils/adminLogUtils";
+import { toast } from "sonner";
 
 type LogsFilterBarProps = {
   searchTerm: string;
@@ -16,6 +19,7 @@ type LogsFilterBarProps = {
   actionTypeFilter: string | null;
   setActionTypeFilter: (value: string | null) => void;
   actionTypes: string[];
+  onRefresh?: () => void;
 };
 
 export default function LogsFilterBar({
@@ -23,8 +27,35 @@ export default function LogsFilterBar({
   setSearchTerm,
   actionTypeFilter,
   setActionTypeFilter,
-  actionTypes
+  actionTypes,
+  onRefresh
 }: LogsFilterBarProps) {
+  // Function to create a test log entry
+  const createTestLogEntry = async () => {
+    try {
+      const testLogResult = await logAdminAction({
+        action_type: 'approve_review',
+        target_entity: 'review',
+        target_id: `test-${Date.now()}`,
+        details: { note: 'This is a test log entry created manually' }
+      });
+      
+      if (testLogResult.error) {
+        toast.error("Failed to create test log entry");
+        console.error("Test log creation error:", testLogResult.error);
+      } else {
+        toast.success("Test log entry created successfully");
+        // Refresh the logs if the callback is provided
+        if (onRefresh) {
+          onRefresh();
+        }
+      }
+    } catch (error) {
+      console.error("Error creating test log:", error);
+      toast.error("An unexpected error occurred creating test log");
+    }
+  };
+
   return (
     <div className="flex flex-col md:flex-row gap-4 mb-6">
       <div className="relative flex-grow">
@@ -56,6 +87,16 @@ export default function LogsFilterBar({
           </SelectContent>
         </Select>
       </div>
+      
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="whitespace-nowrap"
+        onClick={createTestLogEntry}
+      >
+        <PlusCircle className="h-4 w-4 mr-2" />
+        Create Test Log
+      </Button>
     </div>
   );
 }

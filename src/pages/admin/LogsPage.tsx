@@ -17,7 +17,8 @@ const LogsPage = () => {
     actionType,
     setActionType,
     entityType,
-    setEntityType
+    setEntityType,
+    refetchLogs
   } = useAdminLogs();
 
   // Extract unique action types for filter dropdown
@@ -26,8 +27,7 @@ const LogsPage = () => {
   // Handle manual refresh
   const handleRefresh = () => {
     toast.info("Refreshing logs...");
-    // Use the window.location.reload() as a simple way to refresh the data
-    window.location.reload();
+    refetchLogs();
   };
 
   // Apply client-side filtering
@@ -55,6 +55,7 @@ const LogsPage = () => {
         actionTypeFilter={actionType}
         setActionTypeFilter={setActionType}
         actionTypes={actionTypes}
+        onRefresh={handleRefresh}
       />
 
       <div className="bg-muted/20 p-4 rounded-md mb-6">

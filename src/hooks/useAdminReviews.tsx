@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Review } from "@/components/admin/reviews/types";
+import { logAdminAction } from "@/utils/adminLogUtils";
 
 export function useAdminReviews() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -136,9 +137,24 @@ export function useAdminReviews() {
     );
   });
   
-  // Handle review moderation action
+  // Handle review moderation action with proper logging
   const handleReviewAction = async (reviewId: string, action: 'approve' | 'reject') => {
     try {
+      // Get previous status for logging
+      const { data: reviewData, error: fetchError } = await supabase
+        .from("reviews")
+        .select("verification_status")
+        .eq("id", reviewId)
+        .single();
+      
+      if (fetchError) {
+        console.error("Error fetching review status:", fetchError);
+        toast.error(`Failed to fetch review status`);
+        return;
+      }
+      
+      const previousStatus = reviewData?.verification_status || null;
+      
       // Update review verification status
       const newStatus = action === 'approve' ? 'approved' : 'rejected';
       const { error } = await supabase
@@ -151,7 +167,22 @@ export function useAdminReviews() {
         throw error;
       }
       
-      toast.success(`Review ${action === 'approve' ? 'approved' : 'rejected'} successfully`);
+      // Log the admin action
+      const actionType = action === 'approve' ? 'approve_review' : 'reject_review';
+      const logResult = await logAdminAction({
+        action_type: actionType,
+        target_entity: 'review',
+        target_id: reviewId,
+        details: { previous_status: previousStatus, new_status: newStatus }
+      });
+      
+      if (logResult.error) {
+        console.error(`Error logging review ${action}:`, logResult.error);
+        toast.error(`Review ${action === 'approve' ? 'approved' : 'rejected'} successfully, but failed to log action`);
+      } else {
+        toast.success(`Review ${action === 'approve' ? 'approved' : 'rejected'} successfully`);
+      }
+      
       refetchReviews();
     } catch (error) {
       console.error(`Error ${action}ing review:`, error);

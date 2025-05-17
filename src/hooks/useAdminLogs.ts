@@ -19,7 +19,9 @@ const ALLOWED_ACTION_TYPES = [
   'revoke_admin',
   'change_user_role', 
   'edit_vendor_metadata',
-  'verify_company'
+  'verify_company',
+  'PAGE_VIEW',  // Include for backward compatibility
+  'TEST_LOG'    // Include for backward compatibility
 ];
 
 export function useAdminLogs() {
@@ -27,7 +29,7 @@ export function useAdminLogs() {
   const [actionType, setActionType] = useState<string | null>(null);
   const [entityType, setEntityType] = useState<string | null>(null);
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["admin", "logs", actionType, entityType],
     queryFn: async () => {
       let query = supabase
@@ -80,6 +82,11 @@ export function useAdminLogs() {
     );
   }) || [];
 
+  // Expose the refetch function
+  const refetchLogs = () => {
+    refetch();
+  };
+
   return {
     logs: filteredLogs,
     isLoading,
@@ -89,7 +96,8 @@ export function useAdminLogs() {
     actionType,
     setActionType,
     entityType,
-    setEntityType
+    setEntityType,
+    refetchLogs
   };
 }
 

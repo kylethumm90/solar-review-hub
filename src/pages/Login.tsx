@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -5,14 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Lock, Google } from 'lucide-react';
+import { Mail, Lock, Github } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signInWithGoogle } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -24,19 +25,6 @@ const Login = () => {
       navigate('/dashboard');
     } catch (error: any) {
       toast.error(error.message || 'Login failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    try {
-      await signInWithGoogle();
-      toast.success('Login with Google successful!');
-      navigate('/dashboard');
-    } catch (error: any) {
-      toast.error(error.message || 'Login with Google failed');
     } finally {
       setLoading(false);
     }
@@ -83,31 +71,11 @@ const Login = () => {
                 />
               </div>
             </div>
-            <Button type="submit" disabled={loading} className="w-full">
+            <Button type="submit" disabled={loading} className="w-full mt-4">
               {loading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground dark:bg-gray-800">
-                Or continue with
-              </span>
-            </div>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={loading}
-            className="w-full"
-            onClick={handleGoogleSignIn}
-          >
-            <Google className="mr-2 h-4 w-4" />
-            Google
-          </Button>
-          <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+          <div className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
             Don't have an account? <Link to="/pricing" className="text-primary">Sign up</Link>
           </div>
         </CardContent>

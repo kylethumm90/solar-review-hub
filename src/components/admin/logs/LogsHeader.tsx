@@ -1,26 +1,22 @@
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
-
 type LogsHeaderProps = {
-  isFetching: boolean;
-  handleRefresh: () => void;
+  isLoading: boolean;
+  onRefresh: () => void;
 };
 
-export default function LogsHeader({ isFetching, handleRefresh }: LogsHeaderProps) {
+export default function LogsHeader({ isLoading, onRefresh }: LogsHeaderProps) {
   return (
     <div className="flex justify-between items-center mb-6">
       <h1 className="text-2xl font-bold">Admin Logs</h1>
       <Button 
-        onClick={handleRefresh} 
+        onClick={onRefresh} 
         variant="outline" 
         size="sm" 
-        disabled={isFetching}
+        disabled={isLoading}
         className="flex items-center gap-2"
       >
-        <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-        {isFetching ? "Refreshing..." : "Refresh"}
+        <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+        {isLoading ? "Refreshing..." : "Refresh"}
       </Button>
     </div>
   );

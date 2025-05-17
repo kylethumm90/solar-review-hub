@@ -74,11 +74,16 @@ const SignupForm = ({ onComplete, redirectTo = '/dashboard' }: SignupFormProps) 
 
   const handleGoogleSignIn = async () => {
     try {
+      setLoading(true);
+      console.log('Starting Google sign-in');
       await signInWithProvider('google');
       // Note: No need to handle redirection here since OAuth will redirect back to the app
       // and the onAuthStateChange listener in AuthContext will handle the session
     } catch (error: any) {
       toast.error(error.message || 'Google login failed');
+      console.error('Google login error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -195,6 +200,7 @@ const SignupForm = ({ onComplete, redirectTo = '/dashboard' }: SignupFormProps) 
       <button
         type="button"
         onClick={handleGoogleSignIn}
+        disabled={loading}
         className="w-full flex items-center justify-center gap-2 border border-gray-300 dark:border-gray-600 rounded-md py-2 px-4 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm"
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">
@@ -204,7 +210,7 @@ const SignupForm = ({ onComplete, redirectTo = '/dashboard' }: SignupFormProps) 
           <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
           <path fill="none" d="M1 1h22v22H1z" />
         </svg>
-        Continue with Google
+        {loading ? 'Connecting...' : 'Continue with Google'}
       </button>
     </div>
   );

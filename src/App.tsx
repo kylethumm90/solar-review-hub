@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import {
   BrowserRouter as Router,
@@ -39,17 +40,38 @@ import DashboardProfilePage from './pages/dashboard/DashboardProfilePage';
 import DashboardReviews from './pages/dashboard/DashboardReviews';
 import DashboardClaims from './pages/dashboard/DashboardClaims';
 
+// Auth callback handler component
+const AuthCallback = () => {
+  const { isLoading } = useAuth();
+  const navigate = useLocation();
+  
+  useEffect(() => {
+    if (!isLoading) {
+      // After auth state is processed, redirect to dashboard
+      console.log('Auth callback complete, redirecting to dashboard');
+      window.location.href = '/dashboard';
+    }
+  }, [isLoading]);
+
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="flex flex-col items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <p className="mt-4">Completing authentication...</p>
+      </div>
+    </div>
+  );
+};
+
 const App = () => {
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!isLoading && !user && window.location.pathname !== '/') {
-      // toast({
-      //   title: "You must be logged in to view this page.",
-      //   description: "Redirecting to landing page...",
-      //   action: <ToastAction altText="Goto schedule">Schedule</ToastAction>,
-      // })
+    if (!isLoading && !user && window.location.pathname !== '/' && 
+        !window.location.pathname.includes('/auth/callback') &&
+        window.location.pathname !== '/login') {
+      // Don't toast during login flow
     }
   }, [user, isLoading, toast]);
 
@@ -79,6 +101,8 @@ const App = () => {
             <Route path="/reviews/:vendorId" element={user ? <Reviews /> : <Navigate to="/" />} />
             <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
             <Route path="/check-email" element={<CheckEmail />} />
+            {/* Add explicit auth callback route */}
+            <Route path="/auth/callback" element={<AuthCallback />} />
           </Route>
           
           {/* Protected routes using ProtectedLayout */}

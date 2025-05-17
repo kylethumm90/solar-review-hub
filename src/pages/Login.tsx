@@ -1,25 +1,39 @@
 
 import React, { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import LoginForm from '@/components/auth/LoginForm';
 import SignupForm from '@/components/auth/SignupForm';
+import { toast } from 'sonner';
 
 const Login = () => {
   const [activeTab, setActiveTab] = React.useState<'login' | 'signup'>('login');
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+
+  // Check for auth-related error parameters in the URL
+  useEffect(() => {
+    const error = searchParams.get('error');
+    const errorDescription = searchParams.get('error_description');
+    
+    if (error) {
+      console.error('Auth error:', error, errorDescription);
+      toast.error(errorDescription || `Authentication error: ${error}`);
+    }
+  }, [searchParams]);
 
   // Check if user is already logged in
   useEffect(() => {
-    if (user) {
+    if (user && !isLoading) {
+      console.log('User already logged in, redirecting to dashboard');
       navigate('/dashboard');
     }
-  }, [user, navigate]);
+  }, [user, isLoading, navigate]);
 
   // Check URL params for signup
   useEffect(() => {
@@ -27,6 +41,18 @@ const Login = () => {
       setActiveTab('signup');
     }
   }, [searchParams]);
+
+  // Prevent rendering the login page if we're in a callback route
+  if (location.pathname.includes('/auth/callback')) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4">Processing authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">

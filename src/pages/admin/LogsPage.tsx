@@ -30,6 +30,11 @@ const LogsPage = () => {
     window.location.reload();
   };
 
+  // Apply client-side filtering
+  const filteredLogs = React.useMemo(() => {
+    return logs || [];
+  }, [logs]);
+
   return (
     <div className="p-6 space-y-6">
       {error && (
@@ -64,7 +69,7 @@ const LogsPage = () => {
       <LogsTable 
         logs={logs} 
         isLoading={isLoading} 
-        filteredLogs={logs} 
+        filteredLogs={filteredLogs} 
       />
     </div>
   );

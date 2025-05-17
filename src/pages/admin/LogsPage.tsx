@@ -29,7 +29,12 @@ const LogsPage = () => {
 
   // Apply client-side filtering
   const filteredLogs = React.useMemo(() => {
-    return logs || [];
+    if (!logs) return [];
+    
+    // Start with logs filtered by search query (already handled in the hook)
+    let filtered = logs;
+    
+    return filtered;
   }, [logs]);
 
   return (

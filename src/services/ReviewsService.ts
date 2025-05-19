@@ -64,7 +64,6 @@ export class ReviewsService {
         install_count, install_states, still_active,
         rating_communication, rating_install_quality, rating_payment_reliability,
         rating_timeliness, rating_post_install_support,
-        users (full_name),
         company:companies (id, name, type, logo_url)
       `, { count: 'exact' })
       .eq('verified', true); // Only show verified reviews
@@ -161,8 +160,6 @@ export class ReviewsService {
       // Transform data into ExtendedReview[]
       const typedData: ExtendedReview[] = filteredData.map(item => ({
         ...item,
-        // Fix the issue where users might not be properly typed
-        users: item.users && !item.users.error ? item.users : null,
         // Ensure core review properties are present
         rating_communication: item.rating_communication,
         rating_install_quality: item.rating_install_quality,

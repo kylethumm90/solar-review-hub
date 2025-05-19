@@ -18,7 +18,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
   const grade = scoreToGrade(review.average_score || 0);
   const displayName = review.is_anonymous
     ? "Verified Solar Pro"
-    : review.users?.full_name || "Anonymous";
+    : "Verified Reviewer";
   
   return (
     <Card className="overflow-hidden">

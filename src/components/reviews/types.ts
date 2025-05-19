@@ -3,9 +3,6 @@ import { Review, Company } from '@/types';
 
 // Extended review type that includes joined data
 export interface ExtendedReview extends Review {
-  users?: {
-    full_name: string;
-  } | null | any; // Handle any type including SelectQueryError
   company?: Company | any; // Handle simplified company structure from joined query
   install_count?: number;
   install_states?: string[];

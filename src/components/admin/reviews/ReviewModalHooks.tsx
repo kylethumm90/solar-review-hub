@@ -23,6 +23,8 @@ export const useReviewData = (reviewId: string, isOpen: boolean) => {
           verification_status,
           created_at,
           user_id,
+          is_anonymous,
+          attachment_url,
           company:companies(id, name)
         `)
         .eq("id", reviewId)

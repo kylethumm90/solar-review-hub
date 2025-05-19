@@ -71,7 +71,10 @@ const AddVendorForm = () => {
         .select('id')
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error detail:', error);
+        throw error;
+      }
       
       toast.success("Company added successfully!");
       // Navigate to the newly created company page

@@ -9,6 +9,8 @@ interface ReviewFormHeaderProps {
   setReviewTitle: React.Dispatch<React.SetStateAction<string>>;
   isAnonymous: boolean;
   setIsAnonymous: React.Dispatch<React.SetStateAction<boolean>>;
+  showIdentitySection?: boolean;
+  titleReadOnly?: boolean;
 }
 
 const ReviewFormHeader: React.FC<ReviewFormHeaderProps> = ({
@@ -16,6 +18,8 @@ const ReviewFormHeader: React.FC<ReviewFormHeaderProps> = ({
   setReviewTitle,
   isAnonymous,
   setIsAnonymous,
+  showIdentitySection = true,
+  titleReadOnly = false,
 }) => {
   return (
     <>
@@ -28,22 +32,26 @@ const ReviewFormHeader: React.FC<ReviewFormHeaderProps> = ({
           onChange={(e) => setReviewTitle(e.target.value)}
           placeholder="Summarize your experience in a few words"
           required
+          readOnly={titleReadOnly}
+          disabled={titleReadOnly}
         />
       </div>
       
-      <div>
-        <Label className="font-semibold mb-2 block">Reviewer Identity</Label>
-        <RadioGroup defaultValue={isAnonymous ? "anonymous" : "public"} onValueChange={(val) => setIsAnonymous(val === "anonymous")}>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="public" id="public" />
-            <Label htmlFor="public">Display my full name</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="anonymous" id="anonymous" />
-            <Label htmlFor="anonymous">Submit anonymously</Label>
-          </div>
-        </RadioGroup>
-      </div>
+      {showIdentitySection && (
+        <div className="mt-4">
+          <Label className="font-semibold mb-2 block">Reviewer Identity</Label>
+          <RadioGroup defaultValue={isAnonymous ? "anonymous" : "public"} onValueChange={(val) => setIsAnonymous(val === "anonymous")}>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="public" id="public" />
+              <Label htmlFor="public">Display my full name</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="anonymous" id="anonymous" />
+              <Label htmlFor="anonymous">Submit anonymously</Label>
+            </div>
+          </RadioGroup>
+        </div>
+      )}
     </>
   );
 };

@@ -33,46 +33,38 @@ const ReviewsPage = () => {
         </p>
       </div>
       
-      <div className="flex mb-4">
+      <Tabs value={currentView === 'all' ? 'all' : 'anonymous'} onValueChange={(val) => setCurrentView(val as 'all' | 'anonymous')}>
         <TabsList>
-          <TabsTrigger 
-            value="all" 
-            onClick={() => setCurrentView('all')}
-            className={currentView === 'all' ? 'bg-primary text-primary-foreground' : ''}
-          >
-            All Reviews
-          </TabsTrigger>
-          <TabsTrigger 
-            value="anonymous" 
-            onClick={() => setCurrentView('anonymous')}
-            className={currentView === 'anonymous' ? 'bg-primary text-primary-foreground' : ''}
-          >
-            Anonymous Reviews
-          </TabsTrigger>
+          <TabsTrigger value="all">All Reviews</TabsTrigger>
+          <TabsTrigger value="anonymous">Anonymous Reviews</TabsTrigger>
         </TabsList>
-      </div>
-      
-      {currentView === 'all' ? (
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <ReviewFilterTabs
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-          />
-          
-          <TabsContent value={activeTab} className="space-y-4">
-            <ReviewsTable 
-              reviews={reviews} 
-              isLoading={isLoading}
-              onApprove={(reviewId) => handleReviewAction(reviewId, 'approve')}
-              onReject={(reviewId) => handleReviewAction(reviewId, 'reject')}
+        
+        <TabsContent value="all">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-6">
+            <ReviewFilterTabs
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
             />
-          </TabsContent>
-        </Tabs>
-      ) : (
-        <AnonymousReviewVerification />
-      )}
+            
+            <TabsContent value={activeTab} className="space-y-4">
+              <ReviewsTable 
+                reviews={reviews} 
+                isLoading={isLoading}
+                onApprove={(reviewId) => handleReviewAction(reviewId, 'approve')}
+                onReject={(reviewId) => handleReviewAction(reviewId, 'reject')}
+              />
+            </TabsContent>
+          </Tabs>
+        </TabsContent>
+        
+        <TabsContent value="anonymous">
+          <div className="mt-6">
+            <AnonymousReviewVerification />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

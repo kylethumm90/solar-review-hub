@@ -20,10 +20,10 @@ const ReviewFilterTabs = ({
   return (
     <div className="flex items-center justify-between mb-4">
       <TabsList>
-        <TabsTrigger value="pending">Pending</TabsTrigger>
-        <TabsTrigger value="approved">Approved</TabsTrigger>
-        <TabsTrigger value="rejected">Rejected</TabsTrigger>
-        <TabsTrigger value="all">All</TabsTrigger>
+        <TabsTrigger value="pending" onClick={() => onTabChange("pending")}>Pending</TabsTrigger>
+        <TabsTrigger value="approved" onClick={() => onTabChange("approved")}>Approved</TabsTrigger>
+        <TabsTrigger value="rejected" onClick={() => onTabChange("rejected")}>Rejected</TabsTrigger>
+        <TabsTrigger value="all" onClick={() => onTabChange("all")}>All</TabsTrigger>
       </TabsList>
       
       <div className="relative">

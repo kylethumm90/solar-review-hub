@@ -293,7 +293,19 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
               </>
             )}
             
-            {/* Reviewer Identity */}
+            {/* MOVED: Additional Comments - now above Reviewer Identity */}
+            <div>
+              <Label htmlFor="review-details">Additional Comments (Optional)</Label>
+              <Textarea
+                id="review-details"
+                className="min-h-[120px] mt-1"
+                value={reviewDetails}
+                onChange={(e) => setReviewDetails(e.target.value)}
+                placeholder="Share anything else about your experience..."
+              />
+            </div>
+            
+            {/* Reviewer Identity - now below Additional Comments */}
             <div>
               <Label className="font-semibold mb-2 block">Reviewer Identity</Label>
               <RadioGroup defaultValue="public" onValueChange={(val) => setIsAnonymous(val === "anonymous")}>
@@ -306,18 +318,6 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
                   <Label htmlFor="anonymous">Submit anonymously</Label>
                 </div>
               </RadioGroup>
-            </div>
-            
-            {/* MOVED: Additional Comments below Reviewer Identity */}
-            <div>
-              <Label htmlFor="review-details">Additional Comments (Optional)</Label>
-              <Textarea
-                id="review-details"
-                className="min-h-[120px] mt-1"
-                value={reviewDetails}
-                onChange={(e) => setReviewDetails(e.target.value)}
-                placeholder="Share anything else about your experience..."
-              />
             </div>
             
             {isAnonymous && (

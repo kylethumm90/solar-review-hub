@@ -27,7 +27,7 @@ export const ReviewService = {
       .from('review_questions')
       .select('*')
       .eq('company_type', normalizedType)
-      .neq('category', 'pto_time') // Exclude pto_time category for all new reviews
+      .not('category', 'ilike', '%pto%time%') // More thorough exclusion of PTO time
       .order('category');
       
     if (error) throw error;

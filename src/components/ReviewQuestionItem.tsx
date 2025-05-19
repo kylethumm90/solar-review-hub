@@ -31,6 +31,11 @@ const ReviewQuestionItem = ({ question, onChange }: ReviewQuestionItemProps) => 
     return descriptions[key] || question.question;
   };
 
+  // Skip rendering if this is a PTO time question
+  if (question.category.toLowerCase().replace(/ /g, '_') === 'pto_time') {
+    return null;
+  }
+
   return (
     <div className="p-4 border rounded-lg mb-4 bg-card">
       <div className="mb-2">

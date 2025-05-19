@@ -8,7 +8,7 @@ import { logAdminAction } from '@/utils/adminLogUtils';
 
 export function useClaimsAdmin() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('pending');
+  const [activeTab, setActiveTab] = useState('all'); // Changed default from 'pending' to 'all'
   
   const { data: claimsData, isLoading, refetch } = useQuery({
     queryKey: ['admin', 'claims', activeTab],
@@ -42,6 +42,7 @@ export function useClaimsAdmin() {
         throw error;
       }
       
+      console.log('Fetched claims:', data); // Add logging to debug
       return data as Claim[];
     }
   });

@@ -26,7 +26,7 @@ const ClaimsFilter = ({
           data-active={activeTab === "all"}
           className={activeTab === "all" ? "data-[active=true]:bg-primary data-[active=true]:text-primary-foreground" : ""}
         >
-          All
+          All Claims
         </TabsTrigger>
         <TabsTrigger 
           value="pending" 

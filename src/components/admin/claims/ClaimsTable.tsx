@@ -34,7 +34,8 @@ const ClaimsTable = ({ claims, isLoading, onApprove, onReject }: ClaimsTableProp
   if (claims.length === 0) {
     return (
       <div className="text-center py-8 border rounded-md bg-muted/10">
-        <p className="text-muted-foreground">No claims found</p>
+        <p className="text-muted-foreground mb-2">No claims found</p>
+        <p className="text-sm text-muted-foreground">Try selecting a different filter or check if claims have been submitted</p>
       </div>
     );
   }
@@ -46,6 +47,8 @@ const ClaimsTable = ({ claims, isLoading, onApprove, onReject }: ClaimsTableProp
       claim.status === 'approved'
     );
   };
+
+  console.log('Rendering claims:', claims); // Add logging
 
   return (
     <div className="border rounded-md">
@@ -68,7 +71,7 @@ const ClaimsTable = ({ claims, isLoading, onApprove, onReject }: ClaimsTableProp
             
             return (
               <TableRow key={claim.id}>
-                <TableCell className="font-medium">{claim.company?.name}</TableCell>
+                <TableCell className="font-medium">{claim.company?.name || 'Unknown Company'}</TableCell>
                 <TableCell>{claim.full_name}</TableCell>
                 <TableCell>{claim.company_email}</TableCell>
                 <TableCell>{claim.job_title}</TableCell>

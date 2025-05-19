@@ -7,7 +7,6 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CompanyHeader from '@/components/dashboard/company/CompanyHeader';
 import CompanyDashboard from '@/components/dashboard/company/CompanyDashboard';
 import CompanyProfile from '@/components/dashboard/company/CompanyProfile';
@@ -186,29 +185,34 @@ const DashboardMyCompany = () => {
         companyId={company.id}
       />
       
-      <Tabs defaultValue="overview">
-        <TabsList className="mb-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="profile">Company Profile</TabsTrigger>
-          <TabsTrigger value="reviews">Reviews ({reviews.length})</TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        {/* Left column - Company Profile */}
+        <div className="lg:col-span-2">
+          <CompanyProfile company={company} />
+        </div>
         
-        <TabsContent value="overview">
+        {/* Right column - Company Dashboard and Stats */}
+        <div>
           <CompanyDashboard 
             company={company}
             claim={claim}
             reviewsCount={reviews.length}
           />
-        </TabsContent>
-        
-        <TabsContent value="profile">
-          <CompanyProfile company={company} />
-        </TabsContent>
-        
-        <TabsContent value="reviews">
-          <ReviewsList reviews={reviews} />
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
+      
+      {/* Reviews Section - Full Width */}
+      <div className="mt-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Customer Reviews</CardTitle>
+            <CardDescription>Reviews from your customers</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ReviewsList reviews={reviews} />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

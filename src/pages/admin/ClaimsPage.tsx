@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useClaimsAdmin } from "@/hooks/useClaimsAdmin";
 import ClaimsContent from "@/components/admin/claims/ClaimsContent";
@@ -75,7 +74,7 @@ const ClaimsPage = () => {
       
       {/* Data Issues Alert */}
       {rawClaimsData && claims && rawClaimsData.length !== claims.length && (
-        <Alert variant="warning" className="bg-amber-50 border-amber-300">
+        <Alert className="bg-amber-50 border-amber-300">
           <AlertTriangle className="h-4 w-4 text-amber-600" />
           <AlertDescription>
             <span className="font-semibold">Filtered Data Notice:</span> Showing {claims.length} 

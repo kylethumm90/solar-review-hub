@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -249,17 +250,6 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
               </div>
             )}
             
-            <div>
-              <Label htmlFor="review-details">Additional Comments (Optional)</Label>
-              <Textarea
-                id="review-details"
-                className="min-h-[120px] mt-1"
-                value={reviewDetails}
-                onChange={(e) => setReviewDetails(e.target.value)}
-                placeholder="Share anything else about your experience..."
-              />
-            </div>
-            
             {isEpcVendor && (
               <>
                 {/* MOVED: Approximately how many installs */}
@@ -303,7 +293,7 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
               </>
             )}
             
-            {/* MOVED: Reviewer Identity to bottom of step 1 */}
+            {/* Reviewer Identity */}
             <div>
               <Label className="font-semibold mb-2 block">Reviewer Identity</Label>
               <RadioGroup defaultValue="public" onValueChange={(val) => setIsAnonymous(val === "anonymous")}>
@@ -316,6 +306,18 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
                   <Label htmlFor="anonymous">Submit anonymously</Label>
                 </div>
               </RadioGroup>
+            </div>
+            
+            {/* MOVED: Additional Comments below Reviewer Identity */}
+            <div>
+              <Label htmlFor="review-details">Additional Comments (Optional)</Label>
+              <Textarea
+                id="review-details"
+                className="min-h-[120px] mt-1"
+                value={reviewDetails}
+                onChange={(e) => setReviewDetails(e.target.value)}
+                placeholder="Share anything else about your experience..."
+              />
             </div>
             
             {isAnonymous && (

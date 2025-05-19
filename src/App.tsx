@@ -13,6 +13,7 @@ import Home from './pages/Home';
 import LandingPage from './pages/LandingPage';
 import CompanyDetailsPage from './pages/CompanyDetailsPage';
 import Reviews from './pages/Reviews';
+import ReviewConfirmation from './pages/ReviewConfirmation';
 import ProfilePage from './pages/ProfilePage';
 import PricingPage from './pages/PricingPage';
 import AdminLayout from './layouts/AdminLayout';
@@ -82,6 +83,7 @@ const App = () => {
             <Route path="/vendors" element={<Vendors />} />
             <Route path="/vendors/:id" element={<VendorDetails />} />
             <Route path="/reviews/:vendorId" element={user ? <Reviews /> : <Navigate to="/" />} />
+            <Route path="/review/confirmation" element={<ReviewConfirmation />} />
             <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
             <Route path="/check-email" element={<CheckEmail />} />
             <Route path="/reset-password" element={<ResetPassword />} />

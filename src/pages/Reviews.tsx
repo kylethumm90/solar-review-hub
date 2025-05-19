@@ -104,7 +104,16 @@ const Reviews = () => {
         title: "Success",
         description: "Review submitted successfully!"
       });
-      navigate(`/vendors/${vendorId}`);
+      
+      // Redirect to confirmation page with the review data
+      navigate('/review/confirmation', {
+        state: {
+          answers: questionRatings,
+          vendorId,
+          vendorName: vendor?.name,
+          averageScore
+        }
+      });
     } catch (error: any) {
       toast.custom({
         title: "Error",
@@ -132,6 +141,12 @@ const Reviews = () => {
       
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
         <VendorHeader vendor={vendor} />
+        
+        <div className="mb-6">
+          <span className="text-sm text-gray-500 italic flex items-center gap-1">
+            <Star className="h-4 w-4" /> Your selections will be translated into SolarGrade letter grades after submission.
+          </span>
+        </div>
         
         <ReviewForm 
           vendor={vendor}

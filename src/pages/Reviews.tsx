@@ -11,8 +11,6 @@ import VendorHeader from '@/components/review/VendorHeader';
 import ReviewForm from '@/components/review/ReviewForm';
 import { ReviewService, VendorInfo } from '@/services/ReviewService';
 import { Star } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle } from 'lucide-react';
 
 interface ReviewMetadata {
   installCount: number | null;

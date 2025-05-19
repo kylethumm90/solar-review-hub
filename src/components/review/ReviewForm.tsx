@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import ReviewCategoryGroup from '@/components/ReviewCategoryGroup';
 import { ReviewQuestion } from '@/types';
 import { toast } from '@/hooks/use-toast';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Select,
@@ -98,6 +98,10 @@ const US_STATES = [
 ];
 
 const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFormProps) => {
+  // Form step state
+  const [step, setStep] = useState<number>(1);
+  
+  // Form fields
   const [reviewTitle, setReviewTitle] = useState('');
   const [reviewDetails, setReviewDetails] = useState('');
   const [questionRatings, setQuestionRatings] = useState<
@@ -107,7 +111,7 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
   const [attachment, setAttachment] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
 
-  // New metadata state
+  // Metadata state
   const [installCount, setInstallCount] = useState<number | null>(null);
   const [stillActive, setStillActive] = useState<string | null>(null);
   const [lastInstallDate, setLastInstallDate] = useState<string | null>(null);
@@ -160,15 +164,13 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const validateStep1 = () => {
     if (!reviewTitle.trim()) {
       toast.custom({ 
         title: "Missing title", 
         description: "Please provide a title for your review" 
       });
-      return;
+      return false;
     }
 
     // Check if all questions have been answered
@@ -179,10 +181,26 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
     if (unansweredQuestions.length > 0) {
       toast.custom({
         title: "Incomplete review",
-        description: "Please rate all questions before submitting"
+        description: "Please rate all questions before proceeding"
       });
-      return;
+      return false;
     }
+
+    return true;
+  };
+
+  const handleNextStep = () => {
+    if (validateStep1()) {
+      setStep(2);
+    }
+  };
+
+  const handlePrevStep = () => {
+    setStep(1);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
 
     // Validate file attachment for anonymous reviews
     if (isAnonymous && !attachment) {
@@ -215,220 +233,254 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
   return (
     <form onSubmit={handleSubmit}>
       <div className="space-y-6">
-        <div>
-          <Label htmlFor="review-title">Review Title</Label>
-          <Input
-            id="review-title"
-            className="mt-1"
-            value={reviewTitle}
-            onChange={(e) => setReviewTitle(e.target.value)}
-            placeholder="Summarize your experience in a few words"
-            required
-          />
-        </div>
-        
-        <div>
-          <Label className="font-semibold mb-2 block">Reviewer Identity</Label>
-          <RadioGroup defaultValue="public" onValueChange={(val) => setIsAnonymous(val === "anonymous")}>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="public" id="public" />
-              <Label htmlFor="public">Display my full name</Label>
+        {step === 1 && (
+          <>
+            <div>
+              <Label htmlFor="review-title">Review Title</Label>
+              <Input
+                id="review-title"
+                className="mt-1"
+                value={reviewTitle}
+                onChange={(e) => setReviewTitle(e.target.value)}
+                placeholder="Summarize your experience in a few words"
+                required
+              />
             </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="anonymous" id="anonymous" />
-              <Label htmlFor="anonymous">Submit anonymously</Label>
-            </div>
-          </RadioGroup>
-        </div>
-        
-        {isAnonymous && (
-          <div>
-            <Label htmlFor="attachment" className="font-semibold mb-2 block">
-              Upload documentation to verify your review
-            </Label>
-            <Input
-              id="attachment"
-              type="file"
-              onChange={handleFileChange}
-              accept=".pdf,.jpg,.jpeg,.png"
-              className="mt-1"
-            />
-            {fileError && (
-              <Alert variant="destructive" className="mt-2">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{fileError}</AlertDescription>
-              </Alert>
-            )}
-            <p className="text-sm text-muted-foreground mt-2">
-              <strong>Accepted examples:</strong><br />
-              • Signed contract or proposal<br />
-              • Invoice or receipt from the company<br />
-              • Screenshot of an email or text exchange<br />
-              • Photo of installed equipment with branding
-            </p>
-          </div>
-        )}
-        
-        {isEpcVendor && (
-          <div className="space-y-8 border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
-            <h3 className="text-lg font-semibold">Additional Information</h3>
             
-            {/* Field 1: Number of Installs */}
-            <div>
-              <Label htmlFor="install-count" className="block font-semibold mb-2">
-                Approximately how many installs have you completed with this EPC?
-              </Label>
-              <Input
-                id="install-count"
-                type="number"
-                min={1}
-                max={1000}
-                step={1}
-                placeholder="Enter a number (estimates are fine)"
-                onChange={(e) => setInstallCount(Number(e.target.value) || null)}
-                className="mb-2"
+            {reviewQuestions.length > 0 ? (
+              <ReviewCategoryGroup
+                title={`Rate Your Experience with this ${formattedCompanyType}`}
+                questions={reviewQuestions}
+                onQuestionChange={handleQuestionChange}
               />
-              <p className="text-sm text-gray-500 mt-1">
-                Estimates are fine. Just give your best approximation.
-              </p>
-
-              <p className="mt-4 text-sm text-gray-600 font-medium">Not sure? Pick a range:</p>
-              <Select onValueChange={(value) => setInstallCount(Number(value) || null)}>
-                <SelectTrigger className="w-full max-w-xs">
-                  <SelectValue placeholder="Select a range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1</SelectItem>
-                  <SelectItem value="3">2-5</SelectItem>
-                  <SelectItem value="8">6-10</SelectItem>
-                  <SelectItem value="18">11-25</SelectItem>
-                  <SelectItem value="38">26-50</SelectItem>
-                  <SelectItem value="75">51-100</SelectItem>
-                  <SelectItem value="100">100+</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Field 2: Still Working With This EPC? */}
-            <div>
-              <Label className="block font-semibold mb-2">
-                Are you still working with this EPC?
-              </Label>
-              <RadioGroup onValueChange={setStillActive}>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="yes" id="still-active-yes" />
-                    <Label htmlFor="still-active-yes">Yes</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="no" id="still-active-no" />
-                    <Label htmlFor="still-active-no">No</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="considering" id="still-active-considering" />
-                    <Label htmlFor="still-active-considering">Considering ending the relationship</Label>
-                  </div>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {/* Field 3: Most Recent Install Date */}
-            <div>
-              <Label htmlFor="last-install-date" className="block font-semibold mb-2">
-                When was your most recent install with this EPC?
-              </Label>
-              <Input
-                id="last-install-date"
-                type="month"
-                max={new Date().toISOString().split('T')[0].slice(0, 7)}
-                onChange={(e) => setLastInstallDate(e.target.value || null)}
-              />
-            </div>
-
-            {/* Field 4: Install Locations */}
-            <div>
-              <Label className="block font-semibold mb-2">
-                Where were most of your installs with this EPC located?
-              </Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-60 overflow-y-auto border rounded-md p-2">
-                {US_STATES.map((state) => (
-                  <div key={state.value} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`state-${state.value}`} 
-                      checked={installStates.includes(state.value)}
-                      onCheckedChange={() => handleStateChange(state.value)}
-                    />
-                    <Label htmlFor={`state-${state.value}`} className="text-sm">
-                      {state.label}
-                    </Label>
-                  </div>
-                ))}
+            ) : (
+              <div className="py-4 text-center text-muted-foreground">
+                No review questions available for this vendor type.
               </div>
-              <p className="text-sm text-gray-500 mt-1">
-                You may select more than one state.
-              </p>
-            </div>
-
-            {/* Field 5: Recommend This EPC */}
+            )}
+            
             <div>
-              <Label className="block font-semibold mb-2">
-                Would you recommend this EPC to another organization?
-              </Label>
-              <RadioGroup onValueChange={setRecommendEpc}>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="yes" id="recommend-yes" />
-                    <Label htmlFor="recommend-yes">Yes</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="no" id="recommend-no" />
-                    <Label htmlFor="recommend-no">No</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="unsure" id="recommend-unsure" />
-                    <Label htmlFor="recommend-unsure">Not sure</Label>
-                  </div>
+              <Label htmlFor="review-details">Additional Comments (Optional)</Label>
+              <Textarea
+                id="review-details"
+                className="min-h-[120px] mt-1"
+                value={reviewDetails}
+                onChange={(e) => setReviewDetails(e.target.value)}
+                placeholder="Share anything else about your experience..."
+              />
+            </div>
+            
+            <div className="flex justify-end">
+              <Button 
+                type="button" 
+                onClick={handleNextStep}
+                disabled={
+                  reviewQuestions.length === 0 ||
+                  Object.keys(questionRatings).length < reviewQuestions.length
+                }
+              >
+                Next Step <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          </>
+        )}
+
+        {step === 2 && (
+          <>
+            <div className="border-b pb-4 mb-6">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handlePrevStep}
+                className="mb-4"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Ratings
+              </Button>
+              <h2 className="text-xl font-semibold mt-4">Additional Information</h2>
+            </div>
+            
+            <div>
+              <Label className="font-semibold mb-2 block">Reviewer Identity</Label>
+              <RadioGroup defaultValue="public" onValueChange={(val) => setIsAnonymous(val === "anonymous")}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="public" id="public" />
+                  <Label htmlFor="public">Display my full name</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="anonymous" id="anonymous" />
+                  <Label htmlFor="anonymous">Submit anonymously</Label>
                 </div>
               </RadioGroup>
             </div>
-          </div>
+            
+            {isAnonymous && (
+              <div>
+                <Label htmlFor="attachment" className="font-semibold mb-2 block">
+                  Upload documentation to verify your review
+                </Label>
+                <Input
+                  id="attachment"
+                  type="file"
+                  onChange={handleFileChange}
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  className="mt-1"
+                />
+                {fileError && (
+                  <Alert variant="destructive" className="mt-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{fileError}</AlertDescription>
+                  </Alert>
+                )}
+                <p className="text-sm text-muted-foreground mt-2">
+                  <strong>Accepted examples:</strong><br />
+                  • Signed contract or proposal<br />
+                  • Invoice or receipt from the company<br />
+                  • Screenshot of an email or text exchange<br />
+                  • Photo of installed equipment with branding
+                </p>
+              </div>
+            )}
+            
+            {isEpcVendor && (
+              <div className="space-y-6 mt-6">                
+                {/* Field 2: Still Working With This EPC? */}
+                <div>
+                  <Label className="block font-semibold mb-2">
+                    Are you still working with this EPC?
+                  </Label>
+                  <RadioGroup onValueChange={setStillActive}>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="yes" id="still-active-yes" />
+                        <Label htmlFor="still-active-yes">Yes</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id="still-active-no" />
+                        <Label htmlFor="still-active-no">No</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="considering" id="still-active-considering" />
+                        <Label htmlFor="still-active-considering">Considering ending the relationship</Label>
+                      </div>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {/* Field 3: Most Recent Install Date */}
+                <div>
+                  <Label htmlFor="last-install-date" className="block font-semibold mb-2">
+                    When was your most recent install with this EPC?
+                  </Label>
+                  <Input
+                    id="last-install-date"
+                    type="month"
+                    max={new Date().toISOString().split('T')[0].slice(0, 7)}
+                    onChange={(e) => setLastInstallDate(e.target.value || null)}
+                  />
+                </div>
+
+                {/* Field 5: Recommend This EPC */}
+                <div>
+                  <Label className="block font-semibold mb-2">
+                    Would you recommend this EPC to another organization?
+                  </Label>
+                  <RadioGroup onValueChange={setRecommendEpc}>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="yes" id="recommend-yes" />
+                        <Label htmlFor="recommend-yes">Yes</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id="recommend-no" />
+                        <Label htmlFor="recommend-no">No</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="unsure" id="recommend-unsure" />
+                        <Label htmlFor="recommend-unsure">Not sure</Label>
+                      </div>
+                    </div>
+                  </RadioGroup>
+                </div>
+                
+                {/* Field 1: Number of Installs (kept in step 2) */}
+                <div>
+                  <Label htmlFor="install-count" className="block font-semibold mb-2">
+                    Approximately how many installs have you completed with this EPC?
+                  </Label>
+                  <Input
+                    id="install-count"
+                    type="number"
+                    min={1}
+                    max={1000}
+                    step={1}
+                    placeholder="Enter a number (estimates are fine)"
+                    onChange={(e) => setInstallCount(Number(e.target.value) || null)}
+                    className="mb-2"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Estimates are fine. Just give your best approximation.
+                  </p>
+
+                  <p className="mt-4 text-sm text-gray-600 font-medium">Not sure? Pick a range:</p>
+                  <Select onValueChange={(value) => setInstallCount(Number(value) || null)}>
+                    <SelectTrigger className="w-full max-w-xs">
+                      <SelectValue placeholder="Select a range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1</SelectItem>
+                      <SelectItem value="3">2-5</SelectItem>
+                      <SelectItem value="8">6-10</SelectItem>
+                      <SelectItem value="18">11-25</SelectItem>
+                      <SelectItem value="38">26-50</SelectItem>
+                      <SelectItem value="75">51-100</SelectItem>
+                      <SelectItem value="100">100+</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Field 4: Install Locations (kept in step 2) */}
+                <div>
+                  <Label className="block font-semibold mb-2">
+                    Where were most of your installs with this EPC located?
+                  </Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-60 overflow-y-auto border rounded-md p-2">
+                    {US_STATES.map((state) => (
+                      <div key={state.value} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`state-${state.value}`} 
+                          checked={installStates.includes(state.value)}
+                          onCheckedChange={() => handleStateChange(state.value)}
+                        />
+                        <Label htmlFor={`state-${state.value}`} className="text-sm">
+                          {state.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-sm text-gray-500 mt-1">
+                    You may select more than one state.
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex justify-between mt-8">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handlePrevStep}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={submitting}
+              >
+                {submitting ? 'Submitting...' : 'Submit Review'}
+              </Button>
+            </div>
+          </>
         )}
-        
-        {reviewQuestions.length > 0 ? (
-          <ReviewCategoryGroup
-            title={`Rate Your Experience with this ${formattedCompanyType}`}
-            questions={reviewQuestions}
-            onQuestionChange={handleQuestionChange}
-          />
-        ) : (
-          <div className="py-4 text-center text-muted-foreground">
-            No review questions available for this vendor type.
-          </div>
-        )}
-        
-        <div>
-          <Label htmlFor="review-details">Additional Comments (Optional)</Label>
-          <Textarea
-            id="review-details"
-            className="min-h-[120px] mt-1"
-            value={reviewDetails}
-            onChange={(e) => setReviewDetails(e.target.value)}
-            placeholder="Share anything else about your experience..."
-          />
-        </div>
-        
-        <div className="flex justify-end">
-          <Button 
-            type="submit" 
-            disabled={
-              submitting || 
-              reviewQuestions.length === 0 ||
-              Object.keys(questionRatings).length < reviewQuestions.length
-            }
-          >
-            {submitting ? 'Submitting...' : 'Submit Review'}
-          </Button>
-        </div>
       </div>
     </form>
   );

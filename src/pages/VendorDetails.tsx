@@ -6,7 +6,6 @@ import VendorActionButtons from '@/components/vendor/VendorActionButtons';
 import ReviewsList from '@/components/vendor/ReviewsList';
 import VendorNotFoundMessage from '@/components/vendor/VendorNotFoundMessage';
 import { useVendorDetails } from '@/hooks/useVendorDetails';
-import { Globe, Calendar } from 'lucide-react';
 
 const VendorDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -20,7 +19,7 @@ const VendorDetails = () => {
   } = useVendorDetails(id);
   
   if (loading) {
-    return <LoadingSpinner message="Loading vendor details..." />;
+    return <LoadingSpinner message="Loading company details..." />;
   }
   
   if (!company) {
@@ -28,7 +27,7 @@ const VendorDetails = () => {
   }
   
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 px-4">
       <VendorDetailsHeader company={company} avgRating={avgRating} reviewCount={reviews.length} />
       <VendorActionButtons companyId={company.id} />
       <ReviewsList 

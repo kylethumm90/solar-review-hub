@@ -18,8 +18,13 @@ const ReviewsList: React.FC<ReviewsListProps> = ({
   reviewAnswersByReviewId 
 }) => {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-      <h2 className="text-2xl font-bold mb-6">Reviews ({reviews.length})</h2>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6" id="reviews">
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold mb-2">Reviews ({reviews.length})</h2>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Grades are calculated from verified reviews.
+        </p>
+      </div>
       
       {reviews.length > 0 ? (
         <div className="space-y-8">
@@ -35,7 +40,7 @@ const ReviewsList: React.FC<ReviewsListProps> = ({
       ) : (
         <div className="text-center py-12">
           <p className="text-gray-600 dark:text-gray-300 mb-4">
-            This vendor has no reviews yet. Be the first to leave one!
+            This company has no reviews yet. Be the first to leave one!
           </p>
           <Button asChild>
             <Link to={`/reviews/${companyId}`}>Write a Review</Link>

@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import { CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface VendorActionButtonsProps {
@@ -77,21 +77,21 @@ const VendorActionButtons: React.FC<VendorActionButtonsProps> = ({ companyId }) 
       
       {!isCompanyClaimed ? (
         <Button onClick={handleClaimClick} variant="outline">
-          Claim This Vendor
+          Claim This Company
         </Button>
-      ) : (
+      ) : isClaimedByCurrentUser ? (
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-          <div className="flex items-center text-green-600 font-semibold text-sm">
-            <CheckCircle className="h-4 w-4 mr-1" /> 
-            This profile has been claimed
-          </div>
-          
-          {isClaimedByCurrentUser && (
-            <Button asChild variant="outline" size="sm">
-              <Link to="/dashboard/my-company">Manage Company Profile</Link>
-            </Button>
-          )}
+          <Badge className="bg-green-100 text-green-800 border-green-300 hover:bg-green-200">
+            You manage this listing
+          </Badge>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/dashboard/my-company">Go to Dashboard</Link>
+          </Button>
         </div>
+      ) : (
+        <Badge className="bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200">
+          This profile has been claimed
+        </Badge>
       )}
     </div>
   );

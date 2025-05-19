@@ -375,10 +375,13 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back to Ratings
               </Button>
               
-              <h2 className="text-lg font-semibold mb-2">Help Us Improve EPC Scoring</h2>
+              <h2 className="text-lg font-semibold mb-2">
+                Help Us Improve EPC Scoring
+              </h2>
               <p className="text-sm text-gray-600 mb-6">
-                Your answers below help SolarGrade assess vendor performance across the industry.  
-                This data will <strong>never be shared with the EPC</strong> or made public.
+                These questions help SolarGrade assess EPC performance and calculate industry-wide scores.  
+                Your individual answers will <strong>never be shared directly with the EPC</strong>.  
+                Only anonymous, aggregated insights may be used in rankings or performance summaries.
               </p>
             </div>
             

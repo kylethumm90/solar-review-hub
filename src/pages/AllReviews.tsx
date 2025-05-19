@@ -1,9 +1,7 @@
 
 import { useReviews } from '@/hooks/useReviews';
-import MobileReviewControls from '@/components/reviews/MobileReviewControls';
-import ReviewSidebar from '@/components/reviews/ReviewSidebar';
-import DesktopSortControls from '@/components/reviews/DesktopSortControls';
-import ReviewGrid from '@/components/reviews/ReviewGrid';
+import ReviewTable from '@/components/reviews/ReviewTable';
+import TableFilters from '@/components/reviews/TableFilters';
 
 const AllReviews = () => {
   // Available grade options
@@ -19,8 +17,11 @@ const AllReviews = () => {
     currentPage,
     totalPages,
     sortOption,
+    sortColumn,
+    sortDirection,
     handleFilterChange,
     handleSort,
+    handleSortByColumn,
     handlePageChange,
     clearFilters
   } = useReviews();
@@ -32,12 +33,12 @@ const AllReviews = () => {
         <h1 className="text-2xl font-bold mb-1">All Reviews</h1>
         <p className="text-sm text-gray-600">
           Browse verified reviews submitted by solar professionals across the industry. 
-          You can filter by vendor type, grade, location, and more.
+          Filter and sort to find the information you need.
         </p>
       </div>
       
-      {/* Mobile Controls */}
-      <MobileReviewControls 
+      {/* Top Filters */}
+      <TableFilters
         filters={filters}
         onFilterChange={handleFilterChange}
         onClearFilters={clearFilters}
@@ -49,38 +50,19 @@ const AllReviews = () => {
         onSortChange={handleSort}
       />
       
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Desktop Filters Sidebar */}
-        <ReviewSidebar
-          filters={filters}
-          onFilterChange={handleFilterChange}
+      {/* Reviews Table */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <ReviewTable
+          reviews={reviews}
+          loading={loading}
+          totalPages={totalPages}
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
           onClearFilters={clearFilters}
-          vendorTypes={vendorTypes}
-          companies={companies}
-          states={states}
-          gradeOptions={gradeOptions}
+          onSort={handleSortByColumn}
+          sortColumn={sortColumn}
+          sortDirection={sortDirection}
         />
-        
-        {/* Main Content Area */}
-        <div className="w-full md:w-3/4 lg:w-4/5">
-          {/* Desktop Sort Controls */}
-          <DesktopSortControls
-            reviewCount={reviews.length}
-            loading={loading}
-            sortOption={sortOption}
-            onSortChange={handleSort}
-          />
-          
-          {/* Reviews Grid with Pagination */}
-          <ReviewGrid
-            reviews={reviews}
-            loading={loading}
-            totalPages={totalPages}
-            currentPage={currentPage}
-            onPageChange={handlePageChange}
-            onClearFilters={clearFilters}
-          />
-        </div>
       </div>
     </div>
   );

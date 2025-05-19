@@ -14,6 +14,8 @@ export const useReviews = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [sortOption, setSortOption] = useState('recent');
+  const [sortColumn, setSortColumn] = useState('date');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   
   // Initialize filters from URL query parameters
   const [filters, setFilters] = useState<FilterState>({
@@ -105,6 +107,38 @@ export const useReviews = () => {
     setSortOption(value);
   };
   
+  // Handle column sorting
+  const handleSortByColumn = (column: string) => {
+    // If clicking the same column, toggle direction
+    if (column === sortColumn) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // New column, set to default sort direction for that column
+      setSortColumn(column);
+      // Default directions per column
+      switch (column) {
+        case 'date':
+          setSortDirection('desc'); // Most recent first
+          setSortOption('recent');
+          break;
+        case 'grade':
+          setSortDirection('desc'); // Highest grade first
+          setSortOption('grade-high');
+          break;
+        case 'installs':
+          setSortDirection('desc'); // Most installs first
+          setSortOption('installs');
+          break;
+        case 'company':
+          setSortDirection('asc'); // A-Z
+          setSortOption('company');
+          break;
+        default:
+          setSortDirection('desc');
+      }
+    }
+  };
+  
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo(0, 0);
@@ -132,8 +166,11 @@ export const useReviews = () => {
     currentPage,
     totalPages,
     sortOption,
+    sortColumn,
+    sortDirection,
     handleFilterChange,
     handleSort,
+    handleSortByColumn,
     handlePageChange,
     clearFilters
   };

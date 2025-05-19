@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -216,7 +215,7 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
 
   // Format company type for display
   const formattedCompanyType = vendor.type
-    ? vendor.type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+    ? vendor.type.replace(/_/g, ' ').replace(/\b\w/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
     : 'Company';
 
   const isEpcVendor = vendor.type?.toLowerCase().includes('epc') || false;
@@ -260,49 +259,6 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
                 placeholder="Share anything else about your experience..."
               />
             </div>
-
-            {/* MOVED: Reviewer Identity */}
-            <div>
-              <Label className="font-semibold mb-2 block">Reviewer Identity</Label>
-              <RadioGroup defaultValue="public" onValueChange={(val) => setIsAnonymous(val === "anonymous")}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="public" id="public" />
-                  <Label htmlFor="public">Display my full name</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="anonymous" id="anonymous" />
-                  <Label htmlFor="anonymous">Submit anonymously</Label>
-                </div>
-              </RadioGroup>
-            </div>
-            
-            {isAnonymous && (
-              <div>
-                <Label htmlFor="attachment" className="font-semibold mb-2 block">
-                  Upload documentation to verify your review
-                </Label>
-                <Input
-                  id="attachment"
-                  type="file"
-                  onChange={handleFileChange}
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  className="mt-1"
-                />
-                {fileError && (
-                  <Alert variant="destructive" className="mt-2">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{fileError}</AlertDescription>
-                  </Alert>
-                )}
-                <p className="text-sm text-muted-foreground mt-2">
-                  <strong>Accepted examples:</strong><br />
-                  • Signed contract or proposal<br />
-                  • Invoice or receipt from the company<br />
-                  • Screenshot of an email or text exchange<br />
-                  • Photo of installed equipment with branding
-                </p>
-              </div>
-            )}
             
             {isEpcVendor && (
               <>
@@ -345,6 +301,49 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
                   </Select>
                 </div>
               </>
+            )}
+            
+            {/* MOVED: Reviewer Identity to bottom of step 1 */}
+            <div>
+              <Label className="font-semibold mb-2 block">Reviewer Identity</Label>
+              <RadioGroup defaultValue="public" onValueChange={(val) => setIsAnonymous(val === "anonymous")}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="public" id="public" />
+                  <Label htmlFor="public">Display my full name</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="anonymous" id="anonymous" />
+                  <Label htmlFor="anonymous">Submit anonymously</Label>
+                </div>
+              </RadioGroup>
+            </div>
+            
+            {isAnonymous && (
+              <div>
+                <Label htmlFor="attachment" className="font-semibold mb-2 block">
+                  Upload documentation to verify your review
+                </Label>
+                <Input
+                  id="attachment"
+                  type="file"
+                  onChange={handleFileChange}
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  className="mt-1"
+                />
+                {fileError && (
+                  <Alert variant="destructive" className="mt-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{fileError}</AlertDescription>
+                  </Alert>
+                )}
+                <p className="text-sm text-muted-foreground mt-2">
+                  <strong>Accepted examples:</strong><br />
+                  • Signed contract or proposal<br />
+                  • Invoice or receipt from the company<br />
+                  • Screenshot of an email or text exchange<br />
+                  • Photo of installed equipment with branding
+                </p>
+              </div>
             )}
             
             <div className="flex justify-end">

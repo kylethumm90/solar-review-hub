@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -80,10 +81,10 @@ const Reviews = () => {
     setSubmitting(true);
     
     try {
-      // Calculate average score
+      // Calculate average score using the new weighted average function
       const averageScore = calculateWeightedAverage(questionRatings);
       
-      // Format question ratings for API - without notes since we removed them
+      // Format question ratings for API
       const formattedRatings: Record<string, { rating: number }> = {};
       Object.keys(questionRatings).forEach(key => {
         const { rating } = questionRatings[key];

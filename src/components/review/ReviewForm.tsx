@@ -62,6 +62,7 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
     onSubmit(reviewTitle, reviewDetails, questionRatings);
   };
 
+  // Format company type for display
   const formattedCompanyType = vendor.type
     ? vendor.type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
     : 'Company';

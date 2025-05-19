@@ -27,6 +27,7 @@ export const ReviewService = {
       .from('review_questions')
       .select('*')
       .eq('company_type', normalizedType)
+      .neq('category', 'pto_time') // Exclude pto_time category for all new reviews
       .order('category');
       
     if (error) throw error;
@@ -63,12 +64,12 @@ export const ReviewService = {
       
     if (reviewError) throw reviewError;
     
-    // Insert individual answers (without notes now)
-    const reviewAnswers = Object.entries(questionRatings).map(([questionId, { rating }]) => ({
+    // Insert individual answers
+    const reviewAnswers = Object.entries(questionRatings).map(([questionId, { rating, notes }]) => ({
       review_id: review.id,
       question_id: questionId,
       rating,
-      notes: null // We no longer collect per-question notes
+      notes: notes || null
     }));
     
     const { error: answersError } = await supabase

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/hooks/use-toast";
+import { scoreToGrade } from '@/utils/reviewUtils';
 
 export const useVendorDetails = (vendorId: string | undefined) => {
   const [company, setCompany] = useState<any>(null);
@@ -137,6 +138,12 @@ export const useVendorDetails = (vendorId: string | undefined) => {
     ) / 5;
   };
   
+  // Get letter grade from score
+  const getReviewLetterGrade = (review: any) => {
+    const avgScore = getReviewAvgScore(review);
+    return scoreToGrade(avgScore);
+  };
+  
   const avgRating = reviews.length 
     ? reviews.reduce((sum, review) => sum + getReviewAvgScore(review), 0) / reviews.length 
     : 0;
@@ -158,6 +165,7 @@ export const useVendorDetails = (vendorId: string | undefined) => {
     loading,
     avgRating,
     getReviewAvgScore,
+    getReviewLetterGrade,
     reviewAnswersByReviewId
   };
 };

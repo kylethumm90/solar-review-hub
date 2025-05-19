@@ -12,6 +12,7 @@ import { formatDistanceToNow } from "date-fns";
 import ClaimActions from "./ClaimActions";
 import StatusBadge from "./StatusBadge";
 import { AlertTriangle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface ClaimsTableProps {
   claims: Claim[];
@@ -23,6 +24,7 @@ interface ClaimsTableProps {
 const ClaimsTable = ({ claims, isLoading, onApprove, onReject }: ClaimsTableProps) => {
   // Additional check for data quality issues
   const hasDataIssues = claims.some(claim => !claim.id || !claim.status || !claim.company_id);
+  console.log('Rendering claims:', claims); // Add logging
   
   if (isLoading) {
     return (
@@ -52,10 +54,30 @@ const ClaimsTable = ({ claims, isLoading, onApprove, onReject }: ClaimsTableProp
     );
   };
 
-  console.log('Rendering claims:', claims); // Add logging
+  // Count claims by status
+  const pendingCount = claims.filter(c => c.status === 'pending').length;
+  const approvedCount = claims.filter(c => c.status === 'approved').length;
+  const rejectedCount = claims.filter(c => c.status === 'rejected').length;
 
   return (
     <div className="border rounded-md">
+      <div className="bg-muted/20 p-3 flex items-center justify-between border-b">
+        <h3 className="text-sm font-medium">
+          Showing {claims.length} claim{claims.length !== 1 ? 's' : ''}
+        </h3>
+        <div className="flex gap-2">
+          <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200">
+            {pendingCount} pending
+          </Badge>
+          <Badge variant="outline" className="bg-green-50 text-green-800 border-green-200">
+            {approvedCount} approved
+          </Badge>
+          <Badge variant="outline" className="bg-red-50 text-red-800 border-red-200">
+            {rejectedCount} rejected
+          </Badge>
+        </div>
+      </div>
+      
       {hasDataIssues && (
         <div className="bg-yellow-100 dark:bg-yellow-900/30 p-3 text-yellow-800 dark:text-yellow-200 text-sm flex items-center">
           <AlertTriangle className="h-4 w-4 mr-2" />
@@ -65,7 +87,7 @@ const ClaimsTable = ({ claims, isLoading, onApprove, onReject }: ClaimsTableProp
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Company</TableHead>
+            <TableHead className="w-[200px]">Company</TableHead>
             <TableHead>Claimed By</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Job Title</TableHead>
@@ -80,11 +102,14 @@ const ClaimsTable = ({ claims, isLoading, onApprove, onReject }: ClaimsTableProp
             const isAlreadyApproved = claim.status === 'approved';
             
             return (
-              <TableRow key={claim.id}>
-                <TableCell className="font-medium">{claim.company?.name || 'Unknown Company'}</TableCell>
-                <TableCell>{claim.full_name}</TableCell>
-                <TableCell>{claim.company_email}</TableCell>
-                <TableCell>{claim.job_title}</TableCell>
+              <TableRow key={claim.id} className={claim.status === 'pending' ? 'bg-amber-50/50' : ''}>
+                <TableCell className="font-medium">
+                  {claim.company?.name || 
+                    <span className="text-red-500">Unknown Company</span>}
+                </TableCell>
+                <TableCell>{claim.full_name || 'Unknown'}</TableCell>
+                <TableCell>{claim.company_email || 'Unknown'}</TableCell>
+                <TableCell>{claim.job_title || 'Unknown'}</TableCell>
                 <TableCell>
                   {claim.created_at && formatDistanceToNow(new Date(claim.created_at), { addSuffix: true })}
                 </TableCell>

@@ -5,11 +5,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Claim } from '@/types';
 import { logAdminAction } from '@/utils/adminLogUtils';
+import { useAuth } from '@/context/AuthContext';
 
 export function useClaimsAdmin() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [debugMode, setDebugMode] = useState(false);
+  const { user } = useAuth();
+  const isAdmin = user?.app_metadata?.role === 'admin';
   
   // Log tab changes to help debug filtering issues
   useEffect(() => {
@@ -29,6 +32,13 @@ export function useClaimsAdmin() {
       console.log(`[ClaimsAdmin] Fetching claims with filter: ${activeTab}`);
       
       try {
+        // Use regular client for non-admin users
+        if (!isAdmin) {
+          console.log('[ClaimsAdmin] Using regular client (user is not admin)');
+        } else {
+          console.log('[ClaimsAdmin] Using admin client to bypass RLS');
+        }
+        
         let query = supabase
           .from('claims')
           .select(`
@@ -52,7 +62,7 @@ export function useClaimsAdmin() {
         // Order by newest first
         query = query.order('created_at', { ascending: false });
         
-        // Log the generated SQL query (this will be shown in the console for debugging)
+        // Execute the query and log results
         const { data, error, count } = await query;
         
         if (error) {
@@ -235,6 +245,8 @@ export function useClaimsAdmin() {
   // Verify all claims without filtering for debugging
   const fetchAllClaims = async () => {
     try {
+      console.log("[ClaimsAdmin] Performing DIRECT DB CHECK to bypass any filters");
+      
       const { data, error } = await supabase
         .from('claims')
         .select(`

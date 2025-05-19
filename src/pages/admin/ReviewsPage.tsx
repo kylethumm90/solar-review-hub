@@ -1,8 +1,9 @@
 
-import React from "react";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
+import React, { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReviewsTable from "@/components/admin/reviews/ReviewsTable";
 import ReviewFilterTabs from "@/components/admin/reviews/ReviewFilterTabs";
+import AnonymousReviewVerification from "@/components/admin/reviews/AnonymousReviewVerification";
 import { useAdminReviews } from "@/hooks/useAdminReviews";
 
 const ReviewsPage = () => {
@@ -16,6 +17,8 @@ const ReviewsPage = () => {
     handleReviewAction
   } = useAdminReviews();
   
+  const [currentView, setCurrentView] = useState<'all' | 'anonymous'>('all');
+  
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -26,27 +29,50 @@ const ReviewsPage = () => {
         <h2 className="font-medium mb-2">About Review Moderation</h2>
         <p className="text-sm text-muted-foreground">
           Reviews submitted by users are initially set to "pending" and must be approved before they appear publicly. 
-          Ensure all reviews meet community guidelines before approval.
+          Anonymous reviews require verification of supporting documentation.
         </p>
       </div>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <ReviewFilterTabs
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
-        
-        <TabsContent value={activeTab} className="space-y-4">
-          <ReviewsTable 
-            reviews={reviews} 
-            isLoading={isLoading}
-            onApprove={(reviewId) => handleReviewAction(reviewId, 'approve')}
-            onReject={(reviewId) => handleReviewAction(reviewId, 'reject')}
+      <div className="flex mb-4">
+        <TabsList>
+          <TabsTrigger 
+            value="all" 
+            onClick={() => setCurrentView('all')}
+            className={currentView === 'all' ? 'bg-primary text-primary-foreground' : ''}
+          >
+            All Reviews
+          </TabsTrigger>
+          <TabsTrigger 
+            value="anonymous" 
+            onClick={() => setCurrentView('anonymous')}
+            className={currentView === 'anonymous' ? 'bg-primary text-primary-foreground' : ''}
+          >
+            Anonymous Reviews
+          </TabsTrigger>
+        </TabsList>
+      </div>
+      
+      {currentView === 'all' ? (
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <ReviewFilterTabs
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
           />
-        </TabsContent>
-      </Tabs>
+          
+          <TabsContent value={activeTab} className="space-y-4">
+            <ReviewsTable 
+              reviews={reviews} 
+              isLoading={isLoading}
+              onApprove={(reviewId) => handleReviewAction(reviewId, 'approve')}
+              onReject={(reviewId) => handleReviewAction(reviewId, 'reject')}
+            />
+          </TabsContent>
+        </Tabs>
+      ) : (
+        <AnonymousReviewVerification />
+      )}
     </div>
   );
 };

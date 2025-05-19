@@ -228,10 +228,12 @@ export type Database = {
       }
       reviews: {
         Row: {
+          attachment_url: string | null
           average_score: number | null
           company_id: string
           created_at: string
           id: string
+          is_anonymous: boolean | null
           rating_communication: number
           rating_install_quality: number
           rating_payment_reliability: number
@@ -242,12 +244,15 @@ export type Database = {
           text_feedback: string
           user_id: string
           verification_status: string | null
+          verified: boolean | null
         }
         Insert: {
+          attachment_url?: string | null
           average_score?: number | null
           company_id: string
           created_at?: string
           id?: string
+          is_anonymous?: boolean | null
           rating_communication: number
           rating_install_quality: number
           rating_payment_reliability: number
@@ -258,12 +263,15 @@ export type Database = {
           text_feedback: string
           user_id: string
           verification_status?: string | null
+          verified?: boolean | null
         }
         Update: {
+          attachment_url?: string | null
           average_score?: number | null
           company_id?: string
           created_at?: string
           id?: string
+          is_anonymous?: boolean | null
           rating_communication?: number
           rating_install_quality?: number
           rating_payment_reliability?: number
@@ -274,6 +282,7 @@ export type Database = {
           text_feedback?: string
           user_id?: string
           verification_status?: string | null
+          verified?: boolean | null
         }
         Relationships: [
           {

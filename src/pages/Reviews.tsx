@@ -11,6 +11,8 @@ import VendorHeader from '@/components/review/VendorHeader';
 import ReviewForm from '@/components/review/ReviewForm';
 import { ReviewService, VendorInfo } from '@/services/ReviewService';
 import { Star } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { CheckCircle } from 'lucide-react';
 
 const Reviews = () => {
   const { vendorId } = useParams<{ vendorId: string }>();
@@ -21,6 +23,8 @@ const Reviews = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [reviewQuestions, setReviewQuestions] = useState<ReviewQuestion[]>([]);
+  const [submitted, setSubmitted] = useState(false);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   
   useEffect(() => {
     async function fetchVendorInfo() {
@@ -53,7 +57,9 @@ const Reviews = () => {
   const handleSubmitReview = async (
     title: string, 
     details: string, 
-    questionRatings: Record<string, { rating: number; question: ReviewQuestion }>
+    questionRatings: Record<string, { rating: number; question: ReviewQuestion }>,
+    isAnonymous: boolean,
+    attachment: File | null
   ) => {
     if (!user) {
       toast.custom({
@@ -82,7 +88,7 @@ const Reviews = () => {
     setSubmitting(true);
     
     try {
-      // Calculate average score using the new weighted average function
+      // Calculate average score using the weighted average function
       const averageScore = calculateWeightedAverage(questionRatings);
       
       // Format question ratings for API
@@ -98,23 +104,20 @@ const Reviews = () => {
         title,
         details,
         averageScore,
-        formattedRatings
+        formattedRatings,
+        isAnonymous,
+        attachment
       );
       
-      toast.custom({
-        title: "Success",
-        description: "Review submitted successfully!"
-      });
+      setIsAnonymous(isAnonymous);
+      setSubmitted(true);
       
-      // Redirect to confirmation page with the review data
-      navigate('/review/confirmation', {
-        state: {
-          answers: questionRatings,
-          vendorId,
-          vendorName: vendor?.name,
-          averageScore
-        }
-      });
+      if (!isAnonymous) {
+        toast.custom({
+          title: "Success",
+          description: "Review submitted successfully!"
+        });
+      }
     } catch (error: any) {
       toast.custom({
         title: "Error",
@@ -124,6 +127,30 @@ const Reviews = () => {
       setSubmitting(false);
     }
   };
+  
+  if (submitted) {
+    return (
+      <div className="max-w-3xl mx-auto py-8">
+        <Alert className="bg-green-50 dark:bg-green-900/20">
+          <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+          <AlertTitle className="font-medium">Thank you for your review!</AlertTitle>
+          <AlertDescription className="mt-2">
+            {isAnonymous 
+              ? "Your submission is pending verification and will appear once approved."
+              : "Your review has been posted."}
+          </AlertDescription>
+          <div className="mt-4">
+            <button
+              onClick={() => navigate(`/vendors/${vendorId}`)}
+              className="text-primary font-medium hover:underline"
+            >
+              Return to vendor details
+            </button>
+          </div>
+        </Alert>
+      </div>
+    );
+  }
   
   if (loading) {
     return <LoadingSpinner message="Loading..." />;

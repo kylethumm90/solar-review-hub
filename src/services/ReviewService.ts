@@ -40,8 +40,37 @@ export const ReviewService = {
     title: string, 
     details: string, 
     averageScore: number, 
-    questionRatings: Record<string, { rating: number; notes?: string }>
+    questionRatings: Record<string, { rating: number; notes?: string }>,
+    isAnonymous: boolean = false,
+    attachment: File | null = null
   ) => {
+    // Handle file upload if this is an anonymous review with attachment
+    let attachmentUrl: string | null = null;
+    
+    if (isAnonymous && attachment) {
+      // Generate a unique file name to prevent collisions
+      const fileExt = attachment.name.split('.').pop();
+      const fileName = `${userId}-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+      
+      // Upload the file to Supabase storage
+      const { error: uploadError, data: uploadData } = await supabase.storage
+        .from('review-documents')
+        .upload(filePath, attachment);
+        
+      if (uploadError) {
+        console.error('Error uploading file:', uploadError);
+        throw new Error('Failed to upload verification document. Please try again.');
+      }
+      
+      // Get the public URL of the uploaded file
+      const { data: { publicUrl } } = supabase.storage
+        .from('review-documents')
+        .getPublicUrl(filePath);
+        
+      attachmentUrl = publicUrl;
+    }
+    
     // Insert review
     const { data: review, error: reviewError } = await supabase
       .from('reviews')
@@ -52,6 +81,9 @@ export const ReviewService = {
         review_details: details,
         text_feedback: details, // Use the same details for both fields
         average_score: averageScore,
+        is_anonymous: isAnonymous,
+        attachment_url: attachmentUrl,
+        verified: !isAnonymous, // Auto-verify non-anonymous reviews
         // Add legacy fields for backward compatibility
         rating_communication: 5,
         rating_install_quality: 5,

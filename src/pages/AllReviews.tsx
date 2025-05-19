@@ -24,7 +24,7 @@ import { Link } from 'react-router-dom';
 interface ExtendedReview extends Review {
   users?: {
     full_name: string;
-  };
+  } | null;
   company?: Company;
   install_count?: number;
   install_states?: string[];
@@ -237,7 +237,27 @@ const AllReviews = () => {
         });
       }
       
-      setReviews(filteredData);
+      // Transform data into ExtendedReview[]
+      const typedData: ExtendedReview[] = filteredData.map(item => {
+        return {
+          ...item,
+          // Fix the issue where users might not be properly typed
+          users: item.users || null,
+          // Ensure core review properties are present
+          rating_communication: item.rating_communication,
+          rating_install_quality: item.rating_install_quality,
+          rating_payment_reliability: item.rating_payment_reliability,
+          rating_timeliness: item.rating_timeliness,
+          rating_post_install_support: item.rating_post_install_support,
+          text_feedback: item.text_feedback,
+          id: item.id,
+          company_id: item.company_id,
+          user_id: item.user_id,
+          created_at: item.created_at
+        };
+      });
+      
+      setReviews(typedData);
       
       // Calculate total pages
       if (count !== null) {

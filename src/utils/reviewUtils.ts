@@ -49,3 +49,31 @@ export const scoreToGrade = (score: number): string => {
   if (score >= 1.0) return 'D-';
   return 'F';
 };
+
+// This is a consistent way to calculate average score from a review object
+// to ensure compatibility between different pages
+export const getReviewAvgScore = (review: any) => {
+  if (review.average_score) return review.average_score;
+  
+  // For legacy reviews without average_score field
+  const categoryRatings = [
+    review.rating_communication,
+    review.rating_install_quality,
+    review.rating_payment_reliability,
+    review.rating_timeliness,
+    review.rating_post_install_support,
+  ].filter(Boolean);
+
+  return categoryRatings.length > 0 ? 
+    categoryRatings.reduce((a, b) => a + b, 0) / categoryRatings.length : 
+    0;
+};
+
+// Calculate the average rating across multiple reviews
+export const calculateAverageRating = (reviews: any[]) => {
+  if (!reviews || reviews.length === 0) {
+    return 0;
+  }
+
+  return reviews.reduce((sum, review) => sum + getReviewAvgScore(review), 0) / reviews.length;
+};

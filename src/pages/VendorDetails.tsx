@@ -27,7 +27,7 @@ const VendorDetails = () => {
     return <VendorNotFoundMessage />;
   }
   
-  // Calculate letter grade
+  // Calculate letter grade using our standardized function
   const letterGrade = scoreToGrade(avgRating);
   
   return (

@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/hooks/use-toast";
-import { scoreToGrade } from '@/utils/reviewUtils';
+import { scoreToGrade, getReviewAvgScore } from '@/utils/reviewUtils';
 
 export const useVendorDetails = (vendorId: string | undefined) => {
   const [company, setCompany] = useState<any>(null);
@@ -126,17 +126,7 @@ export const useVendorDetails = (vendorId: string | undefined) => {
     fetchVendorDetails();
   }, [vendorId]);
 
-  // Get average score either from the reviews.average_score or calculate it from legacy fields
-  const getReviewAvgScore = (review: any) => {
-    if (review.average_score) return review.average_score;
-    return (
-      review.rating_communication +
-      review.rating_install_quality +
-      review.rating_payment_reliability +
-      review.rating_timeliness +
-      review.rating_post_install_support
-    ) / 5;
-  };
+  // Using the imported getReviewAvgScore function to ensure consistency
   
   // Get letter grade from score
   const getReviewLetterGrade = (review: any) => {

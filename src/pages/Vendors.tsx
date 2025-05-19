@@ -5,10 +5,10 @@ import VendorCard from '@/components/VendorCard';
 import { Search, Filter, PlusCircle } from 'lucide-react';
 import { Company } from '@/types';
 import { Button } from '@/components/ui/button';
-import { calculateAverageRating, ratingToGrade } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { calculateAverageRating, scoreToGrade } from '@/utils/reviewUtils';
 
 const Vendors = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -43,9 +43,10 @@ const Vendors = () => {
         if (companiesError) throw companiesError;
 
         // Process the companies data to add average rating and grade
+        // Using our standardized functions from reviewUtils
         const processedCompanies = companiesData.map(company => {
           const avgRating = calculateAverageRating(company.reviews || []);
-          const grade = ratingToGrade(avgRating);
+          const grade = scoreToGrade(avgRating);
           
           return {
             ...company,

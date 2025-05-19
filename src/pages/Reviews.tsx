@@ -31,8 +31,6 @@ const Reviews = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [reviewQuestions, setReviewQuestions] = useState<ReviewQuestion[]>([]);
-  const [submitted, setSubmitted] = useState(false);
-  const [isAnonymous, setIsAnonymous] = useState(false);
   
   useEffect(() => {
     async function fetchVendorInfo() {
@@ -119,48 +117,24 @@ const Reviews = () => {
         metadata
       );
       
-      setIsAnonymous(isAnonymous);
-      setSubmitted(true);
+      // After submission, navigate to confirmation page with review data
+      navigate('/review/confirmation', {
+        state: {
+          answers: questionRatings,
+          vendorName: vendor?.name,
+          averageScore,
+          vendorId
+        }
+      });
       
-      if (!isAnonymous) {
-        toast.custom({
-          title: "Success",
-          description: "Review submitted successfully!"
-        });
-      }
     } catch (error: any) {
       toast.custom({
         title: "Error",
         description: error.message || 'Failed to submit review'
       });
-    } finally {
       setSubmitting(false);
     }
   };
-  
-  if (submitted) {
-    return (
-      <div className="max-w-3xl mx-auto py-8">
-        <Alert className="bg-green-50 dark:bg-green-900/20">
-          <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
-          <AlertTitle className="font-medium">Thank you for your review!</AlertTitle>
-          <AlertDescription className="mt-2">
-            {isAnonymous 
-              ? "Your submission is pending verification and will appear once approved."
-              : "Your review has been posted."}
-          </AlertDescription>
-          <div className="mt-4">
-            <button
-              onClick={() => navigate(`/vendors/${vendorId}`)}
-              className="text-primary font-medium hover:underline"
-            >
-              Return to vendor details
-            </button>
-          </div>
-        </Alert>
-      </div>
-    );
-  }
   
   if (loading) {
     return <LoadingSpinner message="Loading..." />;

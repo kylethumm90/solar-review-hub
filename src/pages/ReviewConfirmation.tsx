@@ -27,6 +27,7 @@ const ReviewConfirmation = () => {
       answers?: Record<string, { rating: number; question: ReviewQuestion }>;
       vendorName?: string;
       averageScore?: number;
+      vendorId?: string;
     } | null;
     
     if (!state?.answers) {

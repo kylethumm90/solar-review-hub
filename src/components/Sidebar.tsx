@@ -7,7 +7,7 @@ import { useHasApprovedClaim } from '@/hooks/useHasApprovedClaim';
 
 const Sidebar = () => {
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { hasApprovedClaim, loading } = useHasApprovedClaim();
   
   const navItems = [
@@ -34,10 +34,11 @@ const Sidebar = () => {
   ];
   
   // Add company management for users with approved claims or admin users
-  if (hasApprovedClaim || user?.user_metadata?.role === 'admin') {
+  const userIsAdmin = isAdmin?.() || user?.user_metadata?.role === 'admin';
+  if (hasApprovedClaim || userIsAdmin) {
     navItems.push({
       name: "My Company",
-      href: "/dashboard/my-company", // Fixed the route
+      href: "/dashboard/my-company",
       icon: Building
     });
   }

@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 
 export const useHasApprovedClaim = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [hasApprovedClaim, setHasApprovedClaim] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -12,6 +12,15 @@ export const useHasApprovedClaim = () => {
     const checkForApprovedClaims = async () => {
       if (!user) {
         setHasApprovedClaim(false);
+        setLoading(false);
+        return;
+      }
+
+      // Check if user is admin first
+      const userIsAdmin = isAdmin?.() || user?.user_metadata?.role === 'admin';
+      if (userIsAdmin) {
+        console.log('User is admin - granting company access');
+        setHasApprovedClaim(true);
         setLoading(false);
         return;
       }
@@ -40,7 +49,7 @@ export const useHasApprovedClaim = () => {
     };
 
     checkForApprovedClaims();
-  }, [user]);
+  }, [user, isAdmin]);
 
   return { hasApprovedClaim, loading };
 };

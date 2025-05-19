@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -31,6 +30,7 @@ const ReviewFilters: React.FC<ReviewFiltersProps> = ({
   gradeOptions,
   isMobile = false
 }) => {
+  
   const toggleVendorType = (type: string) => {
     const updated = filters.vendorTypes.includes(type)
       ? filters.vendorTypes.filter(t => t !== type)
@@ -83,14 +83,14 @@ const ReviewFilters: React.FC<ReviewFiltersProps> = ({
       <div className="space-y-2">
         <h3 className="font-medium">Company Name</h3>
         <Select 
-          value={filters.companyName || ""} 
-          onValueChange={(value) => onFilterChange({ companyName: value || null })}
+          value={filters.companyName || "all"} 
+          onValueChange={(value) => onFilterChange({ companyName: value === "all" ? null : value })}
         >
           <SelectTrigger>
             <SelectValue placeholder="Select a company" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Companies</SelectItem>
+            <SelectItem value="all">All Companies</SelectItem>
             {companies.map((company) => (
               <SelectItem key={company.id} value={company.id}>
                 {company.name}
@@ -104,11 +104,11 @@ const ReviewFilters: React.FC<ReviewFiltersProps> = ({
       <div className="space-y-2">
         <h3 className="font-medium">Review Date</h3>
         <RadioGroup 
-          value={filters.reviewDate || ""}
-          onValueChange={(value) => onFilterChange({ reviewDate: value === "" ? null : value })}
+          value={filters.reviewDate || "all"}
+          onValueChange={(value) => onFilterChange({ reviewDate: value === "all" ? null : value })}
         >
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="" id="all-dates" />
+            <RadioGroupItem value="all" id="all-dates" />
             <Label htmlFor="all-dates">All Time</Label>
           </div>
           <div className="flex items-center space-x-2">
@@ -184,11 +184,11 @@ const ReviewFilters: React.FC<ReviewFiltersProps> = ({
       <div className="space-y-2">
         <h3 className="font-medium">Still Working With Vendor</h3>
         <RadioGroup 
-          value={filters.stillActive || ""} 
-          onValueChange={(value) => onFilterChange({ stillActive: value === "" ? null : value })}
+          value={filters.stillActive || "all"} 
+          onValueChange={(value) => onFilterChange({ stillActive: value === "all" ? null : value })}
         >
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="" id="all-active" />
+            <RadioGroupItem value="all" id="all-active" />
             <Label htmlFor="all-active">All</Label>
           </div>
           <div className="flex items-center space-x-2">

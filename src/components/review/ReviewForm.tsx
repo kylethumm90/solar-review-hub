@@ -374,37 +374,44 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
               >
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back to Ratings
               </Button>
-              <h2 className="text-xl font-semibold mt-4">Additional Information</h2>
+              
+              <h2 className="text-lg font-semibold mb-2">Help Us Improve EPC Scoring</h2>
+              <p className="text-sm text-gray-600 mb-6">
+                Your answers below help SolarGrade assess vendor performance across the industry.  
+                This data will <strong>never be shared with the EPC</strong> or made public.
+              </p>
             </div>
             
             {isEpcVendor && (
               <div className="space-y-6 mt-6">                
                 {/* Field: Still Working With This EPC? */}
-                <div>
-                  <Label className="block font-semibold mb-2">
+                <div className="mb-6">
+                  <Label className="block font-medium mb-2">
                     Are you still working with this EPC?
                   </Label>
-                  <RadioGroup onValueChange={setStillActive}>
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="yes" id="still-active-yes" />
-                        <Label htmlFor="still-active-yes">Yes</Label>
+                  <div className="space-y-2">
+                    <RadioGroup onValueChange={setStillActive}>
+                      <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:gap-4">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="yes" id="still-active-yes" />
+                          <Label htmlFor="still-active-yes">Yes</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="no" id="still-active-no" />
+                          <Label htmlFor="still-active-no">No</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="considering" id="still-active-considering" />
+                          <Label htmlFor="still-active-considering">Considering ending the relationship</Label>
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="still-active-no" />
-                        <Label htmlFor="still-active-no">No</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="considering" id="still-active-considering" />
-                        <Label htmlFor="still-active-considering">Considering ending the relationship</Label>
-                      </div>
-                    </div>
-                  </RadioGroup>
+                    </RadioGroup>
+                  </div>
                 </div>
 
                 {/* Field: Most Recent Install Date */}
-                <div>
-                  <Label htmlFor="last-install-date" className="block font-semibold mb-2">
+                <div className="mb-6">
+                  <Label htmlFor="last-install-date" className="block font-medium mb-2">
                     When was your most recent install with this EPC?
                   </Label>
                   <Input
@@ -416,31 +423,33 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
                 </div>
 
                 {/* Field: Recommend This EPC */}
-                <div>
-                  <Label className="block font-semibold mb-2">
+                <div className="mb-6">
+                  <Label className="block font-medium mb-2">
                     Would you recommend this EPC to another organization?
                   </Label>
-                  <RadioGroup onValueChange={setRecommendEpc}>
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="yes" id="recommend-yes" />
-                        <Label htmlFor="recommend-yes">Yes</Label>
+                  <div className="space-y-2">
+                    <RadioGroup onValueChange={setRecommendEpc}>
+                      <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:gap-4">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="yes" id="recommend-yes" />
+                          <Label htmlFor="recommend-yes">Yes</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="no" id="recommend-no" />
+                          <Label htmlFor="recommend-no">No</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="unsure" id="recommend-unsure" />
+                          <Label htmlFor="recommend-unsure">Not sure</Label>
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="recommend-no" />
-                        <Label htmlFor="recommend-no">No</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="unsure" id="recommend-unsure" />
-                        <Label htmlFor="recommend-unsure">Not sure</Label>
-                      </div>
-                    </div>
-                  </RadioGroup>
+                    </RadioGroup>
+                  </div>
                 </div>
               </div>
             )}
             
-            <div className="flex justify-between mt-8">
+            <div className="mt-6 flex justify-between">
               <Button 
                 type="button" 
                 variant="outline" 

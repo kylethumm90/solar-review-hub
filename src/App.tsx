@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import {
   BrowserRouter as Router,
@@ -34,6 +35,7 @@ import Vendors from './pages/Vendors';
 import VendorDetails from './pages/VendorDetails';
 import Login from './pages/Login';
 import CheckEmail from './pages/CheckEmail';
+import ResetPassword from './pages/ResetPassword';
 import ProtectedLayout from './layouts/ProtectedLayout';
 import DashboardProfilePage from './pages/dashboard/DashboardProfilePage';
 import DashboardReviews from './pages/dashboard/DashboardReviews';
@@ -79,6 +81,7 @@ const App = () => {
             <Route path="/reviews/:vendorId" element={user ? <Reviews /> : <Navigate to="/" />} />
             <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
             <Route path="/check-email" element={<CheckEmail />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
           
           {/* Protected routes using ProtectedLayout */}

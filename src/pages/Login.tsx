@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -8,10 +8,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import LoginForm from '@/components/auth/LoginForm';
 import SignupForm from '@/components/auth/SignupForm';
 import GoogleLoginButton from '@/components/auth/GoogleLoginButton';
+import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm';
 import { Separator } from '@/components/ui/separator';
 
 const Login = () => {
-  const [activeTab, setActiveTab] = React.useState<'login' | 'signup'>('login');
+  const [activeTab, setActiveTab] = React.useState<'login' | 'signup' | 'forgot-password'>('login');
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -40,7 +41,7 @@ const Login = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'signup')} className="w-full">
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'signup' | 'forgot-password')} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
@@ -48,25 +49,51 @@ const Login = () => {
             
             <TabsContent value="login">
               <LoginForm />
+              <div className="mt-4 text-center">
+                <Button 
+                  variant="link" 
+                  className="p-0 h-auto font-normal text-primary" 
+                  onClick={() => setActiveTab('forgot-password')}
+                >
+                  Forgot your password?
+                </Button>
+              </div>
             </TabsContent>
             
             <TabsContent value="signup">
               <SignupForm />
             </TabsContent>
+
+            <TabsContent value="forgot-password">
+              <ForgotPasswordForm />
+              <div className="mt-4 text-center">
+                <Button 
+                  variant="link" 
+                  className="p-0 h-auto font-normal text-primary" 
+                  onClick={() => setActiveTab('login')}
+                >
+                  Back to login
+                </Button>
+              </div>
+            </TabsContent>
           </Tabs>
 
-          <div className="relative mt-6 mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">
-                Or continue with
-              </span>
-            </div>
-          </div>
+          {activeTab !== 'forgot-password' && (
+            <>
+              <div className="relative mt-6 mb-6">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">
+                    Or continue with
+                  </span>
+                </div>
+              </div>
 
-          <GoogleLoginButton />
+              <GoogleLoginButton />
+            </>
+          )}
 
           <div className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
             {activeTab === 'login' ? (
@@ -80,7 +107,7 @@ const Login = () => {
                   Sign up
                 </Button>
               </>
-            ) : (
+            ) : activeTab === 'signup' ? (
               <>
                 Already have an account?{' '}
                 <Button 
@@ -91,7 +118,7 @@ const Login = () => {
                   Log in
                 </Button>
               </>
-            )}
+            ) : null}
           </div>
         </CardContent>
       </Card>

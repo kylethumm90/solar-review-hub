@@ -11,6 +11,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import ClaimActions from "./ClaimActions";
 import StatusBadge from "./StatusBadge";
+import { AlertTriangle } from "lucide-react";
 
 interface ClaimsTableProps {
   claims: Claim[];
@@ -20,6 +21,9 @@ interface ClaimsTableProps {
 }
 
 const ClaimsTable = ({ claims, isLoading, onApprove, onReject }: ClaimsTableProps) => {
+  // Additional check for data quality issues
+  const hasDataIssues = claims.some(claim => !claim.id || !claim.status || !claim.company_id);
+  
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -52,6 +56,12 @@ const ClaimsTable = ({ claims, isLoading, onApprove, onReject }: ClaimsTableProp
 
   return (
     <div className="border rounded-md">
+      {hasDataIssues && (
+        <div className="bg-yellow-100 dark:bg-yellow-900/30 p-3 text-yellow-800 dark:text-yellow-200 text-sm flex items-center">
+          <AlertTriangle className="h-4 w-4 mr-2" />
+          Warning: Some claims have missing or invalid data which may affect display
+        </div>
+      )}
       <Table>
         <TableHeader>
           <TableRow>

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -8,61 +8,125 @@ import { logAdminAction } from '@/utils/adminLogUtils';
 
 export function useClaimsAdmin() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('all'); // Changed default from 'pending' to 'all'
+  const [activeTab, setActiveTab] = useState('all');
+  const [debugMode, setDebugMode] = useState(false);
   
-  const { data: claimsData, isLoading, refetch } = useQuery({
-    queryKey: ['admin', 'claims', activeTab],
-    queryFn: async () => {
-      let query = supabase
-        .from('claims')
-        .select(`
-          id,
-          user_id,
-          company_id,
-          status,
-          full_name,
-          job_title,
-          company_email,
-          created_at,
-          company:companies(id, name, type, is_verified, logo_url)
-        `);
-      
-      // Filter by status based on active tab
-      if (activeTab !== 'all') {
-        query = query.eq('status', activeTab);
-      }
-      
-      // Order by newest first
-      query = query.order('created_at', { ascending: false });
-      
-      const { data, error } = await query;
-      
-      if (error) {
-        toast.error('Failed to load claims');
-        throw error;
-      }
-      
-      console.log('Fetched claims:', data); // Add logging to debug
-      return data as Claim[];
+  // Log tab changes to help debug filtering issues
+  useEffect(() => {
+    console.log(`[ClaimsAdmin] Active tab changed to: ${activeTab}`);
+  }, [activeTab]);
+  
+  // Log search queries to track filtering behavior
+  useEffect(() => {
+    if (searchQuery) {
+      console.log(`[ClaimsAdmin] Search query updated: "${searchQuery}"`);
     }
+  }, [searchQuery]);
+
+  const { data: claimsData, isLoading, error, refetch } = useQuery({
+    queryKey: ['admin', 'claims', activeTab, searchQuery],
+    queryFn: async () => {
+      console.log(`[ClaimsAdmin] Fetching claims with filter: ${activeTab}`);
+      
+      try {
+        let query = supabase
+          .from('claims')
+          .select(`
+            id,
+            user_id,
+            company_id,
+            status,
+            full_name,
+            job_title,
+            company_email,
+            created_at,
+            company:companies(id, name, type, is_verified, logo_url)
+          `);
+        
+        // Filter by status based on active tab
+        if (activeTab !== 'all') {
+          console.log(`[ClaimsAdmin] Applying status filter: ${activeTab}`);
+          query = query.eq('status', activeTab);
+        }
+        
+        // Order by newest first
+        query = query.order('created_at', { ascending: false });
+        
+        // Log the generated SQL query (this will be shown in the console for debugging)
+        const { data, error, count } = await query;
+        
+        if (error) {
+          console.error('[ClaimsAdmin] Error fetching claims:', error);
+          toast.error('Failed to load claims: ' + error.message);
+          throw error;
+        }
+        
+        // Extra verification that we actually got data back
+        console.log(`[ClaimsAdmin] Fetched ${data?.length || 0} claims:`, data);
+        
+        // Additional verification for pending claims specifically
+        const pendingClaims = data?.filter(claim => claim.status === 'pending') || [];
+        console.log(`[ClaimsAdmin] Found ${pendingClaims.length} pending claims`);
+        
+        // Check for null or undefined values in critical fields
+        const problematicClaims = data?.filter(claim => 
+          !claim.id || !claim.status || !claim.company_id || !claim.user_id
+        ) || [];
+        
+        if (problematicClaims.length > 0) {
+          console.warn('[ClaimsAdmin] Found claims with missing critical fields:', problematicClaims);
+        }
+        
+        // Verify company data is being correctly joined
+        const claimsWithMissingCompany = data?.filter(claim => !claim.company) || [];
+        if (claimsWithMissingCompany.length > 0) {
+          console.warn('[ClaimsAdmin] Claims with missing company data:', claimsWithMissingCompany);
+        }
+        
+        return data as Claim[];
+      } catch (err) {
+        console.error('[ClaimsAdmin] Unexpected error in fetch function:', err);
+        toast.error('An unexpected error occurred while loading claims');
+        return [];
+      }
+    },
+    refetchInterval: debugMode ? 5000 : false, // Auto-refresh every 5 seconds in debug mode
   });
+  
+  // Log any query errors
+  useEffect(() => {
+    if (error) {
+      console.error('[ClaimsAdmin] Query error:', error);
+    }
+  }, [error]);
   
   // Filter claims based on search query
   const filteredClaims = claimsData?.filter(claim => {
     if (!searchQuery) return true;
     
     const searchTerm = searchQuery.toLowerCase();
-    return (
-      claim.full_name.toLowerCase().includes(searchTerm) ||
-      claim.company_email.toLowerCase().includes(searchTerm) ||
-      claim.job_title.toLowerCase().includes(searchTerm) ||
+    const result = (
+      claim.full_name?.toLowerCase().includes(searchTerm) ||
+      claim.company_email?.toLowerCase().includes(searchTerm) ||
+      claim.job_title?.toLowerCase().includes(searchTerm) ||
       claim.company?.name?.toLowerCase().includes(searchTerm)
     );
+    
+    return result;
   }) || [];
+  
+  // Log the filtered results
+  useEffect(() => {
+    if (searchQuery) {
+      console.log(`[ClaimsAdmin] After filtering by "${searchQuery}": ${filteredClaims.length} claims remain`);
+    }
+  }, [filteredClaims, searchQuery]);
   
   // Handle claim action (approve/reject) with proper logging
   const handleClaimAction = async (claimId: string, action: 'approve' | 'reject') => {
     try {
+      console.log(`[ClaimsAdmin] Processing ${action} action for claim ${claimId}`);
+      
       // Get previous status and claim details for logging
       const { data: claimData, error: fetchError } = await supabase
         .from('claims')
@@ -71,7 +135,7 @@ export function useClaimsAdmin() {
         .single();
       
       if (fetchError) {
-        console.error('Error fetching claim:', fetchError);
+        console.error('[ClaimsAdmin] Error fetching claim:', fetchError);
         toast.error('Failed to fetch claim details');
         return;
       }
@@ -92,12 +156,15 @@ export function useClaimsAdmin() {
         .eq('id', claimId);
       
       if (error) {
+        console.error(`[ClaimsAdmin] Error ${action}ing claim:`, error);
         toast.error(`Failed to ${action} claim`);
         throw error;
       }
       
       // For approvals, also update company verification status
       if (action === 'approve' && claimData?.company_id) {
+        console.log(`[ClaimsAdmin] Updating company ${claimData.company_id} verification status`);
+        
         const { data: companyData } = await supabase
           .from('companies')
           .select('is_verified, last_verified')
@@ -141,7 +208,7 @@ export function useClaimsAdmin() {
       });
       
       if (logResult.error) {
-        console.error(`Error logging claim ${action}:`, logResult.error);
+        console.error(`[ClaimsAdmin] Error logging claim ${action}:`, logResult.error);
         const isStatusChange = previousStatus === 'approved' || previousStatus === 'rejected';
         const message = isStatusChange 
           ? `Claim status changed from ${previousStatus} to ${newStatus}, but failed to log action` 
@@ -157,20 +224,62 @@ export function useClaimsAdmin() {
         toast.success(message);
       }
       
+      console.log(`[ClaimsAdmin] Successfully ${action}ed claim ${claimId}`);
       refetch();
     } catch (error) {
-      console.error(`Error ${action}ing claim:`, error);
+      console.error(`[ClaimsAdmin] Error ${action}ing claim:`, error);
       toast.error(`An error occurred while ${action}ing the claim`);
     }
   };
+
+  // Verify all claims without filtering for debugging
+  const fetchAllClaims = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('claims')
+        .select(`
+          id,
+          user_id,
+          company_id,
+          status,
+          full_name,
+          job_title,
+          company_email,
+          created_at,
+          company:companies(id, name, type, is_verified, logo_url)
+        `)
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        console.error('[ClaimsAdmin] Error in direct DB check:', error);
+        return;
+      }
+      
+      console.log('[ClaimsAdmin] Direct DB check - All claims:', data);
+      console.log('[ClaimsAdmin] Direct DB check - Pending claims:', data?.filter(c => c.status === 'pending'));
+      
+      return data;
+    } catch (err) {
+      console.error('[ClaimsAdmin] Error in direct DB check:', err);
+    }
+  };
+  
+  // Run a direct DB check on mount
+  useEffect(() => {
+    fetchAllClaims();
+  }, []);
   
   return {
     claims: filteredClaims,
+    rawClaimsData: claimsData, // Expose raw data for debugging
     isLoading,
     searchQuery,
     setSearchQuery,
     activeTab,
     setActiveTab,
-    handleClaimAction
+    handleClaimAction,
+    debugMode,
+    setDebugMode,
+    refetchAllClaims: fetchAllClaims
   };
 }

@@ -2,17 +2,21 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import VendorCard from '@/components/VendorCard';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, PlusCircle } from 'lucide-react';
 import { Company } from '@/types';
 import { Button } from '@/components/ui/button';
 import { calculateAverageRating, ratingToGrade } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 
 const Vendors = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
+  const navigate = useNavigate();
+  const { user } = useAuth();
   
   // Company types for filtering with counts
   const companyTypes = [
@@ -81,11 +85,24 @@ const Vendors = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Solar Companies Directory</h1>
-        <p className="text-gray-600 dark:text-gray-300">
-          Find and review the best companies in the solar industry
-        </p>
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Solar Companies Directory</h1>
+          <p className="text-gray-600 dark:text-gray-300">
+            Find and review the best companies in the solar industry
+          </p>
+        </div>
+        
+        {/* Add New Company Button - Only visible for logged in users */}
+        {user && (
+          <Button 
+            onClick={() => navigate('/vendors/new')} 
+            className="flex items-center gap-2"
+          >
+            <PlusCircle size={18} />
+            Add New Company
+          </Button>
+        )}
       </div>
       
       {/* Search and Filter */}
@@ -158,12 +175,25 @@ const Vendors = () => {
           <p className="text-lg text-gray-600 dark:text-gray-300 mb-4">
             No companies found matching your criteria.
           </p>
-          <Button onClick={() => {
-            setSearchTerm('');
-            setSelectedType('all');
-          }}>
-            Clear Filters
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button onClick={() => {
+              setSearchTerm('');
+              setSelectedType('all');
+            }}>
+              Clear Filters
+            </Button>
+            
+            {user && (
+              <Button 
+                onClick={() => navigate('/vendors/new')} 
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <PlusCircle size={18} />
+                Add a new company
+              </Button>
+            )}
+          </div>
         </div>
       )}
     </div>

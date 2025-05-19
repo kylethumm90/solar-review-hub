@@ -33,6 +33,7 @@ import { useToast } from '@/components/ui/use-toast';
 import PublicLayout from './layouts/PublicLayout';
 import Vendors from './pages/Vendors';
 import VendorDetails from './pages/VendorDetails';
+import NewVendor from './pages/NewVendor';
 import Login from './pages/Login';
 import CheckEmail from './pages/CheckEmail';
 import ResetPassword from './pages/ResetPassword';
@@ -86,6 +87,7 @@ const App = () => {
           
           {/* Protected routes using ProtectedLayout */}
           <Route element={<ProtectedLayout />}>
+            <Route path="/vendors/new" element={<NewVendor />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/profile" element={<DashboardProfilePage />} />
             <Route path="/dashboard/reviews" element={<DashboardReviews />} />

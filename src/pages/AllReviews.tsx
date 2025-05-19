@@ -24,7 +24,7 @@ import { Link } from 'react-router-dom';
 interface ExtendedReview extends Review {
   users?: {
     full_name: string;
-  } | null;
+  } | null | any; // Updated to handle any type including SelectQueryError
   company?: Company;
   install_count?: number;
   install_states?: string[];
@@ -242,7 +242,7 @@ const AllReviews = () => {
         return {
           ...item,
           // Fix the issue where users might not be properly typed
-          users: item.users || null,
+          users: item.users && !item.users.error ? item.users : null,
           // Ensure core review properties are present
           rating_communication: item.rating_communication,
           rating_install_quality: item.rating_install_quality,
@@ -686,6 +686,13 @@ const ReviewCard = ({ review }: { review: ExtendedReview }) => {
     if (grade.startsWith('B')) return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300";
     if (grade.startsWith('C')) return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300";
     return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+  };
+  
+  // Format vendor type for display 
+  const formatVendorType = (type: string) => {
+    return type.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
   };
   
   // Truncate review text

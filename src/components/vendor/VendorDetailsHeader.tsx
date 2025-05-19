@@ -1,28 +1,34 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Globe, Calendar } from 'lucide-react';
+import { Globe, Calendar, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Company } from '@/types';
-import { scoreToGrade } from '@/utils/reviewUtils';
 
 interface VendorDetailsHeaderProps {
   company: Company;
   avgRating: number;
   reviewCount: number;
+  letterGrade: string;
 }
 
 const VendorDetailsHeader: React.FC<VendorDetailsHeaderProps> = ({ 
   company, 
   avgRating, 
-  reviewCount 
+  reviewCount,
+  letterGrade
 }) => {
-  const letterGrade = scoreToGrade(avgRating);
+  // Function to determine badge color based on grade
+  const getBadgeColor = (grade: string) => {
+    if (grade.startsWith('A')) return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
+    if (grade.startsWith('B')) return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300";
+    return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+  };
   
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
-      <div className="flex flex-col md:flex-row md:items-start">
-        <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-6">
+      <div className="flex flex-col md:flex-row md:items-center gap-4">
+        <div className="flex-shrink-0">
           {company.logo_url ? (
             <img 
               src={company.logo_url} 
@@ -37,27 +43,29 @@ const VendorDetailsHeader: React.FC<VendorDetailsHeaderProps> = ({
         </div>
         
         <div className="flex-grow">
-          <div className="flex flex-col mb-3">
-            <div className="flex items-center mb-2">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mr-3">{company.name}</h1>
-              {company.is_verified && (
-                <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs px-2 py-1 rounded-full flex items-center">
-                  <span>Verified</span>
-                </div>
-              )}
-            </div>
-            
-            <div className="flex items-center mb-3">
-              <Badge className="text-base bg-blue-500 hover:bg-blue-600 px-3 py-1" variant="default">
-                Grade: {letterGrade}
-              </Badge>
-              <span className="ml-2 text-gray-600 dark:text-gray-300">
-                <Link to="#reviews" className="hover:underline">
-                  {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
-                </Link>
-                <span className="text-sm ml-2 text-gray-500">({avgRating.toFixed(1)})</span>
-              </span>
-            </div>
+          <div className="flex flex-col sm:flex-row sm:items-center mb-2 gap-3">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{company.name}</h1>
+            <Badge 
+              className={`text-base px-3 py-1 rounded-full ${getBadgeColor(letterGrade)}`}
+              variant="outline"
+            >
+              Grade: {letterGrade}
+            </Badge>
+            {company.is_verified && (
+              <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs px-2 py-1 rounded-full flex items-center">
+                <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                <span>Verified</span>
+              </div>
+            )}
+          </div>
+          
+          <div className="mb-3">
+            <span className="text-gray-600 dark:text-gray-300">
+              <Link to="#reviews" className="hover:underline">
+                {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
+              </Link>
+              <span className="text-sm ml-2 text-gray-500">({avgRating.toFixed(1)})</span>
+            </span>
           </div>
           
           <p className="text-gray-600 dark:text-gray-300 mb-4">

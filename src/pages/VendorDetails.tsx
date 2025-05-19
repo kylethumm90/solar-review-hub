@@ -6,6 +6,7 @@ import VendorActionButtons from '@/components/vendor/VendorActionButtons';
 import ReviewsList from '@/components/vendor/ReviewsList';
 import VendorNotFoundMessage from '@/components/vendor/VendorNotFoundMessage';
 import { useVendorDetails } from '@/hooks/useVendorDetails';
+import { scoreToGrade } from '@/utils/reviewUtils';
 
 const VendorDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,9 +27,17 @@ const VendorDetails = () => {
     return <VendorNotFoundMessage />;
   }
   
+  // Calculate letter grade
+  const letterGrade = scoreToGrade(avgRating);
+  
   return (
     <div className="container mx-auto py-8 px-4">
-      <VendorDetailsHeader company={company} avgRating={avgRating} reviewCount={reviews.length} />
+      <VendorDetailsHeader 
+        company={company} 
+        avgRating={avgRating} 
+        reviewCount={reviews.length} 
+        letterGrade={letterGrade}
+      />
       <VendorActionButtons companyId={company.id} />
       <ReviewsList 
         companyId={company.id}

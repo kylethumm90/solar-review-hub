@@ -3,6 +3,7 @@ import React from 'react';
 import { formatDate } from '@/lib/utils';
 import { scoreToGrade } from '@/utils/reviewUtils';
 import { Badge } from '@/components/ui/badge';
+import { MessageCircle, Tool, Clock, DollarSign, LifeBuoy, HeadphonesIcon } from 'lucide-react';
 
 interface ReviewAnswer {
   id: string;
@@ -24,6 +25,25 @@ const ReviewItem: React.FC<ReviewItemProps> = ({ review, getReviewAvgScore, revi
   const avgScore = getReviewAvgScore(review);
   const letterGrade = scoreToGrade(avgScore);
   
+  // Function to get icon for a category
+  const getCategoryIcon = (category: string) => {
+    const lowerCategory = category.toLowerCase();
+    if (lowerCategory.includes('communication')) return <MessageCircle className="h-4 w-4 mr-2" />;
+    if (lowerCategory.includes('customer service')) return <HeadphonesIcon className="h-4 w-4 mr-2" />;
+    if (lowerCategory.includes('installation quality')) return <Tool className="h-4 w-4 mr-2" />;
+    if (lowerCategory.includes('payment reliability')) return <DollarSign className="h-4 w-4 mr-2" />;
+    if (lowerCategory.includes('post-install support')) return <LifeBuoy className="h-4 w-4 mr-2" />;
+    if (lowerCategory.includes('timeliness')) return <Clock className="h-4 w-4 mr-2" />;
+    return null;
+  };
+  
+  // Function to determine badge color based on grade
+  const getBadgeColor = (grade: string) => {
+    if (grade.startsWith('A')) return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
+    if (grade.startsWith('B')) return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300";
+    return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+  };
+  
   // Group answers by category for easier display
   const answersByCategory = reviewAnswers.reduce((acc: Record<string, ReviewAnswer>, answer) => {
     if (answer.review_questions?.category) {
@@ -37,15 +57,25 @@ const ReviewItem: React.FC<ReviewItemProps> = ({ review, getReviewAvgScore, revi
     <div className="border-b dark:border-gray-700 pb-8 last:border-0">
       <div className="flex justify-between mb-2">
         <div>
-          <span className="font-semibold">
-            {review.users?.full_name || 'Anonymous User'}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="font-semibold">
+              {review.users?.full_name || 'Anonymous User'}
+            </span>
+            {review.is_verified_reviewer && (
+              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
+                Verified Reviewer
+              </Badge>
+            )}
+          </div>
           {review.review_title && (
             <h3 className="text-lg font-medium mt-1">{review.review_title}</h3>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-blue-50 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+          <Badge 
+            variant="outline" 
+            className={`${getBadgeColor(letterGrade)}`}
+          >
             Grade: {letterGrade}
           </Badge>
           <span className="text-gray-500 text-sm">
@@ -60,24 +90,23 @@ const ReviewItem: React.FC<ReviewItemProps> = ({ review, getReviewAvgScore, revi
       
       {reviewAnswers && reviewAnswers.length > 0 && (
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {Object.entries(answersByCategory).map(([category, answer]) => (
-            <div key={answer.id} className="bg-gray-50 dark:bg-gray-700/30 p-3 rounded">
-              <div className="text-sm font-medium mb-1">
-                {category}
-              </div>
-              <div className="flex items-center justify-between">
-                <Badge variant="outline" className="bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">
-                  {scoreToGrade(answer.rating)}
+          {Object.entries(answersByCategory).map(([category, answer]) => {
+            const grade = scoreToGrade(answer.rating);
+            return (
+              <div key={answer.id} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/30 rounded">
+                <div className="flex items-center">
+                  {getCategoryIcon(category)}
+                  <span className="text-sm font-medium">{category}</span>
+                </div>
+                <Badge 
+                  variant="outline" 
+                  className={`${getBadgeColor(grade)}`}
+                >
+                  {grade}
                 </Badge>
-                <span className="text-xs text-gray-500">({answer.rating}/5)</span>
               </div>
-              {answer.notes && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">
-                  "{answer.notes}"
-                </p>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

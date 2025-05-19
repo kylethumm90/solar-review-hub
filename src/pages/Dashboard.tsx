@@ -11,6 +11,7 @@ import AdminDiagnostics from '@/components/dashboard/AdminDiagnostics';
 const Dashboard = () => {
   const { user } = useAuth();
   const { reviews, claims, isLoading, hasErrors } = useDashboardData();
+  const isAdmin = user?.user_metadata?.role === 'admin';
 
   return (
     <div className="container mx-auto py-6 px-4">
@@ -40,8 +41,8 @@ const Dashboard = () => {
               isLoading={isLoading}
             />
             
-            {/* Admin Diagnostic Section */}
-            <AdminDiagnostics />
+            {/* Admin Diagnostic Section - Only show for admins */}
+            {isAdmin && <AdminDiagnostics />}
           </div>
           
           {/* Sidebar Column */}
@@ -51,7 +52,7 @@ const Dashboard = () => {
               claims={claims}
               isLoading={isLoading}
             />
-            <AdminUpgrade />
+            {isAdmin && <AdminUpgrade />}
           </div>
         </div>
       )}

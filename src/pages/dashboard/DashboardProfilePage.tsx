@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -294,6 +295,7 @@ export default function DashboardProfilePage() {
               </Card>
             </TabsContent>
 
+            {/* Only render the Admin tab content if user is an admin */}
             {isAdmin && (
               <TabsContent value="admin" className="space-y-6">
                 <AdminDiagnostics />
@@ -305,4 +307,4 @@ export default function DashboardProfilePage() {
       </div>
     </div>
   );
-}
+};

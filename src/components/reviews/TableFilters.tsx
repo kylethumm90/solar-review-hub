@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { Drawer, DrawerContent, DrawerTrigger, DrawerClose, DrawerHeader, Drawer
 import { X, Filter, ChevronDown } from 'lucide-react';
 import { FilterState, SimpleCompany } from './types';
 import { formatVendorType } from './reviewUtils';
-import { useMediaQuery } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface TableFiltersProps {
   filters: FilterState;
@@ -36,7 +35,7 @@ const TableFilters = ({
   const [isVendorDrawerOpen, setIsVendorDrawerOpen] = useState(false);
   const [isGradeDrawerOpen, setIsGradeDrawerOpen] = useState(false);
   const [isStateDrawerOpen, setIsStateDrawerOpen] = useState(false);
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isMobile = useIsMobile();
   
   const toggleVendorType = (type: string) => {
     const updated = filters.vendorTypes.includes(type)

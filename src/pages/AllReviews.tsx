@@ -29,6 +29,7 @@ interface ExtendedReview extends Review {
   install_count?: number;
   install_states?: string[];
   still_active?: string;
+  is_anonymous?: boolean;
 }
 
 // Filter state type
@@ -41,11 +42,19 @@ interface FilterState {
   stillActive: string | null;
 }
 
+// Define a simplified company type for the dropdown
+interface SimpleCompany {
+  id: string;
+  name: string;
+  type: string;
+  is_verified: boolean;
+}
+
 const AllReviews = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [reviews, setReviews] = useState<ExtendedReview[]>([]);
   const [loading, setLoading] = useState(true);
-  const [companies, setCompanies] = useState<Company[]>([]);
+  const [companies, setCompanies] = useState<SimpleCompany[]>([]);
   const [vendorTypes, setVendorTypes] = useState<string[]>([]);
   const [states, setStates] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -123,6 +132,8 @@ const AllReviews = () => {
         id, company_id, user_id, review_title, review_details, 
         text_feedback, average_score, is_anonymous, created_at,
         install_count, install_states, still_active,
+        rating_communication, rating_install_quality, rating_payment_reliability,
+        rating_timeliness, rating_post_install_support,
         users (full_name),
         company:companies (id, name, type, logo_url)
       `)
@@ -133,7 +144,7 @@ const AllReviews = () => {
     if (sortOption === 'grade-high') {
       query = query.order('average_score', { ascending: false });
     } else if (sortOption === 'installs') {
-      query = query.order('install_count', { ascending: false, nullsLast: true });
+      query = query.order('install_count', { ascending: false });
     } else if (sortOption === 'company') {
       // We'll sort by company name after fetching
     }
@@ -703,7 +714,7 @@ const ReviewCard = ({ review }: { review: ExtendedReview }) => {
               Grade: {grade}
             </Badge>
             <span className="text-xs text-gray-500 mt-1">
-              {formatDate(review.created_at, { format: 'MMM yyyy' })}
+              {formatDate(review.created_at)}
             </span>
           </div>
         </div>

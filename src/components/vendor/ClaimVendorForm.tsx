@@ -57,8 +57,12 @@ const ClaimVendorForm = ({
         
       if (error) throw error;
       
-      toast.success('Claim request submitted successfully!');
-      // Optionally, redirect or show a success message
+      toast.success('Claim request submitted successfully!', {
+        onDismiss: () => {
+          // Reload the page after toast is dismissed
+          window.location.reload();
+        }
+      });
     } catch (error: any) {
       console.error('Error submitting claim:', error);
       toast.error(error.message || 'An error occurred while submitting your claim.');

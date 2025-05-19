@@ -20,6 +20,27 @@ export const signIn = async (email: string, password: string) => {
   }
 };
 
+export const signInWithGoogle = async () => {
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/dashboard'
+      }
+    });
+
+    if (error) {
+      toast.error(error.message || 'Failed to sign in with Google');
+      return { error, data: null };
+    }
+    
+    return { data, error: null };
+  } catch (error: any) {
+    toast.error(error.message || 'An error occurred during Google sign in');
+    return { error, data: null };
+  }
+};
+
 export const signUp = async (email: string, password: string, fullName: string) => {
   try {
     const response = await supabase.auth.signUp({

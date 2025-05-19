@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import LoginForm from '@/components/auth/LoginForm';
 import SignupForm from '@/components/auth/SignupForm';
+import GoogleLoginButton from '@/components/auth/GoogleLoginButton';
+import { Separator } from '@/components/ui/separator';
 
 const Login = () => {
   const [activeTab, setActiveTab] = React.useState<'login' | 'signup'>('login');
@@ -52,6 +54,19 @@ const Login = () => {
               <SignupForm />
             </TabsContent>
           </Tabs>
+
+          <div className="relative mt-6 mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
+          <GoogleLoginButton />
 
           <div className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
             {activeTab === 'login' ? (

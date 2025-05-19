@@ -21,6 +21,10 @@ export type AuthContextType = {
     error: any | null;
     data: any | null;
   }>;
+  signInWithGoogle: () => Promise<{
+    error: any | null;
+    data: any | null;
+  }>;
   signOut: () => Promise<void>;
   isAdmin: () => boolean;
   isVerifiedRep: () => boolean;

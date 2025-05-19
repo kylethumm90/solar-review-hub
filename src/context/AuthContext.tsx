@@ -11,7 +11,8 @@ import {
   createUserInDatabase,
   updateUserWithRole,
   isAdmin as checkIsAdmin,
-  isVerifiedRep as checkIsVerifiedRep
+  isVerifiedRep as checkIsVerifiedRep,
+  signInWithGoogle as authSignInWithGoogle
 } from '@/services/AuthService';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -159,6 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = authSignIn;
   const signUp = authSignUp;
   const signOut = authSignOut;
+  const signInWithGoogle = authSignInWithGoogle;
   
   const isAdmin = () => checkIsAdmin(user);
   const isVerifiedRep = () => checkIsVerifiedRep(user);
@@ -170,6 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn,
     signUp,
     signOut,
+    signInWithGoogle,
     isAdmin,
     isVerifiedRep,
     setUser

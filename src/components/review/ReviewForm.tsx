@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ReviewQuestion } from '@/types';
@@ -10,11 +9,14 @@ import ReviewCategoryGroup from '@/components/ReviewCategoryGroup';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { calculateWeightedAverage } from '@/utils/reviewUtils';
 
 interface ReviewFormProps {
   vendor: {
     name: string;
     type?: string;
+    id?: string;
   };
   reviewQuestions: ReviewQuestion[];
   onSubmit: (
@@ -37,6 +39,7 @@ export interface ReviewMetadata {
 }
 
 const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFormProps) => {
+  const navigate = useNavigate();
   const [reviewTitle, setReviewTitle] = useState('');
   const [reviewDetails, setReviewDetails] = useState('');
   const [questionRatings, setQuestionRatings] = useState<
@@ -119,7 +122,21 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
       installStates,
       recommendEpc
     };
+    
+    // Calculate average score for the review confirmation page
+    const averageScore = calculateWeightedAverage(questionRatings);
+    
+    // Navigate to the review confirmation page with all the rating data
+    navigate('/review-confirmation', {
+      state: {
+        answers: questionRatings,
+        vendorName: vendor.name,
+        averageScore,
+        vendorId: vendor.id
+      }
+    });
 
+    // Also submit the review to the backend
     onSubmit(reviewTitle, reviewDetails, questionRatings, isAnonymous, attachment, metadata);
   };
 

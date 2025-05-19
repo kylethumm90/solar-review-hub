@@ -233,14 +233,19 @@ export type Database = {
           company_id: string
           created_at: string
           id: string
+          install_count: number | null
+          install_states: string[] | null
           is_anonymous: boolean | null
+          last_install_date: string | null
           rating_communication: number
           rating_install_quality: number
           rating_payment_reliability: number
           rating_post_install_support: number
           rating_timeliness: number
+          recommend_epc: string | null
           review_details: string | null
           review_title: string | null
+          still_active: string | null
           text_feedback: string
           user_id: string
           verification_status: string | null
@@ -252,14 +257,19 @@ export type Database = {
           company_id: string
           created_at?: string
           id?: string
+          install_count?: number | null
+          install_states?: string[] | null
           is_anonymous?: boolean | null
+          last_install_date?: string | null
           rating_communication: number
           rating_install_quality: number
           rating_payment_reliability: number
           rating_post_install_support: number
           rating_timeliness: number
+          recommend_epc?: string | null
           review_details?: string | null
           review_title?: string | null
+          still_active?: string | null
           text_feedback: string
           user_id: string
           verification_status?: string | null
@@ -271,14 +281,19 @@ export type Database = {
           company_id?: string
           created_at?: string
           id?: string
+          install_count?: number | null
+          install_states?: string[] | null
           is_anonymous?: boolean | null
+          last_install_date?: string | null
           rating_communication?: number
           rating_install_quality?: number
           rating_payment_reliability?: number
           rating_post_install_support?: number
           rating_timeliness?: number
+          recommend_epc?: string | null
           review_details?: string | null
           review_title?: string | null
+          still_active?: string | null
           text_feedback?: string
           user_id?: string
           verification_status?: string | null

@@ -9,6 +9,14 @@ export interface VendorInfo {
   type: string;
 }
 
+interface ReviewMetadata {
+  installCount: number | null;
+  stillActive: string | null;
+  lastInstallDate: string | null;
+  installStates: string[];
+  recommendEpc: string | null;
+}
+
 export const ReviewService = {
   fetchVendorInfo: async (vendorId: string): Promise<VendorInfo> => {
     const { data, error } = await supabase
@@ -42,7 +50,14 @@ export const ReviewService = {
     averageScore: number, 
     questionRatings: Record<string, { rating: number; notes?: string }>,
     isAnonymous: boolean = false,
-    attachment: File | null = null
+    attachment: File | null = null,
+    metadata: ReviewMetadata = {
+      installCount: null,
+      stillActive: null,
+      lastInstallDate: null,
+      installStates: [],
+      recommendEpc: null
+    }
   ) => {
     // Handle file upload if this is an anonymous review with attachment
     let attachmentUrl: string | null = null;
@@ -71,6 +86,11 @@ export const ReviewService = {
       attachmentUrl = publicUrl;
     }
     
+    // Convert date string to proper date object if it exists
+    const lastInstallDate = metadata.lastInstallDate 
+      ? new Date(metadata.lastInstallDate).toISOString()
+      : null;
+    
     // Insert review
     const { data: review, error: reviewError } = await supabase
       .from('reviews')
@@ -84,6 +104,14 @@ export const ReviewService = {
         is_anonymous: isAnonymous,
         attachment_url: attachmentUrl,
         verified: !isAnonymous, // Auto-verify non-anonymous reviews
+        
+        // Add metadata fields
+        install_count: metadata.installCount,
+        still_active: metadata.stillActive,
+        last_install_date: lastInstallDate,
+        install_states: metadata.installStates,
+        recommend_epc: metadata.recommendEpc,
+        
         // Add legacy fields for backward compatibility
         rating_communication: 5,
         rating_install_quality: 5,

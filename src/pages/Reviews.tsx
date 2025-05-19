@@ -14,6 +14,14 @@ import { Star } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CheckCircle } from 'lucide-react';
 
+interface ReviewMetadata {
+  installCount: number | null;
+  stillActive: string | null;
+  lastInstallDate: string | null;
+  installStates: string[];
+  recommendEpc: string | null;
+}
+
 const Reviews = () => {
   const { vendorId } = useParams<{ vendorId: string }>();
   const { user } = useAuth();
@@ -59,7 +67,8 @@ const Reviews = () => {
     details: string, 
     questionRatings: Record<string, { rating: number; question: ReviewQuestion }>,
     isAnonymous: boolean,
-    attachment: File | null
+    attachment: File | null,
+    metadata: ReviewMetadata
   ) => {
     if (!user) {
       toast.custom({
@@ -92,7 +101,7 @@ const Reviews = () => {
       const averageScore = calculateWeightedAverage(questionRatings);
       
       // Format question ratings for API
-      const formattedRatings: Record<string, { rating: number }> = {};
+      const formattedRatings: Record<string, { rating: number; notes?: string }> = {};
       Object.keys(questionRatings).forEach(key => {
         const { rating } = questionRatings[key];
         formattedRatings[key] = { rating };
@@ -106,7 +115,8 @@ const Reviews = () => {
         averageScore,
         formattedRatings,
         isAnonymous,
-        attachment
+        attachment,
+        metadata
       );
       
       setIsAnonymous(isAnonymous);

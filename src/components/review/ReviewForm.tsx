@@ -4,20 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { RadioGroup } from '@/components/ui/radio-group';
 import ReviewCategoryGroup from '@/components/ReviewCategoryGroup';
 import { ReviewQuestion } from '@/types';
 import { toast } from '@/hooks/use-toast';
-import { AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import AnonymousReviewSection from './form-sections/AnonymousReviewSection';
+import EpcMetadataFields from './form-sections/EpcMetadataFields';
+import ReviewFormHeader from './form-sections/ReviewFormHeader';
 
 interface ReviewFormProps {
   vendor: {
@@ -36,66 +29,13 @@ interface ReviewFormProps {
   submitting: boolean;
 }
 
-interface ReviewMetadata {
+export interface ReviewMetadata {
   installCount: number | null;
   stillActive: string | null;
   lastInstallDate: string | null;
   installStates: string[];
   recommendEpc: string | null;
 }
-
-const US_STATES = [
-  { value: 'AL', label: 'Alabama' },
-  { value: 'AK', label: 'Alaska' },
-  { value: 'AZ', label: 'Arizona' },
-  { value: 'AR', label: 'Arkansas' },
-  { value: 'CA', label: 'California' },
-  { value: 'CO', label: 'Colorado' },
-  { value: 'CT', label: 'Connecticut' },
-  { value: 'DE', label: 'Delaware' },
-  { value: 'FL', label: 'Florida' },
-  { value: 'GA', label: 'Georgia' },
-  { value: 'HI', label: 'Hawaii' },
-  { value: 'ID', label: 'Idaho' },
-  { value: 'IL', label: 'Illinois' },
-  { value: 'IN', label: 'Indiana' },
-  { value: 'IA', label: 'Iowa' },
-  { value: 'KS', label: 'Kansas' },
-  { value: 'KY', label: 'Kentucky' },
-  { value: 'LA', label: 'Louisiana' },
-  { value: 'ME', label: 'Maine' },
-  { value: 'MD', label: 'Maryland' },
-  { value: 'MA', label: 'Massachusetts' },
-  { value: 'MI', label: 'Michigan' },
-  { value: 'MN', label: 'Minnesota' },
-  { value: 'MS', label: 'Mississippi' },
-  { value: 'MO', label: 'Missouri' },
-  { value: 'MT', label: 'Montana' },
-  { value: 'NE', label: 'Nebraska' },
-  { value: 'NV', label: 'Nevada' },
-  { value: 'NH', label: 'New Hampshire' },
-  { value: 'NJ', label: 'New Jersey' },
-  { value: 'NM', label: 'New Mexico' },
-  { value: 'NY', label: 'New York' },
-  { value: 'NC', label: 'North Carolina' },
-  { value: 'ND', label: 'North Dakota' },
-  { value: 'OH', label: 'Ohio' },
-  { value: 'OK', label: 'Oklahoma' },
-  { value: 'OR', label: 'Oregon' },
-  { value: 'PA', label: 'Pennsylvania' },
-  { value: 'RI', label: 'Rhode Island' },
-  { value: 'SC', label: 'South Carolina' },
-  { value: 'SD', label: 'South Dakota' },
-  { value: 'TN', label: 'Tennessee' },
-  { value: 'TX', label: 'Texas' },
-  { value: 'UT', label: 'Utah' },
-  { value: 'VT', label: 'Vermont' },
-  { value: 'VA', label: 'Virginia' },
-  { value: 'WA', label: 'Washington' },
-  { value: 'WV', label: 'West Virginia' },
-  { value: 'WI', label: 'Wisconsin' },
-  { value: 'WY', label: 'Wyoming' },
-];
 
 const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFormProps) => {
   const [reviewTitle, setReviewTitle] = useState('');
@@ -107,7 +47,7 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
   const [attachment, setAttachment] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
 
-  // New metadata state
+  // Metadata state
   const [installCount, setInstallCount] = useState<number | null>(null);
   const [stillActive, setStillActive] = useState<string | null>(null);
   const [lastInstallDate, setLastInstallDate] = useState<string | null>(null);
@@ -122,42 +62,6 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
       ...prev,
       [questionId]: { rating, question }
     }));
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setFileError(null);
-    
-    if (file) {
-      // Check file type
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-      if (!validTypes.includes(file.type)) {
-        setFileError('Invalid file type. Please upload a PDF, JPG, or PNG file.');
-        setAttachment(null);
-        return;
-      }
-      
-      // Check file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setFileError('File is too large. Maximum size is 5MB.');
-        setAttachment(null);
-        return;
-      }
-      
-      setAttachment(file);
-    } else {
-      setAttachment(null);
-    }
-  };
-
-  const handleStateChange = (state: string) => {
-    setInstallStates(prev => {
-      if (prev.includes(state)) {
-        return prev.filter(s => s !== state);
-      } else {
-        return [...prev, state];
-      }
-    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -215,183 +119,34 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
   return (
     <form onSubmit={handleSubmit}>
       <div className="space-y-6">
-        <div>
-          <Label htmlFor="review-title">Review Title</Label>
-          <Input
-            id="review-title"
-            className="mt-1"
-            value={reviewTitle}
-            onChange={(e) => setReviewTitle(e.target.value)}
-            placeholder="Summarize your experience in a few words"
-            required
-          />
-        </div>
+        <ReviewFormHeader 
+          reviewTitle={reviewTitle}
+          setReviewTitle={setReviewTitle}
+          isAnonymous={isAnonymous}
+          setIsAnonymous={setIsAnonymous}
+        />
         
-        <div>
-          <Label className="font-semibold mb-2 block">Reviewer Identity</Label>
-          <RadioGroup defaultValue="public" onValueChange={(val) => setIsAnonymous(val === "anonymous")}>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="public" id="public" />
-              <Label htmlFor="public">Display my full name</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="anonymous" id="anonymous" />
-              <Label htmlFor="anonymous">Submit anonymously</Label>
-            </div>
-          </RadioGroup>
-        </div>
-        
-        {isAnonymous && (
-          <div>
-            <Label htmlFor="attachment" className="font-semibold mb-2 block">
-              Upload documentation to verify your review
-            </Label>
-            <Input
-              id="attachment"
-              type="file"
-              onChange={handleFileChange}
-              accept=".pdf,.jpg,.jpeg,.png"
-              className="mt-1"
-            />
-            {fileError && (
-              <Alert variant="destructive" className="mt-2">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{fileError}</AlertDescription>
-              </Alert>
-            )}
-            <p className="text-sm text-muted-foreground mt-2">
-              <strong>Accepted examples:</strong><br />
-              • Signed contract or proposal<br />
-              • Invoice or receipt from the company<br />
-              • Screenshot of an email or text exchange<br />
-              • Photo of installed equipment with branding
-            </p>
-          </div>
-        )}
+        <AnonymousReviewSection 
+          isAnonymous={isAnonymous}
+          attachment={attachment}
+          setAttachment={setAttachment}
+          fileError={fileError}
+          setFileError={setFileError}
+        />
         
         {isEpcVendor && (
-          <div className="space-y-8 border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
-            <h3 className="text-lg font-semibold">Additional Information</h3>
-            
-            {/* Field 1: Number of Installs */}
-            <div>
-              <Label htmlFor="install-count" className="block font-semibold mb-2">
-                Approximately how many installs have you completed with this EPC?
-              </Label>
-              <Input
-                id="install-count"
-                type="number"
-                min={1}
-                max={1000}
-                step={1}
-                placeholder="Enter a number (estimates are fine)"
-                onChange={(e) => setInstallCount(Number(e.target.value) || null)}
-                className="mb-2"
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                Estimates are fine. Just give your best approximation.
-              </p>
-
-              <p className="mt-4 text-sm text-gray-600 font-medium">Not sure? Pick a range:</p>
-              <Select onValueChange={(value) => setInstallCount(Number(value) || null)}>
-                <SelectTrigger className="w-full max-w-xs">
-                  <SelectValue placeholder="Select a range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1</SelectItem>
-                  <SelectItem value="3">2-5</SelectItem>
-                  <SelectItem value="8">6-10</SelectItem>
-                  <SelectItem value="18">11-25</SelectItem>
-                  <SelectItem value="38">26-50</SelectItem>
-                  <SelectItem value="75">51-100</SelectItem>
-                  <SelectItem value="100">100+</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Field 2: Still Working With This EPC? */}
-            <div>
-              <Label className="block font-semibold mb-2">
-                Are you still working with this EPC?
-              </Label>
-              <RadioGroup onValueChange={setStillActive}>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="yes" id="still-active-yes" />
-                    <Label htmlFor="still-active-yes">Yes</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="no" id="still-active-no" />
-                    <Label htmlFor="still-active-no">No</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="considering" id="still-active-considering" />
-                    <Label htmlFor="still-active-considering">Considering ending the relationship</Label>
-                  </div>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {/* Field 3: Most Recent Install Date */}
-            <div>
-              <Label htmlFor="last-install-date" className="block font-semibold mb-2">
-                When was your most recent install with this EPC?
-              </Label>
-              <Input
-                id="last-install-date"
-                type="month"
-                max={new Date().toISOString().split('T')[0].slice(0, 7)}
-                onChange={(e) => setLastInstallDate(e.target.value || null)}
-              />
-            </div>
-
-            {/* Field 4: Install Locations */}
-            <div>
-              <Label className="block font-semibold mb-2">
-                Where were most of your installs with this EPC located?
-              </Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-60 overflow-y-auto border rounded-md p-2">
-                {US_STATES.map((state) => (
-                  <div key={state.value} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`state-${state.value}`} 
-                      checked={installStates.includes(state.value)}
-                      onCheckedChange={() => handleStateChange(state.value)}
-                    />
-                    <Label htmlFor={`state-${state.value}`} className="text-sm">
-                      {state.label}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-              <p className="text-sm text-gray-500 mt-1">
-                You may select more than one state.
-              </p>
-            </div>
-
-            {/* Field 5: Recommend This EPC */}
-            <div>
-              <Label className="block font-semibold mb-2">
-                Would you recommend this EPC to another organization?
-              </Label>
-              <RadioGroup onValueChange={setRecommendEpc}>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="yes" id="recommend-yes" />
-                    <Label htmlFor="recommend-yes">Yes</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="no" id="recommend-no" />
-                    <Label htmlFor="recommend-no">No</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="unsure" id="recommend-unsure" />
-                    <Label htmlFor="recommend-unsure">Not sure</Label>
-                  </div>
-                </div>
-              </RadioGroup>
-            </div>
-          </div>
+          <EpcMetadataFields
+            installCount={installCount}
+            setInstallCount={setInstallCount}
+            stillActive={stillActive}
+            setStillActive={setStillActive}
+            lastInstallDate={lastInstallDate}
+            setLastInstallDate={setLastInstallDate}
+            installStates={installStates}
+            setInstallStates={setInstallStates}
+            recommendEpc={recommendEpc}
+            setRecommendEpc={setRecommendEpc}
+          />
         )}
         
         {reviewQuestions.length > 0 ? (

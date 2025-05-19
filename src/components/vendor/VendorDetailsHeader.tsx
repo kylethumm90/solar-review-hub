@@ -64,7 +64,6 @@ const VendorDetailsHeader: React.FC<VendorDetailsHeaderProps> = ({
               <Link to="#reviews" className="hover:underline">
                 {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
               </Link>
-              <span className="text-sm ml-2 text-gray-500">({avgRating.toFixed(1)})</span>
             </span>
           </div>
           

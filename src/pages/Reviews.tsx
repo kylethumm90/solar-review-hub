@@ -10,6 +10,7 @@ import VendorNotFound from '@/components/review/VendorNotFound';
 import VendorHeader from '@/components/review/VendorHeader';
 import ReviewForm from '@/components/review/ReviewForm';
 import { ReviewService, VendorInfo } from '@/services/ReviewService';
+import { Star } from 'lucide-react';
 
 const Reviews = () => {
   const { vendorId } = useParams<{ vendorId: string }>();

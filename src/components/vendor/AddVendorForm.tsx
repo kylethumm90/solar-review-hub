@@ -44,6 +44,13 @@ const AddVendorForm = () => {
       type: value,
     }));
   };
+
+  // Normalize website URL
+  const normalizeUrl = (input: string) => {
+    if (!input) return "";
+    if (input.startsWith("http://") || input.startsWith("https://")) return input;
+    return `https://${input.replace(/^www\./, "")}`;
+  };
   
   // Submit form data to Supabase
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,13 +65,16 @@ const AddVendorForm = () => {
     setIsSubmitting(true);
     
     try {
+      // Normalize the website URL before saving
+      const normalizedWebsite = normalizeUrl(formData.website);
+
       // Insert new company into the database
       const { data, error } = await supabase
         .from('companies')
         .insert({
           name: formData.name,
           description: formData.description,
-          website: formData.website,
+          website: normalizedWebsite,
           type: formData.type,
           is_verified: false, // New companies are not verified by default
         })

@@ -9,8 +9,10 @@ import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
-import { Mail, User, Lock } from 'lucide-react';
+import { Mail, User, Lock, Shield } from 'lucide-react';
 import AvatarUpload from '@/components/profile/AvatarUpload';
+import AdminDiagnostics from '@/components/dashboard/AdminDiagnostics';
+import AdminUpgrade from '@/components/dashboard/AdminUpgrade';
 
 export default function DashboardProfilePage() {
   const { user, isLoading, setUser } = useAuth();
@@ -147,6 +149,8 @@ export default function DashboardProfilePage() {
     });
   };
 
+  const isAdmin = user?.user_metadata?.role === 'admin';
+
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">My Profile</h1>
@@ -186,6 +190,12 @@ export default function DashboardProfilePage() {
                 <Lock className="h-4 w-4" />
                 <span>Security</span>
               </TabsTrigger>
+              {isAdmin && (
+                <TabsTrigger value="admin" className="flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  <span>Admin</span>
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="profile">
@@ -283,6 +293,13 @@ export default function DashboardProfilePage() {
                 </form>
               </Card>
             </TabsContent>
+
+            {isAdmin && (
+              <TabsContent value="admin" className="space-y-6">
+                <AdminDiagnostics />
+                <AdminUpgrade />
+              </TabsContent>
+            )}
           </Tabs>
         </div>
       </div>

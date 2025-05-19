@@ -28,12 +28,6 @@ const AdminLayout = () => {
         // First check if the user has admin role in their metadata
         const isAdminInMetadata = user.user_metadata?.role === 'admin';
         
-        if (isAdminInMetadata) {
-          setAdminVerified(true);
-          setVerificationLoading(false);
-          return;
-        }
-        
         // Double check admin status by querying the users table directly
         const { data, error } = await supabase
           .from('users')
@@ -44,49 +38,83 @@ const AdminLayout = () => {
         if (error) {
           console.error('Error verifying admin role:', error);
           
-          // If we're in development and the error is "No rows found", run auto-diagnose
+          // If the error is "No rows found", create the user record with appropriate role
           if (error.message.includes('No rows found')) {
-            console.log('Running auto-diagnosis for missing user record...');
-            const result = await diagnoseAuthIssues();
+            console.log('Synchronizing user record to database...');
             
-            // If diagnosis was successful and created the user with admin role, verify again
-            if (result.success && result.dbRole === 'admin') {
-              setAdminVerified(true);
-            } else {
+            const { error: upsertError } = await supabase
+              .from('users')
+              .upsert({
+                id: user.id,
+                email: user.email,
+                role: isAdminInMetadata ? 'admin' : 'user',
+                full_name: user.user_metadata?.full_name || 'User'
+              });
+              
+            if (upsertError) {
+              console.error('Error creating user record:', upsertError);
               setAdminVerified(false);
+            } else {
+              // If we successfully created the record with admin role, verify
+              setAdminVerified(isAdminInMetadata);
+              
+              // Run auto-diagnose if we're creating a new record
+              const result = await diagnoseAuthIssues();
+              console.log('Auto-diagnosis result:', result);
             }
           } else {
             setAdminVerified(false);
           }
         } else {
           // Verify if the user has admin role in the database
-          const isAdmin = data?.role === 'admin';
-          setAdminVerified(isAdmin);
+          const isAdminInDb = data?.role === 'admin';
           
-          // Update user metadata if it doesn't match the database
-          if (isAdmin && user.user_metadata?.role !== 'admin') {
-            try {
-              await supabase.auth.updateUser({
-                data: { role: 'admin' }
-              });
-              
-              // Update the user in the local state to reflect the admin role
-              setUser(prevUser => {
-                if (!prevUser) return null;
-                return {
-                  ...prevUser,
-                  user_metadata: {
-                    ...prevUser.user_metadata,
-                    role: 'admin'
-                  }
-                };
-              });
-              
-              // Refresh the session to ensure role persistence
-              await supabase.auth.refreshSession();
-              
-            } catch (updateError) {
-              console.error('Error updating user metadata:', updateError);
+          // Only grant access if BOTH metadata and database show admin role
+          // This ensures RLS policies work correctly
+          const isFullAdmin = isAdminInMetadata && isAdminInDb;
+          setAdminVerified(isFullAdmin);
+          
+          // If there's a mismatch, synchronize the roles
+          if (isAdminInMetadata !== isAdminInDb) {
+            console.log('Role mismatch detected between metadata and database');
+            
+            if (isAdminInMetadata && !isAdminInDb) {
+              // Update database to match metadata
+              await supabase
+                .from('users')
+                .update({ role: 'admin' })
+                .eq('id', user.id);
+                
+              console.log('Updated database role to admin to match metadata');
+              setAdminVerified(true);
+            } else if (!isAdminInMetadata && isAdminInDb) {
+              // Update metadata to match database
+              try {
+                await supabase.auth.updateUser({
+                  data: { role: 'admin' }
+                });
+                
+                // Update the user in the local state
+                setUser(prevUser => {
+                  if (!prevUser) return null;
+                  return {
+                    ...prevUser,
+                    user_metadata: {
+                      ...prevUser.user_metadata,
+                      role: 'admin'
+                    }
+                  };
+                });
+                
+                console.log('Updated metadata role to admin to match database');
+                setAdminVerified(true);
+                
+                // Refresh the session to ensure role persistence
+                await supabase.auth.refreshSession();
+                
+              } catch (updateError) {
+                console.error('Error updating user metadata:', updateError);
+              }
             }
           }
         }

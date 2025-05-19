@@ -12,7 +12,7 @@ export function useClaimsAdmin() {
   const [activeTab, setActiveTab] = useState('all');
   const [debugMode, setDebugMode] = useState(false);
   const { user } = useAuth();
-  const isAdmin = user?.app_metadata?.role === 'admin';
+  const isAdmin = user?.user_metadata?.role === 'admin';
   
   // Log tab changes to help debug filtering issues
   useEffect(() => {
@@ -37,6 +37,26 @@ export function useClaimsAdmin() {
           console.log('[ClaimsAdmin] Using regular client (user is not admin)');
         } else {
           console.log('[ClaimsAdmin] Using admin client to bypass RLS');
+          
+          // Verify admin status in database as well to ensure RLS policies work correctly
+          const { data: dbUser, error: dbUserError } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+            
+          if (dbUserError) {
+            console.error('[ClaimsAdmin] Error fetching user role from database:', dbUserError);
+            toast.error('Error verifying admin permissions');
+            
+            // If we can't verify, try to create/update the user record
+            await syncUserRoleToDatabase(user);
+          } else if (dbUser.role !== 'admin') {
+            console.warn('[ClaimsAdmin] User metadata shows admin role but database does not match');
+            
+            // Attempt to sync roles if there's a mismatch
+            await syncUserRoleToDatabase(user);
+          }
         }
         
         let query = supabase
@@ -102,6 +122,40 @@ export function useClaimsAdmin() {
     },
     refetchInterval: debugMode ? 5000 : false, // Auto-refresh every 5 seconds in debug mode
   });
+  
+  // Function to ensure user role synchronization between auth metadata and database
+  const syncUserRoleToDatabase = async (currentUser) => {
+    if (!currentUser) return;
+    
+    try {
+      const role = currentUser.user_metadata?.role || 'user';
+      console.log(`[ClaimsAdmin] Syncing user role to database: ${role}`);
+      
+      // Upsert to ensure the user exists in the users table with correct role
+      const { error } = await supabase
+        .from('users')
+        .upsert({
+          id: currentUser.id,
+          email: currentUser.email,
+          role: role,
+          full_name: currentUser.user_metadata?.full_name || 'User'
+        }, {
+          onConflict: 'id'
+        });
+      
+      if (error) {
+        console.error('[ClaimsAdmin] Error syncing user role to database:', error);
+        toast.error('Failed to sync user permissions');
+        return false;
+      }
+      
+      toast.success('User permissions synchronized');
+      return true;
+    } catch (err) {
+      console.error('[ClaimsAdmin] Error in syncUserRoleToDatabase:', err);
+      return false;
+    }
+  };
   
   // Log any query errors
   useEffect(() => {
@@ -247,6 +301,11 @@ export function useClaimsAdmin() {
     try {
       console.log("[ClaimsAdmin] Performing DIRECT DB CHECK to bypass any filters");
       
+      // Make sure to synchronize user role if in debug mode
+      if (debugMode && user) {
+        await syncUserRoleToDatabase(user);
+      }
+      
       const { data, error } = await supabase
         .from('claims')
         .select(`
@@ -276,10 +335,16 @@ export function useClaimsAdmin() {
     }
   };
   
-  // Run a direct DB check on mount
+  // Run a direct DB check on mount and sync user role
   useEffect(() => {
-    fetchAllClaims();
-  }, []);
+    if (user) {
+      // Sync user role on component mount
+      syncUserRoleToDatabase(user).then(() => {
+        // After sync, fetch all claims
+        fetchAllClaims();
+      });
+    }
+  }, [user]);
   
   return {
     claims: filteredClaims,

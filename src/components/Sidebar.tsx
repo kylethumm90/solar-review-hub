@@ -1,11 +1,14 @@
+
 import { Link, useLocation } from 'react-router-dom';
-import { Home, User, Sun, FileEdit, Building, Star, Briefcase } from 'lucide-react';
+import { Home, User, Star, Briefcase, Building } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
+import { useHasApprovedClaim } from '@/hooks/useHasApprovedClaim';
 
 const Sidebar = () => {
   const location = useLocation();
   const { user } = useAuth();
+  const { hasApprovedClaim, loading } = useHasApprovedClaim();
   
   const navItems = [
     {
@@ -30,11 +33,11 @@ const Sidebar = () => {
     }
   ];
   
-  // Add company management for verified reps
-  if (user?.user_metadata?.role === 'verified_rep') {
+  // Add company management for users with approved claims or admin users
+  if (hasApprovedClaim || user?.user_metadata?.role === 'admin') {
     navItems.push({
       name: "My Company",
-      href: "/dashboard/company",
+      href: "/dashboard/my-company", // Fixed the route
       icon: Building
     });
   }

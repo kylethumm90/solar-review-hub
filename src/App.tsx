@@ -44,6 +44,7 @@ import DashboardProfilePage from './pages/dashboard/DashboardProfilePage';
 import DashboardReviews from './pages/dashboard/DashboardReviews';
 import DashboardClaims from './pages/dashboard/DashboardClaims';
 import DashboardMyCompany from './pages/dashboard/DashboardMyCompany';
+import AllReviews from './pages/AllReviews';
 
 const App = () => {
   const { user, isLoading } = useAuth();
@@ -82,6 +83,7 @@ const App = () => {
             <Route path="/cookies" element={<CookiePolicy />} />
             <Route path="/vendors" element={<Vendors />} />
             <Route path="/vendors/:id" element={<VendorDetails />} />
+            <Route path="/reviews" element={<AllReviews />} />
             <Route path="/reviews/:vendorId" element={user ? <Reviews /> : <Navigate to="/" />} />
             <Route path="/review/confirmation" element={<ReviewConfirmation />} />
             <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />

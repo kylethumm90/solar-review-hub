@@ -3,7 +3,7 @@ import React from 'react';
 import { formatDate } from '@/lib/utils';
 import { scoreToGrade } from '@/utils/reviewUtils';
 import { Badge } from '@/components/ui/badge';
-import { MessageCircle, Tool, Clock, DollarSign, LifeBuoy, HeadphonesIcon } from 'lucide-react';
+import { MessageCircle, Wrench, Clock, DollarSign, LifeBuoy, HeadphonesIcon } from 'lucide-react';
 
 interface ReviewAnswer {
   id: string;
@@ -30,7 +30,7 @@ const ReviewItem: React.FC<ReviewItemProps> = ({ review, getReviewAvgScore, revi
     const lowerCategory = category.toLowerCase();
     if (lowerCategory.includes('communication')) return <MessageCircle className="h-4 w-4 mr-2" />;
     if (lowerCategory.includes('customer service')) return <HeadphonesIcon className="h-4 w-4 mr-2" />;
-    if (lowerCategory.includes('installation quality')) return <Tool className="h-4 w-4 mr-2" />;
+    if (lowerCategory.includes('installation quality')) return <Wrench className="h-4 w-4 mr-2" />; // Changed from Tool to Wrench
     if (lowerCategory.includes('payment reliability')) return <DollarSign className="h-4 w-4 mr-2" />;
     if (lowerCategory.includes('post-install support')) return <LifeBuoy className="h-4 w-4 mr-2" />;
     if (lowerCategory.includes('timeliness')) return <Clock className="h-4 w-4 mr-2" />;

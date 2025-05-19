@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 
 interface ReviewFormProps {
   vendor: {
@@ -115,7 +116,7 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
   const [installCount, setInstallCount] = useState<number | null>(null);
   const [stillActive, setStillActive] = useState<string | null>(null);
   const [lastInstallDate, setLastInstallDate] = useState<string | null>(null);
-  const [installStates, setInstallStates] = useState<string[]>([]);
+  const [installState, setInstallState] = useState<string>('');
   const [recommendEpc, setRecommendEpc] = useState<string | null>(null);
 
   const handleQuestionChange = (questionId: string, rating: number) => {
@@ -152,16 +153,6 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
     } else {
       setAttachment(null);
     }
-  };
-
-  const handleStateChange = (state: string) => {
-    setInstallStates(prev => {
-      if (prev.includes(state)) {
-        return prev.filter(s => s !== state);
-      } else {
-        return [...prev, state];
-      }
-    });
   };
 
   const validateStep1 = () => {
@@ -216,7 +207,7 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
       installCount,
       stillActive,
       lastInstallDate,
-      installStates,
+      installStates: installState ? [installState] : [],
       recommendEpc
     };
 
@@ -269,36 +260,8 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
                 placeholder="Share anything else about your experience..."
               />
             </div>
-            
-            <div className="flex justify-end">
-              <Button 
-                type="button" 
-                onClick={handleNextStep}
-                disabled={
-                  reviewQuestions.length === 0 ||
-                  Object.keys(questionRatings).length < reviewQuestions.length
-                }
-              >
-                Next Step <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          </>
-        )}
 
-        {step === 2 && (
-          <>
-            <div className="border-b pb-4 mb-6">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={handlePrevStep}
-                className="mb-4"
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Ratings
-              </Button>
-              <h2 className="text-xl font-semibold mt-4">Additional Information</h2>
-            </div>
-            
+            {/* MOVED: Reviewer Identity */}
             <div>
               <Label className="font-semibold mb-2 block">Reviewer Identity</Label>
               <RadioGroup defaultValue="public" onValueChange={(val) => setIsAnonymous(val === "anonymous")}>
@@ -342,8 +305,80 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
             )}
             
             {isEpcVendor && (
+              <>
+                {/* MOVED: Approximately how many installs */}
+                <div>
+                  <Label htmlFor="install-count" className="block font-semibold mb-2">
+                    Approximately how many installs have you completed with this EPC?
+                  </Label>
+                  <Input
+                    id="install-count"
+                    type="number"
+                    min={1}
+                    max={1000}
+                    step={1}
+                    placeholder="Enter a number (estimates are fine)"
+                    onChange={(e) => setInstallCount(Number(e.target.value) || null)}
+                    className="mb-2"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Estimates are fine. Just give your best approximation.
+                  </p>
+                </div>
+                
+                {/* MOVED: Convert to dropdown - Install Locations */}
+                <div>
+                  <Label className="block font-semibold mb-2">
+                    Where were most of your installs with this EPC located?
+                  </Label>
+                  <Select onValueChange={setInstallState}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {US_STATES.map((state) => (
+                        <SelectItem key={state.value} value={state.value}>
+                          {state.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
+            
+            <div className="flex justify-end">
+              <Button 
+                type="button" 
+                onClick={handleNextStep}
+                disabled={
+                  reviewQuestions.length === 0 ||
+                  Object.keys(questionRatings).length < reviewQuestions.length
+                }
+              >
+                Next Step <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          </>
+        )}
+
+        {step === 2 && (
+          <>
+            <div className="border-b pb-4 mb-6">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handlePrevStep}
+                className="mb-4"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Ratings
+              </Button>
+              <h2 className="text-xl font-semibold mt-4">Additional Information</h2>
+            </div>
+            
+            {isEpcVendor && (
               <div className="space-y-6 mt-6">                
-                {/* Field 2: Still Working With This EPC? */}
+                {/* Field: Still Working With This EPC? */}
                 <div>
                   <Label className="block font-semibold mb-2">
                     Are you still working with this EPC?
@@ -366,7 +401,7 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
                   </RadioGroup>
                 </div>
 
-                {/* Field 3: Most Recent Install Date */}
+                {/* Field: Most Recent Install Date */}
                 <div>
                   <Label htmlFor="last-install-date" className="block font-semibold mb-2">
                     When was your most recent install with this EPC?
@@ -379,7 +414,7 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
                   />
                 </div>
 
-                {/* Field 5: Recommend This EPC */}
+                {/* Field: Recommend This EPC */}
                 <div>
                   <Label className="block font-semibold mb-2">
                     Would you recommend this EPC to another organization?
@@ -400,66 +435,6 @@ const ReviewForm = ({ vendor, reviewQuestions, onSubmit, submitting }: ReviewFor
                       </div>
                     </div>
                   </RadioGroup>
-                </div>
-                
-                {/* Field 1: Number of Installs (kept in step 2) */}
-                <div>
-                  <Label htmlFor="install-count" className="block font-semibold mb-2">
-                    Approximately how many installs have you completed with this EPC?
-                  </Label>
-                  <Input
-                    id="install-count"
-                    type="number"
-                    min={1}
-                    max={1000}
-                    step={1}
-                    placeholder="Enter a number (estimates are fine)"
-                    onChange={(e) => setInstallCount(Number(e.target.value) || null)}
-                    className="mb-2"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Estimates are fine. Just give your best approximation.
-                  </p>
-
-                  <p className="mt-4 text-sm text-gray-600 font-medium">Not sure? Pick a range:</p>
-                  <Select onValueChange={(value) => setInstallCount(Number(value) || null)}>
-                    <SelectTrigger className="w-full max-w-xs">
-                      <SelectValue placeholder="Select a range" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1</SelectItem>
-                      <SelectItem value="3">2-5</SelectItem>
-                      <SelectItem value="8">6-10</SelectItem>
-                      <SelectItem value="18">11-25</SelectItem>
-                      <SelectItem value="38">26-50</SelectItem>
-                      <SelectItem value="75">51-100</SelectItem>
-                      <SelectItem value="100">100+</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Field 4: Install Locations (kept in step 2) */}
-                <div>
-                  <Label className="block font-semibold mb-2">
-                    Where were most of your installs with this EPC located?
-                  </Label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-60 overflow-y-auto border rounded-md p-2">
-                    {US_STATES.map((state) => (
-                      <div key={state.value} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`state-${state.value}`} 
-                          checked={installStates.includes(state.value)}
-                          onCheckedChange={() => handleStateChange(state.value)}
-                        />
-                        <Label htmlFor={`state-${state.value}`} className="text-sm">
-                          {state.label}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    You may select more than one state.
-                  </p>
                 </div>
               </div>
             )}

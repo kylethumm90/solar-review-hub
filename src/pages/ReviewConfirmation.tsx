@@ -20,7 +20,6 @@ const ReviewConfirmation = () => {
   const [answers, setAnswers] = useState<AnswerWithCategory[]>([]);
   const [vendorName, setVendorName] = useState<string>('');
   const [overallGrade, setOverallGrade] = useState<string>('');
-  const [vendorId, setVendorId] = useState<string>('');
   
   useEffect(() => {
     // Retrieve data from location state
@@ -28,7 +27,6 @@ const ReviewConfirmation = () => {
       answers?: Record<string, { rating: number; question: ReviewQuestion }>;
       vendorName?: string;
       averageScore?: number;
-      vendorId?: string;
     } | null;
     
     if (!state?.answers) {
@@ -51,11 +49,6 @@ const ReviewConfirmation = () => {
     if (state.averageScore) {
       setOverallGrade(scoreToGrade(state.averageScore));
     }
-
-    // Store vendor ID for navigation
-    if (state.vendorId) {
-      setVendorId(state.vendorId);
-    }
   }, [location, navigate]);
   
   const renderStars = (rating: number) => {
@@ -76,7 +69,6 @@ const ReviewConfirmation = () => {
   const getBadgeColor = (grade: string) => {
     if (grade.startsWith('A')) return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
     if (grade.startsWith('B')) return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300";
-    if (grade.startsWith('C')) return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300";
     return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
   };
   
@@ -109,8 +101,8 @@ const ReviewConfirmation = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {answers.map((answer, index) => (
-              <TableRow key={index}>
+            {answers.map((answer) => (
+              <TableRow key={answer.category}>
                 <TableCell className="font-medium">{answer.category}</TableCell>
                 <TableCell>{renderStars(answer.rating)}</TableCell>
                 <TableCell>
@@ -132,7 +124,7 @@ const ReviewConfirmation = () => {
         </p>
         
         <div className="flex justify-center">
-          <Button onClick={() => navigate(`/vendors/${vendorId}`)}>
+          <Button onClick={() => navigate(`/vendors/${location.state?.vendorId || ''}`)}>
             View Vendor Profile
           </Button>
         </div>

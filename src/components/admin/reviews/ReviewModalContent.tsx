@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +19,25 @@ const ReviewModalContent = ({ review, user, answers, isLoading }: ReviewModalCon
   const getReviewerName = () => {
     if (!user) return "Unknown User";
     return user.full_name || user.email || "Unknown User";
+  };
+
+  // Format attachment URL to ensure it has the correct path
+  const getFormattedAttachmentUrl = (url: string) => {
+    if (!url) return '';
+    
+    // If URL is already a fully qualified URL, use it as is
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    
+    // Otherwise, it's likely a relative path that needs the Supabase URL
+    // This ensures we're using the correct Supabase storage URL
+    const SUPABASE_URL = "https://cmmposdobssorzcfduvl.supabase.co";
+    if (!url.startsWith('/storage/')) {
+      return `${SUPABASE_URL}/storage/v1/object/public/${url}`;
+    }
+    
+    return `${SUPABASE_URL}${url}`;
   };
 
   if (isLoading) {
@@ -58,7 +76,7 @@ const ReviewModalContent = ({ review, user, answers, isLoading }: ReviewModalCon
                   <div className="p-3 bg-gray-50 flex items-center justify-between">
                     <span className="text-sm">Document attachment (PDF)</span>
                     <a 
-                      href={review.attachment_url} 
+                      href={getFormattedAttachmentUrl(review.attachment_url)} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
@@ -69,13 +87,13 @@ const ReviewModalContent = ({ review, user, answers, isLoading }: ReviewModalCon
                 ) : (
                   <div className="flex flex-col">
                     <img 
-                      src={review.attachment_url} 
+                      src={getFormattedAttachmentUrl(review.attachment_url)} 
                       alt="Verification document" 
                       className="max-h-64 object-contain"
                     />
                     <div className="p-2 bg-gray-50 flex justify-end">
                       <a 
-                        href={review.attachment_url} 
+                        href={getFormattedAttachmentUrl(review.attachment_url)} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:text-blue-800 flex items-center text-sm"

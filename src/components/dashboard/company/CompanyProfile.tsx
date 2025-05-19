@@ -7,6 +7,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -45,6 +52,18 @@ const CompanyProfile = ({ company }: CompanyProfileProps) => {
       type: company?.type || "",
     },
   });
+
+  // Define company types - use the same options as in EditCompanyModal.tsx
+  const companyTypes = ["epc", "sales_org", "lead_gen", "software", "other"];
+
+  // Helper function to format company type for display
+  const formatCompanyType = (type: string): string => {
+    return type
+      .replace("_", " ")
+      .split(" ")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
 
   const onSubmit = async (values: CompanyFormValues) => {
     setIsSubmitting(true);
@@ -100,7 +119,7 @@ const CompanyProfile = ({ company }: CompanyProfileProps) => {
             <Separator />
             <div>
               <h3 className="font-medium mb-1">Type</h3>
-              <p>{company.type}</p>
+              <p>{company.type ? formatCompanyType(company.type) : 'Not specified'}</p>
             </div>
           </div>
         </CardContent>
@@ -174,7 +193,21 @@ const CompanyProfile = ({ company }: CompanyProfileProps) => {
                   <FormItem>
                     <FormLabel>Company Type</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Installer, Distributor" {...field} />
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select company type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {companyTypes.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {formatCompanyType(type)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

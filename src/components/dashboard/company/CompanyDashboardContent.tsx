@@ -1,55 +1,67 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import CompanyHeader from '@/components/dashboard/company/CompanyHeader';
-import CompanyProfile from '@/components/dashboard/company/CompanyProfile';
-import CompanyDashboard from '@/components/dashboard/company/CompanyDashboard';
-import ReviewsList from '@/components/dashboard/company/ReviewsList';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card } from '@/components/ui/card';
+import CompanyHeader from './CompanyHeader';
+import CompanyProfile from './CompanyProfile';
+import ReviewsSummary from './ReviewsSummary';
+import ReviewsList from './ReviewsList';
+import ClaimInformation from './ClaimInformation';
 
 interface CompanyDashboardContentProps {
-  company: any;
+  company: {
+    id: string;
+    name: string;
+    description?: string;
+    website?: string;
+    type?: string;
+    logo_url?: string;
+    operating_states?: string[];
+  };
   claim: any;
   reviews: any[];
 }
 
-const CompanyDashboardContent = ({ company, claim, reviews }: CompanyDashboardContentProps) => {
+const CompanyDashboardContent: React.FC<CompanyDashboardContentProps> = ({ 
+  company, 
+  claim, 
+  reviews 
+}) => {
   return (
-    <div className="container mx-auto py-8 px-4">
-      <CompanyHeader 
-        companyName={company.name} 
-        companyId={company.id}
-      />
+    <div className="container mx-auto py-6">
+      <CompanyHeader company={company} claim={claim} />
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-        {/* Left column - Company Profile */}
-        <div className="lg:col-span-2">
-          <CompanyProfile company={company} />
-        </div>
+      <Tabs defaultValue="profile" className="mt-6">
+        <TabsList className="grid grid-cols-3 w-full max-w-md">
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="reviews">Reviews</TabsTrigger>
+          <TabsTrigger value="claims">Claims</TabsTrigger>
+        </TabsList>
         
-        {/* Right column - Company Dashboard and Stats */}
-        <div>
-          <CompanyDashboard 
-            company={company}
-            claim={claim}
-            reviewsCount={reviews.length}
-          />
-        </div>
-      </div>
-      
-      {/* Reviews Section - Full Width */}
-      <div className="mt-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Customer Reviews</CardTitle>
-            <CardDescription>Reviews from your customers</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ReviewsList reviews={reviews} />
-          </CardContent>
-        </Card>
-      </div>
+        <TabsContent value="profile" className="mt-6">
+          <div className="grid grid-cols-1 gap-6">
+            <CompanyProfile company={company} />
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="reviews" className="mt-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-1">
+              <ReviewsSummary reviews={reviews} />
+            </div>
+            <div className="lg:col-span-2">
+              <Card className="p-6">
+                <h3 className="text-xl font-semibold mb-4">Recent Reviews</h3>
+                <ReviewsList reviews={reviews} />
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="claims" className="mt-6">
+          <ClaimInformation claim={claim} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

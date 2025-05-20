@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,7 +11,28 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { type CompanyData, type CompanyFormValues, useCompanyUpdate } from '@/hooks/useCompanyUpdate';
+import { 
+  type CompanyData, 
+  type CompanyFormValues, 
+  useCompanyUpdate
+} from '@/hooks/useCompanyUpdate';
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
+import { 
+  Command, 
+  CommandEmpty, 
+  CommandGroup, 
+  CommandInput, 
+  CommandItem 
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+import { Check } from "lucide-react";
 
 interface CompanyProfileFormProps {
   company: CompanyData;
@@ -25,7 +46,9 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({ company, onCanc
     logoPreview, 
     companyTypes, 
     handleLogoChange, 
-    onSubmit 
+    onSubmit,
+    US_STATES,
+    showStatesField
   } = useCompanyUpdate(company);
 
   return (
@@ -119,6 +142,92 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({ company, onCanc
             </FormItem>
           )}
         />
+        
+        {showStatesField && (
+          <FormField
+            control={form.control}
+            name="operating_states"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>States You Operate In</FormLabel>
+                <FormControl>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-between",
+                          !field.value?.length && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value?.length
+                          ? `${field.value.length} states selected`
+                          : "Select states"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search states..." />
+                        <CommandEmpty>No state found.</CommandEmpty>
+                        <ScrollArea className="h-64">
+                          <CommandGroup>
+                            {US_STATES.map((state) => {
+                              const isSelected = field.value?.includes(state.value);
+                              return (
+                                <CommandItem
+                                  key={state.value}
+                                  onSelect={() => {
+                                    const updatedValues = isSelected
+                                      ? field.value?.filter(
+                                          (value) => value !== state.value
+                                        )
+                                      : [...(field.value || []), state.value];
+                                    form.setValue("operating_states", updatedValues);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      isSelected ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  {state.label}
+                                </CommandItem>
+                              );
+                            })}
+                          </CommandGroup>
+                        </ScrollArea>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </FormControl>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {field.value?.map((state) => {
+                    const stateObj = US_STATES.find((s) => s.value === state);
+                    return (
+                      <Badge key={state} variant="secondary" className="flex items-center gap-1">
+                        {stateObj?.label}
+                        <X
+                          className="h-3 w-3 cursor-pointer"
+                          onClick={() => {
+                            const updatedValues = field.value?.filter(
+                              (value) => value !== state
+                            );
+                            form.setValue("operating_states", updatedValues);
+                          }}
+                        />
+                      </Badge>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Used to power regional search and filtering. Select all states where your company operates.
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         
         <FormField
           control={form.control}

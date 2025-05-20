@@ -8,6 +8,7 @@ import { Edit } from "lucide-react";
 import CompanyLogo from "./CompanyLogo";
 import CompanyProfileForm from "./CompanyProfileForm";
 import { useCompanyUpdate } from "@/hooks/useCompanyUpdate";
+import { Badge } from "@/components/ui/badge";
 
 interface CompanyProfileProps {
   company: {
@@ -17,12 +18,27 @@ interface CompanyProfileProps {
     website?: string;
     type?: string;
     logo_url?: string;
+    operating_states?: string[];
   };
 }
 
 const CompanyProfile = ({ company }: CompanyProfileProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { formatCompanyType } = useCompanyUpdate(company);
+  const { formatCompanyType, US_STATES } = useCompanyUpdate(company);
+  
+  // Function to get full state names from state codes
+  const getStateNames = (stateCodes: string[] | undefined): string[] => {
+    if (!stateCodes || stateCodes.length === 0) return [];
+    
+    return stateCodes.map(code => {
+      const state = US_STATES.find(s => s.value === code);
+      return state ? state.label : code;
+    });
+  };
+  
+  const stateNames = getStateNames(company.operating_states);
+  const showStates = (company.type === 'epc' || company.type === 'sales_org') && 
+                     stateNames.length > 0;
   
   return (
     <Card className="h-full">
@@ -63,6 +79,24 @@ const CompanyProfile = ({ company }: CompanyProfileProps) => {
             {company.description || 'No description provided'}
           </p>
         </div>
+        
+        {/* Operating States (only shown for EPCs and Sales Organizations) */}
+        {showStates && (
+          <>
+            <Separator className="my-4" />
+            
+            <div className="mt-4">
+              <h3 className="font-medium mb-2">States of Operation</h3>
+              <div className="flex flex-wrap gap-1">
+                {stateNames.map((state) => (
+                  <Badge key={state} variant="secondary">
+                    {state}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </CardContent>
       <CardFooter>
         <Button onClick={() => setDialogOpen(true)} className="w-full">

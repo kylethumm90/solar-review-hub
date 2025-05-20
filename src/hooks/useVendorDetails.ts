@@ -10,6 +10,7 @@ export const useVendorDetails = (vendorId: string | undefined) => {
   const [reviewAnswers, setReviewAnswers] = useState<any[]>([]);
   const [reviewQuestions, setReviewQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [toastShown, setToastShown] = useState(false);
 
   useEffect(() => {
     async function fetchVendorDetails() {
@@ -115,7 +116,11 @@ export const useVendorDetails = (vendorId: string | undefined) => {
         setReviewQuestions(questionsData || []);
         setReviewAnswers(answersData);
         
-        toast.success(`Loaded details for ${companyData.name}`);
+        // Show toast only once per vendor load
+        if (!toastShown && companyData) {
+          toast.success(`Loaded details for ${companyData.name}`);
+          setToastShown(true);
+        }
       } catch (error) {
         console.error('Error fetching vendor details:', error);
       } finally {
@@ -124,7 +129,12 @@ export const useVendorDetails = (vendorId: string | undefined) => {
     }
     
     fetchVendorDetails();
-  }, [vendorId]);
+    
+    // Reset toast shown state when vendor ID changes
+    return () => {
+      setToastShown(false);
+    };
+  }, [vendorId, toastShown]);
 
   // Using the imported getReviewAvgScore function to ensure consistency
   

@@ -55,14 +55,16 @@ export class RankingsService {
       // Flatten all operating_states arrays and get unique values
       const allRegions: string[] = [];
       data.forEach(company => {
-        if (company && 
-            company.operating_states && 
-            Array.isArray(company.operating_states)) {
-          company.operating_states.forEach(state => {
-            if (state && !allRegions.includes(state)) {
-              allRegions.push(state);
-            }
-          });
+        if (company) {
+          // Safely access operating_states with type checking
+          const states = company.operating_states;
+          if (states && Array.isArray(states)) {
+            states.forEach(state => {
+              if (state && !allRegions.includes(state)) {
+                allRegions.push(state);
+              }
+            });
+          }
         }
       });
       

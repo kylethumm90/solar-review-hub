@@ -42,7 +42,7 @@ const RankingsTable: React.FC<RankingsTableProps> = ({ companies, isLoading }) =
           <TableRow>
             <TableHead className="w-12 text-center">Rank</TableHead>
             <TableHead className="min-w-[200px]">Company</TableHead>
-            <TableHead className="w-20 text-center">Grade</TableHead>
+            <TableHead className="w-32 text-center">Grade / Score</TableHead>
             <TableHead className="w-20 text-center">Reviews</TableHead>
             <TableHead className="w-20 text-center">Installs</TableHead>
             <TableHead className="w-24 text-center">Movement</TableHead>
@@ -74,12 +74,17 @@ const RankingsTable: React.FC<RankingsTableProps> = ({ companies, isLoading }) =
                 </Link>
               </TableCell>
               <TableCell className="text-center">
-                <Badge 
-                  variant="outline" 
-                  className={`${getBadgeColorForGrade(company.grade || 'N/A')}`}
-                >
-                  {company.grade || 'N/A'}
-                </Badge>
+                <div className="flex flex-col items-center">
+                  <Badge 
+                    variant="outline" 
+                    className={`${getBadgeColorForGrade(company.grade || 'N/A')} mb-1`}
+                  >
+                    {company.grade || 'N/A'}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {company.solargrade_score ?? '—'}/100
+                  </span>
+                </div>
               </TableCell>
               <TableCell className="text-center">{company.review_count}</TableCell>
               <TableCell className="text-center">{formatNumber(company.install_count)}</TableCell>

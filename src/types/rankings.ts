@@ -6,6 +6,7 @@ export interface RankedCompany {
   status: string;
   average_grade: string;
   grade?: string;
+  solargrade_score?: number;
   review_count: number;
   install_count?: number;
   last_verified?: string;

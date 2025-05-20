@@ -50,6 +50,12 @@ export const scoreToGrade = (score: number): string => {
   return 'F';
 };
 
+// Convert 1-5 scale to 0-100 SolarGrade score
+export const calculateSolarGradeScore = (avgScore: number): number => {
+  // Normalize the 1-5 scale to 0-100
+  return Math.round((avgScore / 5) * 100);
+};
+
 // This is a consistent way to calculate average score from a review object
 // to ensure compatibility between different pages
 export const getReviewAvgScore = (review: any) => {

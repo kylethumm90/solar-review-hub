@@ -1,6 +1,7 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { RankedCompany } from '@/types/rankings';
-import { scoreToGrade } from '@/utils/reviewUtils';
+import { scoreToGrade, calculateSolarGradeScore } from '@/utils/reviewUtils';
 
 export class RankingsService {
   static async getTopCompanies(
@@ -19,6 +20,7 @@ export class RankingsService {
           status,
           logo_url,
           last_verified,
+          solargrade_score,
           reviews!inner (
             id,
             average_score,
@@ -80,6 +82,9 @@ export class RankingsService {
         // Convert score to letter grade
         const grade = scoreToGrade(avgScore);
 
+        // Calculate SolarGrade score (0-100)
+        const solarGradeScore = calculateSolarGradeScore(avgScore);
+
         // If grade threshold is set, filter out companies below it
         if (gradeThreshold) {
           const gradeOrder = 'A+,A,A-,B+,B,B-,C+,C,C-,D+,D,D-,F'.split(',');
@@ -91,6 +96,19 @@ export class RankingsService {
           }
         }
 
+        // Update the company's solargrade_score in the database if it's different
+        if (company.solargrade_score !== solarGradeScore) {
+          supabase
+            .from('companies')
+            .update({ solargrade_score: solarGradeScore })
+            .eq('id', company.id)
+            .then(({ error }) => {
+              if (error) {
+                console.error('Error updating solargrade_score:', error);
+              }
+            });
+        }
+
         return {
           id: company.id,
           name: company.name,
@@ -98,6 +116,7 @@ export class RankingsService {
           status: company.status,
           average_grade: avgScore.toFixed(1),
           grade,
+          solargrade_score: solarGradeScore,
           review_count: reviewCount,
           install_count: installCount,
           last_verified: company.last_verified || (oldestReview ? oldestReview.created_at : null),
@@ -107,9 +126,14 @@ export class RankingsService {
         };
       }).filter(Boolean) as RankedCompany[];
 
-      // Sort by grade (best first)
+      // Sort by SolarGrade score first (best first), then by other criteria
       return rankedCompanies.sort((a, b) => {
-        // First, sort by grade
+        // First, sort by SolarGrade score
+        if (a.solargrade_score !== b.solargrade_score) {
+          return (b.solargrade_score || 0) - (a.solargrade_score || 0);
+        }
+        
+        // Then by grade
         if (a.average_grade !== b.average_grade) {
           return parseFloat(b.average_grade) - parseFloat(a.average_grade);
         }

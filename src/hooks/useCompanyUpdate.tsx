@@ -116,7 +116,7 @@ export const useCompanyUpdate = (company: CompanyData) => {
     };
     
     checkClaim();
-  }, [company.id, company.type, user]);
+  });
   
   const form = useForm<CompanyFormValues>({
     resolver: zodResolver(companyFormSchema),

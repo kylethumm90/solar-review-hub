@@ -29,7 +29,10 @@ const CompanyDashboardContent: React.FC<CompanyDashboardContentProps> = ({
 }) => {
   return (
     <div className="container mx-auto py-6">
-      <CompanyHeader company={company} claim={claim} />
+      <CompanyHeader 
+        companyName={company.name} 
+        companyId={company.id} 
+      />
       
       <Tabs defaultValue="profile" className="mt-6">
         <TabsList className="grid grid-cols-3 w-full max-w-md">
@@ -47,7 +50,7 @@ const CompanyDashboardContent: React.FC<CompanyDashboardContentProps> = ({
         <TabsContent value="reviews" className="mt-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1">
-              <ReviewsSummary reviews={reviews} />
+              <ReviewsSummary reviewCount={reviews.length} />
             </div>
             <div className="lg:col-span-2">
               <Card className="p-6">
@@ -59,7 +62,11 @@ const CompanyDashboardContent: React.FC<CompanyDashboardContentProps> = ({
         </TabsContent>
         
         <TabsContent value="claims" className="mt-6">
-          <ClaimInformation claim={claim} />
+          <ClaimInformation 
+            fullName={claim.full_name} 
+            jobTitle={claim.job_title}
+            companyEmail={claim.company_email} 
+          />
         </TabsContent>
       </Tabs>
     </div>

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -51,7 +52,7 @@ const Navbar = () => {
                 isActive ? "text-foreground" : "text-muted-foreground"
               }`
             }>Rankings</NavLink>
-            {user?.role === 'admin' && (
+            {user?.user_metadata?.role === 'admin' && (
               <NavLink to="/admin/dashboard" className={({ isActive }) =>
                 `text-sm font-medium transition-colors hover:text-foreground/80 ${
                   isActive ? "text-foreground" : "text-muted-foreground"
@@ -65,8 +66,8 @@ const Navbar = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={`https://avatar.vercel.sh/${user.email}.png`} alt={user.full_name} />
-                    <AvatarFallback>{user.full_name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    <AvatarImage src={`https://avatar.vercel.sh/${user.email}.png`} alt={user.user_metadata?.full_name || 'User'} />
+                    <AvatarFallback>{(user.user_metadata?.full_name || 'User').slice(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>

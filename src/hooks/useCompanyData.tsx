@@ -57,7 +57,7 @@ export const useCompanyData = () => {
         
         const { data: companiesData, error: companiesError } = await supabase
           .from('companies')
-          .select('*, operating_states')
+          .select('*')
           .in('id', companyIds);
           
         if (companiesError) {
@@ -67,9 +67,15 @@ export const useCompanyData = () => {
           return;
         }
         
+        if (!companiesData) {
+          console.error('No companies data returned');
+          setLoading(false);
+          return;
+        }
+        
         // Sort companies to match the order of claims
         const sortedCompanies = companyIds.map(id => 
-          companiesData?.find(company => company.id === id)
+          companiesData.find(company => company.id === id)
         ).filter(Boolean);
         
         setCompanies(sortedCompanies);
@@ -84,10 +90,10 @@ export const useCompanyData = () => {
         if (reviewsError) {
           console.error('Error fetching reviews:', reviewsError);
           toast.error('Failed to fetch company reviews');
-        } else {
+        } else if (reviewsData) {
           // Group reviews by company_id
           const reviewsByCompany = companyIds.map(id => 
-            reviewsData?.filter(review => review.company_id === id) || []
+            reviewsData.filter(review => review.company_id === id) || []
           );
           
           setReviews(reviewsByCompany);

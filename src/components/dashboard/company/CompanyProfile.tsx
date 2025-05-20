@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -9,6 +8,7 @@ import CompanyLogo from "./CompanyLogo";
 import CompanyProfileForm from "./CompanyProfileForm";
 import { useCompanyUpdate } from "@/hooks/useCompanyUpdate";
 import { Badge } from "@/components/ui/badge";
+import { getStateNames } from "@/data/us-states";
 
 interface CompanyProfileProps {
   company: {
@@ -25,16 +25,6 @@ interface CompanyProfileProps {
 const CompanyProfile = ({ company }: CompanyProfileProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { formatCompanyType, US_STATES } = useCompanyUpdate(company);
-  
-  // Function to get full state names from state codes
-  const getStateNames = (stateCodes: string[] | undefined): string[] => {
-    if (!stateCodes || stateCodes.length === 0) return [];
-    
-    return stateCodes.map(code => {
-      const state = US_STATES.find(s => s.value === code);
-      return state ? state.label : code;
-    });
-  };
   
   const stateNames = getStateNames(company.operating_states);
   const showStates = (company.type === 'epc' || company.type === 'sales_org') && 

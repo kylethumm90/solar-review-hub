@@ -1,37 +1,18 @@
+
 import React, { useEffect, useState } from 'react';
 import {
   BrowserRouter as Router,
   Route,
   Routes,
-  Navigate,
 } from 'react-router-dom';
-import { ThemeProvider } from './components/theme-provider';
-import { useTheme } from 'next-themes';
+import { ThemeProvider } from '@/components/theme-provider';
+import { useTheme } from '@/context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import PublicLayout from './layouts/PublicLayout';
-import AccountLayout from './layouts/AccountLayout';
-import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import ProfilePage from './pages/ProfilePage';
-import CompaniesPage from './pages/CompaniesPage';
-import CompanyDetailsPage from './pages/CompanyDetailsPage';
-import ReviewsPage from './pages/ReviewsPage';
-import PricingPage from './pages/PricingPage';
-import TermsOfServicePage from './pages/TermsOfServicePage';
-import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
-import ContactPage from './pages/ContactPage';
-import NotFoundPage from './pages/NotFoundPage';
-import AdminLayout from './layouts/AdminLayout';
-import AdminDashboardPage from './pages/admin/AdminDashboardPage';
-import AdminUsersPage from './pages/admin/AdminUsersPage';
-import AdminCompaniesPage from './pages/admin/AdminCompaniesPage';
-import AdminClaimsPage from './pages/admin/AdminClaimsPage';
-import CreateReviewPage from './pages/CreateReviewPage';
 import RankingsPage from './pages/RankingsPage';
 
 const App: React.FC = () => {
-  const { theme, setTheme } = useTheme();
+  const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -50,79 +31,79 @@ const App: React.FC = () => {
       children: [
         {
           path: '',
-          element: <HomePage />,
+          element: <div>Home Page</div>,
         },
         {
           path: 'login',
-          element: <LoginPage />,
+          element: <div>Login Page</div>,
         },
         {
           path: 'register',
-          element: <RegisterPage />,
+          element: <div>Register Page</div>,
         },
         {
           path: 'pricing',
-          element: <PricingPage />,
+          element: <div>Pricing Page</div>,
         },
         {
           path: 'terms',
-          element: <TermsOfServicePage />,
+          element: <div>Terms of Service</div>,
         },
         {
           path: 'privacy',
-          element: <PrivacyPolicyPage />,
+          element: <div>Privacy Policy</div>,
         },
         {
           path: 'contact',
-          element: <ContactPage />,
+          element: <div>Contact Page</div>,
         },
         {
           path: 'reviews',
-          element: <ReviewsPage />,
+          element: <div>Reviews Page</div>,
         },
         {
           path: 'vendors',
-          element: <CompaniesPage />,
+          element: <div>Companies Page</div>,
         },
         {
           path: 'vendors/:companyId',
-          element: <CompanyDetailsPage />,
+          element: <div>Company Details Page</div>,
         },
       ],
     },
     {
       path: '/account',
-      element: <AccountLayout />,
+      element: <div>Account Layout</div>,
       children: [
         {
           path: 'profile',
-          element: <ProfilePage />,
+          element: <div>Profile Page</div>,
         },
         {
           path: 'reviews/new/:companyId',
-          element: <CreateReviewPage />,
+          element: <div>Create Review Page</div>,
         },
       ],
     },
     {
       path: '/admin',
-      element: <AdminLayout />,
+      element: <div>Admin Layout</div>,
       children: [
         {
           path: 'dashboard',
-          element: <AdminDashboardPage />,
+          element: <div>Admin Dashboard</div>,
         },
         {
           path: 'users',
-          element: <AdminUsersPage />,
+          element: <div>Admin Users</div>,
         },
         {
           path: 'companies',
-          element: <AdminCompaniesPage />,
+          element: <div>Admin Companies</div>,
         },
         {
           path: 'claims',
-          element: <AdminClaimsPage />,
+          element: <div>Admin Claims</div>,
         },
       ],
     },
@@ -138,7 +119,7 @@ const App: React.FC = () => {
     },
     {
       path: '*',
-      element: <NotFoundPage />,
+      element: <div>Not Found</div>,
     },
   ];
 

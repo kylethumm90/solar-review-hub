@@ -1,7 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet";
 import { 
   Select,
   SelectContent,
@@ -88,10 +86,6 @@ export default function RankingsPage() {
 
   return (
     <>
-      <Helmet>
-        <title>SolarGrade Power Rankings</title>
-      </Helmet>
-      
       <div className="container mx-auto py-8">
         <Card>
           <CardHeader className="pb-3">

@@ -1,79 +1,35 @@
 
-import { ReviewQuestion } from '@/types';
-
-type QuestionRatings = Record<string, { rating: number, question: ReviewQuestion }>;
-
-// Define weights for each category for EPCs
-const EPC_CATEGORY_WEIGHTS: Record<string, number> = {
-  'payment_reliability': 1.5,
-  'installation_quality': 1.25,
-  'timeliness': 1.25,
-  'communication': 1.0,
-  'post_install_support': 1.0,
-  'customer_service': 1.0
-};
-
-export const calculateWeightedAverage = (
-  questionRatings: QuestionRatings
-): number => {
-  if (Object.keys(questionRatings).length === 0) return 0;
-
-  let totalWeightedRating = 0;
-  let totalWeight = 0;
-
-  Object.values(questionRatings).forEach(({ rating, question }) => {
-    // Use the new weighting system if category matches, otherwise use question weight
-    const categoryKey = question.category.toLowerCase().replace(/ /g, '_');
-    const weight = EPC_CATEGORY_WEIGHTS[categoryKey] || question.weight;
-    
-    totalWeightedRating += rating * weight;
-    totalWeight += weight;
-  });
-
-  return totalWeight > 0 ? totalWeightedRating / totalWeight : 0;
-};
-
-// Map numeric score to letter grade
+// Convert a numerical score (0-5) to a letter grade (A+ to F)
 export const scoreToGrade = (score: number): string => {
-  if (score >= 4.7) return 'A+';
-  if (score >= 4.3) return 'A';
-  if (score >= 4.0) return 'A-';
-  if (score >= 3.7) return 'B+';
-  if (score >= 3.3) return 'B';
-  if (score >= 3.0) return 'B-';
-  if (score >= 2.7) return 'C+';
-  if (score >= 2.3) return 'C';
-  if (score >= 2.0) return 'C-';
-  if (score >= 1.7) return 'D+';
-  if (score >= 1.3) return 'D';
-  if (score >= 1.0) return 'D-';
+  if (score >= 4.8) return 'A+';
+  if (score >= 4.5) return 'A';
+  if (score >= 4.2) return 'A-';
+  if (score >= 3.9) return 'B+';
+  if (score >= 3.6) return 'B';
+  if (score >= 3.3) return 'B-';
+  if (score >= 3.0) return 'C+';
+  if (score >= 2.7) return 'C';
+  if (score >= 2.4) return 'C-';
+  if (score >= 2.1) return 'D+';
+  if (score >= 1.8) return 'D';
+  if (score >= 1.5) return 'D-';
   return 'F';
 };
 
-// This is a consistent way to calculate average score from a review object
-// to ensure compatibility between different pages
-export const getReviewAvgScore = (review: any) => {
-  if (review.average_score) return review.average_score;
-  
-  // For legacy reviews without average_score field
-  const categoryRatings = [
-    review.rating_communication,
-    review.rating_install_quality,
-    review.rating_payment_reliability,
-    review.rating_timeliness,
-    review.rating_post_install_support,
-  ].filter(Boolean);
-
-  return categoryRatings.length > 0 ? 
-    categoryRatings.reduce((a, b) => a + b, 0) / categoryRatings.length : 
-    0;
-};
-
-// Calculate the average rating across multiple reviews
-export const calculateAverageRating = (reviews: any[]) => {
-  if (!reviews || reviews.length === 0) {
-    return 0;
+// Get badge color based on grade
+export const getBadgeColorForGrade = (grade: string): string => {
+  switch (grade.charAt(0)) {
+    case 'A':
+      return 'bg-green-100 text-green-800 border-green-200';
+    case 'B':
+      return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'C':
+      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    case 'D':
+      return 'bg-orange-100 text-orange-800 border-orange-200';
+    case 'F':
+      return 'bg-red-100 text-red-800 border-red-200';
+    default:
+      return 'bg-gray-100 text-gray-800 border-gray-200';
   }
-
-  return reviews.reduce((sum, review) => sum + getReviewAvgScore(review), 0) / reviews.length;
 };

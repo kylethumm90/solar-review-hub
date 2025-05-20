@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -15,7 +16,7 @@ const navItems = [
   { name: 'Home', href: '/' },
   { name: 'Reviews', href: '/reviews' },
   { name: 'Vendors', href: '/vendors' },
-  { name: 'Rankings', href: '/rankings' }, // Add this new line
+  { name: 'Rankings', href: '/rankings' }, 
   { name: 'Pricing', href: '/pricing' }
 ];
 
@@ -26,6 +27,11 @@ const Navbar = () => {
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
+  // Extract user properties safely
+  const userAvatar = user?.avatar_url || "";
+  const userName = user?.full_name || user?.email || "";
+  const userInitials = (user?.full_name || user?.email || "").slice(0, 2).toUpperCase();
 
   return (
     <nav className="bg-background border-b">
@@ -64,8 +70,8 @@ const Navbar = () => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={user?.avatar_url || ""} alt={user?.full_name || user?.email} />
-                        <AvatarFallback>{user?.full_name?.slice(0, 2).toUpperCase() || user?.email?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                        <AvatarImage src={userAvatar} alt={userName} />
+                        <AvatarFallback>{userInitials}</AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>

@@ -1,14 +1,11 @@
 
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trophy, Star } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
-import { getStateNames } from '@/data/us-states';
-import { getBadgeColorForGrade } from '@/components/reviews/reviewUtils';
-import { formatCompanyType } from '@/types/company';
+import { getBadgeColorForGrade } from '@/utils/reviewUtils';
 
 interface RankingsTableProps {
   rankings: any[];
@@ -25,6 +22,20 @@ const RankingsTable = ({ rankings, sortOption }: RankingsTableProps) => {
       </div>
     );
   }
+
+  // Function to format company type for display
+  const formatCompanyType = (type: string | null): string => {
+    if (!type) return "Not specified";
+    return type
+      .split("_")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
+  // Function to get state names from codes
+  const getStateNames = (stateCodes: string[]): string[] => {
+    return stateCodes || [];
+  };
 
   return (
     <div className="w-full overflow-hidden">

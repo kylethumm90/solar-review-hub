@@ -60,9 +60,6 @@ const VendorDetailsHeader: React.FC<VendorDetailsHeaderProps> = ({
     );
   };
   
-  // Calculate SolarGrade score from average rating
-  const solarGradeScore = company.solargrade_score || Math.round((avgRating / 5) * 100);
-  
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
       <div className="flex flex-col md:flex-row md:items-center gap-4">
@@ -83,13 +80,21 @@ const VendorDetailsHeader: React.FC<VendorDetailsHeaderProps> = ({
         <div className="flex-grow">
           <div className="flex flex-col sm:flex-row sm:items-center mb-2 gap-3">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{company.name}</h1>
-            <Badge 
-              className={`text-base px-3 py-1 rounded-full ${getBadgeColor(letterGrade)}`}
-              variant="outline"
-            >
-              <span>Grade: {letterGrade}</span>
-              <span className="ml-1 text-sm text-muted-foreground">/ {solarGradeScore}</span>
-            </Badge>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge 
+                    className={`text-base px-3 py-1 rounded-full ${getBadgeColor(letterGrade)}`}
+                    variant="outline"
+                  >
+                    <span>SolarGrade: {letterGrade}</span>
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>This is the company's calculated SolarGrade letter rating based on verified reviews.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             {renderStatusBadge()}
           </div>
           

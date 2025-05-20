@@ -10,7 +10,7 @@ export const useCompanyData = () => {
   const [claims, setClaims] = useState<any[]>([]);
   const [selectedClaimIndex, setSelectedClaimIndex] = useState(0);
   const [companies, setCompanies] = useState<any[]>([]);
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[][]>([]); // Initialize as array of arrays
   
   // Get the currently selected claim and company
   const currentClaim = claims.length > 0 ? claims[selectedClaimIndex] : null;
@@ -45,15 +45,17 @@ export const useCompanyData = () => {
           return;
         }
         
-        if (!claimData || claimData.length === 0) {
+        // Initialize with empty arrays if no data
+        const claimsArray = Array.isArray(claimData) ? claimData : [];
+        setClaims(claimsArray);
+        
+        if (!claimsArray.length) {
           setLoading(false);
           return;
         }
         
-        setClaims(claimData);
-        
         // Fetch full company details for all claimed companies
-        const companyIds = claimData.map(claim => claim.company_id);
+        const companyIds = claimsArray.map(claim => claim.company_id);
         
         const { data: companiesData, error: companiesError } = await supabase
           .from('companies')
@@ -67,15 +69,12 @@ export const useCompanyData = () => {
           return;
         }
         
-        if (!companiesData) {
-          console.error('No companies data returned');
-          setLoading(false);
-          return;
-        }
+        // Initialize with empty array if no data
+        const companiesArray = Array.isArray(companiesData) ? companiesData : [];
         
         // Sort companies to match the order of claims
         const sortedCompanies = companyIds.map(id => 
-          companiesData.find(company => company.id === id)
+          companiesArray.find(company => company?.id === id)
         ).filter(Boolean);
         
         setCompanies(sortedCompanies);
@@ -90,10 +89,13 @@ export const useCompanyData = () => {
         if (reviewsError) {
           console.error('Error fetching reviews:', reviewsError);
           toast.error('Failed to fetch company reviews');
-        } else if (reviewsData) {
+        } else {
+          // Initialize with empty array if no data
+          const reviewsArray = Array.isArray(reviewsData) ? reviewsData : [];
+          
           // Group reviews by company_id
           const reviewsByCompany = companyIds.map(id => 
-            reviewsData.filter(review => review.company_id === id) || []
+            reviewsArray.filter(review => review?.company_id === id) || []
           );
           
           setReviews(reviewsByCompany);
@@ -116,7 +118,7 @@ export const useCompanyData = () => {
     companies,
     currentClaim,
     currentCompany,
-    reviews: reviews[selectedClaimIndex] || [],
+    reviews: Array.isArray(reviews[selectedClaimIndex]) ? reviews[selectedClaimIndex] : [],
     selectedClaimIndex,
     selectCompany,
     totalClaimedCompanies: claims.length

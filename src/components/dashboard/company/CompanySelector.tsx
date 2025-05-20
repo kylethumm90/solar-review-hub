@@ -10,11 +10,14 @@ interface CompanySelectorProps {
 }
 
 const CompanySelector: React.FC<CompanySelectorProps> = ({ 
-  companies, 
-  selectedIndex, 
+  companies = [], // Provide default empty array
+  selectedIndex = 0, 
   onSelect 
 }) => {
-  if (!companies || companies.length <= 1) return null;
+  // Don't render if there are no companies or only one company
+  if (!companies || !Array.isArray(companies) || companies.length <= 1) {
+    return null;
+  }
 
   return (
     <Card className="mb-6">
@@ -31,8 +34,8 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({
           </SelectTrigger>
           <SelectContent>
             {companies.map((company, index) => (
-              <SelectItem key={company.id} value={index.toString()}>
-                {company.name}
+              <SelectItem key={company?.id || index} value={index.toString()}>
+                {company?.name || `Company ${index + 1}`}
               </SelectItem>
             ))}
           </SelectContent>

@@ -32,12 +32,16 @@ const DashboardMyCompany = () => {
   if (!currentClaim || !currentCompany) {
     return <NoAccessMessage />;
   }
+
+  // Ensure we have valid arrays for the selector
+  const validCompanies = Array.isArray(companies) ? companies : [];
+  const hasMultipleCompanies = validCompanies.length > 1;
   
   return (
     <div className="container mx-auto py-4">
-      {totalClaimedCompanies > 1 && (
+      {hasMultipleCompanies && (
         <CompanySelector 
-          companies={companies}
+          companies={validCompanies}
           selectedIndex={selectedClaimIndex}
           onSelect={selectCompany}
         />
@@ -46,7 +50,7 @@ const DashboardMyCompany = () => {
       <CompanyDashboardContent 
         company={currentCompany}
         claim={currentClaim}
-        reviews={reviews}
+        reviews={Array.isArray(reviews) ? reviews : []}
       />
     </div>
   );

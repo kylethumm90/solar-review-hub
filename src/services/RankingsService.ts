@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { RankedCompany } from '@/types/rankings';
 import { scoreToGrade } from '@/utils/reviewUtils';
@@ -27,7 +26,7 @@ export class RankingsService {
             created_at
           )
         `)
-        .in('status', ['verified', 'certified'])
+        .in('status', ['verified', 'certified', 'unclaimed'])
         .eq('reviews.verified', true);
 
       // Apply vendor type filter if provided

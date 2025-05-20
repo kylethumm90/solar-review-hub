@@ -16,6 +16,7 @@ export interface Company {
   logo_url?: string;
   type: string; // Changed from specific literals to accept any string to match database
   is_verified: boolean;
+  status?: string; // Added status field
   grade?: string;
   last_verified?: string;
   created_at: string;

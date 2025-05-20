@@ -23,6 +23,7 @@ type CompanyFilter = {
 interface CompanyWithReviewCount extends Omit<Company, 'reviews'> {
   reviews?: { count: number }[];
   review_count?: number;
+  status?: string; // Added status field
 }
 
 const CompaniesPage = () => {

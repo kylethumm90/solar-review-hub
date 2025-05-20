@@ -34,9 +34,12 @@ export class RankingsService {
         return [];
       }
 
+      // Handle potential missing column in database schema
+      if (!data || !Array.isArray(data)) return [];
+      
       // Flatten the array of arrays and get unique values
       const allRegions = data
-        .filter(company => company.operating_states && Array.isArray(company.operating_states))
+        .filter(company => company?.operating_states && Array.isArray(company.operating_states))
         .flatMap(company => company.operating_states || []);
       
       return Array.from(new Set(allRegions)).sort();

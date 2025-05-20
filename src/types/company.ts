@@ -45,6 +45,19 @@ export interface CompanyData {
   last_verified: string | null;
 }
 
+// Make a more flexible version that accepts optional fields for component compatibility
+export interface CompanyDataPartial {
+  id: string;
+  name: string;
+  description?: string;
+  website?: string | null;
+  type?: string;
+  operating_states?: string[] | null;
+  logo_url?: string | null;
+  is_verified?: boolean;
+  last_verified?: string | null;
+}
+
 export const COMPANY_TYPES = [
   { value: "epc", label: "EPC (Engineering, Procurement, Construction)" },
   { value: "installer", label: "Installer" },

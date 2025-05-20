@@ -122,14 +122,14 @@ export default function RankingsPage() {
             <div className="flex flex-wrap gap-2 mt-4">
               {/* Optional Filters */}
               <Select
-                value={vendorTypeFilter || ""}
-                onValueChange={(value) => setVendorTypeFilter(value === "" ? null : value)}
+                value={vendorTypeFilter || "all"}
+                onValueChange={(value) => setVendorTypeFilter(value === "all" ? null : value)}
               >
                 <SelectTrigger className="w-[150px]">
                   <SelectValue placeholder="Vendor Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="all">All Types</SelectItem>
                   {vendorTypes.map((type) => (
                     <SelectItem key={type} value={type}>
                       {formatVendorType(type)}
@@ -139,14 +139,14 @@ export default function RankingsPage() {
               </Select>
               
               <Select
-                value={gradeFilter || ""}
-                onValueChange={(value) => setGradeFilter(value === "" ? null : value)}
+                value={gradeFilter || "all"}
+                onValueChange={(value) => setGradeFilter(value === "all" ? null : value)}
               >
                 <SelectTrigger className="w-[120px]">
                   <SelectValue placeholder="Grade" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Grades</SelectItem>
+                  <SelectItem value="all">All Grades</SelectItem>
                   {grades.map((grade) => (
                     <SelectItem key={grade} value={grade}>
                       {grade}
@@ -156,14 +156,14 @@ export default function RankingsPage() {
               </Select>
               
               <Select
-                value={regionFilter || ""}
-                onValueChange={(value) => setRegionFilter(value === "" ? null : value)}
+                value={regionFilter || "all"}
+                onValueChange={(value) => setRegionFilter(value === "all" ? null : value)}
               >
                 <SelectTrigger className="w-[150px]">
                   <SelectValue placeholder="Region" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Regions</SelectItem>
+                  <SelectItem value="all">All Regions</SelectItem>
                   {regions.map((region) => (
                     <SelectItem key={region} value={region}>
                       {region}

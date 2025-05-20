@@ -1,3 +1,4 @@
+
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, RefreshCw } from 'lucide-react';
@@ -60,4 +61,3 @@ export default function LogsFilterBar({
     </div>
   );
 }
-

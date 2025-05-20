@@ -53,8 +53,8 @@ export class RankingsService {
         // Calculate total reviews
         const reviewCount = company.reviews ? company.reviews.length : 0;
 
-        // Skip companies with fewer than 3 reviews
-        if (reviewCount < 3) {
+        // Skip companies with fewer than 1 review (changed from 3)
+        if (reviewCount < 1) {
           return null;
         }
 

@@ -60,7 +60,7 @@ const Rankings = () => {
       )}
       
       <div className="mt-8 text-sm text-muted-foreground">
-        <p><strong>Note:</strong> Rankings are updated every 30 minutes. Companies with fewer than 3 verified reviews are not included.</p>
+        <p><strong>Note:</strong> Rankings are updated every 30 minutes. All companies with at least one verified review are included.</p>
         <p className="mt-2">
           <strong>Ranking Methodology:</strong> Companies are ranked based on average review grade, with number of reviews and installs used as tiebreakers.
         </p>

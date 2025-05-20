@@ -40,8 +40,8 @@ export class AdminService {
           (review: any) => review.verified
         );
         
-        // Skip companies with fewer than 3 verified reviews
-        if (verifiedReviews.length < 3) {
+        // Skip companies with no verified reviews (changed from 3)
+        if (verifiedReviews.length < 1) {
           continue;
         }
 

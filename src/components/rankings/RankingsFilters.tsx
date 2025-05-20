@@ -49,7 +49,7 @@ const RankingsFilters: React.FC<RankingsFiltersProps> = ({
                 <SelectValue placeholder="All Grades" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Grades</SelectItem>
+                <SelectItem value="all">All Grades</SelectItem>
                 <SelectItem value="A+">A+ or better</SelectItem>
                 <SelectItem value="A">A or better</SelectItem>
                 <SelectItem value="A-">A- or better</SelectItem>

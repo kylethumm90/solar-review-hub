@@ -7,7 +7,7 @@ export const useRankings = () => {
   const [companies, setCompanies] = useState<RankedCompany[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [vendorType, setVendorType] = useState('all');
-  const [gradeThreshold, setGradeThreshold] = useState('');
+  const [gradeThreshold, setGradeThreshold] = useState('all');
   const [error, setError] = useState<string | null>(null);
 
   const fetchRankings = async () => {
@@ -18,7 +18,7 @@ export const useRankings = () => {
       const data = await RankingsService.getTopCompanies(
         100,
         vendorType === 'all' ? undefined : vendorType,
-        gradeThreshold
+        gradeThreshold === 'all' ? undefined : gradeThreshold
       );
       setCompanies(data);
     } catch (err) {

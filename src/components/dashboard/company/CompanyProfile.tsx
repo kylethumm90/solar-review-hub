@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -9,17 +10,10 @@ import CompanyProfileForm from "./CompanyProfileForm";
 import { useCompanyUpdate } from "@/hooks/useCompanyUpdate";
 import { Badge } from "@/components/ui/badge";
 import { getStateNames } from "@/data/us-states";
+import { CompanyDataPartial } from "@/types/company";
 
 interface CompanyProfileProps {
-  company: {
-    id: string;
-    name: string;
-    description?: string;
-    website?: string;
-    type?: string;
-    logo_url?: string;
-    operating_states?: string[];
-  };
+  company: CompanyDataPartial;
 }
 
 const CompanyProfile = ({ company }: CompanyProfileProps) => {

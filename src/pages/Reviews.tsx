@@ -94,7 +94,18 @@ const Reviews = () => {
     
     try {
       // Calculate average score using the weighted average function
-      const averageScore = calculateWeightedAverage(questionRatings);
+      // Create ratings and weights arrays for calculateWeightedAverage
+      const ratings: number[] = [];
+      const weights: number[] = [];
+      
+      Object.keys(questionRatings).forEach(key => {
+        const { rating, question } = questionRatings[key];
+        ratings.push(rating);
+        weights.push(question.weight || 1);
+      });
+      
+      // Now call with both parameters
+      const averageScore = calculateWeightedAverage(ratings, weights);
       
       // Format question ratings for API
       const formattedRatings: Record<string, { rating: number; notes?: string }> = {};

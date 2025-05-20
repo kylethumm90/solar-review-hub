@@ -25,6 +25,19 @@ export class RankingsService {
 
   static async getOperatingRegions(): Promise<string[]> {
     try {
+      // Check if operating_states column exists by querying metadata
+      const { data: columns, error: metaError } = await supabase
+        .from('companies')
+        .select('operating_states')
+        .limit(1)
+        .maybeSingle();
+      
+      // If we get an error mentioning the column doesn't exist, return empty array
+      if (metaError && metaError.message?.includes("operating_states")) {
+        console.log("operating_states column may not exist in companies table");
+        return [];
+      }
+      
       const { data, error } = await supabase
         .from('companies')
         .select('operating_states');
@@ -34,15 +47,24 @@ export class RankingsService {
         return [];
       }
 
-      // Handle potential missing column in database schema
+      // Safe handling for potentially missing column
       if (!data || !Array.isArray(data)) return [];
       
-      // Flatten the array of arrays and get unique values
-      const allRegions = data
-        .filter(company => company?.operating_states && Array.isArray(company.operating_states))
-        .flatMap(company => company.operating_states || []);
+      // Flatten the array of arrays and get unique values, with safer property access
+      const allRegions: string[] = [];
+      data.forEach(company => {
+        if (company && 
+            Object.prototype.hasOwnProperty.call(company, 'operating_states') && 
+            Array.isArray(company.operating_states)) {
+          company.operating_states.forEach(state => {
+            if (state && !allRegions.includes(state)) {
+              allRegions.push(state);
+            }
+          });
+        }
+      });
       
-      return Array.from(new Set(allRegions)).sort();
+      return allRegions.sort();
     } catch (e) {
       console.error("Exception fetching operating regions:", e);
       return [];
@@ -60,7 +82,7 @@ export class RankingsService {
       let query = supabase
         .from('companies')
         .select(`
-          id, name, type, logo_url, is_verified, operating_states, last_verified,
+          id, name, type, logo_url, is_verified, last_verified,
           reviews(average_score, install_count, verified)
         `);
 
@@ -69,9 +91,15 @@ export class RankingsService {
         query = query.eq('type', vendorType);
       }
 
-      // Apply region filter if specified
+      // Apply region filter if specified, only if operating_states column exists
       if (region && region.trim()) {
-        query = query.contains('operating_states', [region]);
+        // Check if column exists first (we'll catch the error if not)
+        try {
+          query = query.contains('operating_states', [region]);
+        } catch (e) {
+          console.error("Error applying operating_states filter:", e);
+          // Continue without this filter
+        }
       }
 
       const { data, error } = await query;
@@ -87,13 +115,19 @@ export class RankingsService {
 
       // Process and calculate metrics for each company
       const rankings = data.map(company => {
-        // Filter to only include verified reviews from the reviews array
-        const verifiedReviews = (company.reviews || []).filter((review: any) => review.verified);
+        // Handle potentially missing reviews array
+        const reviews = company.reviews || [];
+        
+        // Filter to only include verified reviews
+        const verifiedReviews = Array.isArray(reviews) 
+          ? reviews.filter((review: any) => review && review.verified)
+          : [];
+          
         const reviewCount = verifiedReviews.length;
         
         // Calculate average score across all verified reviews
         const totalScore = verifiedReviews.reduce((sum: number, review: any) => {
-          return sum + (review.average_score || 0);
+          return sum + (review && review.average_score ? review.average_score : 0);
         }, 0);
         
         const averageScore = reviewCount > 0 ? totalScore / reviewCount : 0;
@@ -101,12 +135,14 @@ export class RankingsService {
         
         // Sum up install counts
         const installCount = verifiedReviews.reduce((sum: number, review: any) => {
-          return sum + (review.install_count || 0);
+          return sum + (review && review.install_count ? review.install_count : 0);
         }, 0);
 
         // For sorting by recent activity
         const mostRecentReview = verifiedReviews.length > 0 
-          ? new Date(Math.max(...verifiedReviews.map((r: any) => new Date(r.created_at || 0).getTime())))
+          ? new Date(Math.max(...verifiedReviews.map((r: any) => 
+              r && r.created_at ? new Date(r.created_at).getTime() : 0
+            ))) 
           : new Date(0);
 
         return {

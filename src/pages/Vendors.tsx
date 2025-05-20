@@ -1,20 +1,20 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import VendorCard from '@/components/VendorCard';
-import { Search, Filter, PlusCircle } from 'lucide-react';
 import { Company } from '@/types';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { calculateAverageRating, scoreToGrade } from '@/utils/reviewUtils';
+
+// Import our new components
+import VendorHeader from '@/components/vendors/VendorHeader';
+import VendorFilters from '@/components/vendors/VendorFilters';
+import VendorList from '@/components/vendors/VendorList';
 
 const Vendors = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
-  const navigate = useNavigate();
   const { user } = useAuth();
   
   // Company types for filtering with counts
@@ -77,126 +77,28 @@ const Vendors = () => {
     return matchesSearch && matchesType;
   });
 
-  // Get count of companies by type for the filter pills
-  const getCompanyCountByType = (type: string) => {
-    if (type === 'all') return companies.length;
-    return companies.filter(company => company.type === type).length;
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Solar Companies Directory</h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            Find and review the best companies in the solar industry
-          </p>
-        </div>
-        
-        {/* Add New Company Button - Only visible for logged in users */}
-        {user && (
-          <Button 
-            onClick={() => navigate('/vendors/new')} 
-            className="flex items-center gap-2"
-          >
-            <PlusCircle size={18} />
-            Add New Company
-          </Button>
-        )}
-      </div>
+      <VendorHeader user={user} />
       
-      {/* Search and Filter */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8 sticky top-0 z-10">
-        <div className="flex flex-col space-y-4">
-          <div className="relative flex-grow">
-            <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search companies..."
-              className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-md bg-background"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          
-          {/* Filter Pills */}
-          <div className="flex overflow-x-auto gap-2 pb-1">
-            {companyTypes.map(type => {
-              const count = getCompanyCountByType(type.value);
-              const isActive = selectedType === type.value;
-              
-              return (
-                <button
-                  key={type.value}
-                  onClick={() => setSelectedType(type.value)}
-                  className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 ${
-                    isActive 
-                    ? 'bg-primary text-white' 
-                    : 'border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600'
-                  }`}
-                  aria-pressed={isActive}
-                >
-                  <span className="mr-1">{type.icon}</span> {type.label} ({count})
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      <VendorFilters 
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        selectedType={selectedType}
+        setSelectedType={setSelectedType}
+        companies={companies}
+        companyTypes={companyTypes}
+      />
       
-      {/* Results */}
-      {isLoading ? (
-        <div className="flex justify-center items-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-300">Loading companies...</p>
-          </div>
-        </div>
-      ) : filteredCompanies.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCompanies.map((company) => (
-            <VendorCard
-              key={company.id}
-              id={company.id}
-              name={company.name}
-              description={company.description || ''}
-              logoUrl={company.logo_url}
-              website={company.website}
-              grade={company.grade}
-              type={company.type || ''}
-              rating={company.avg_rating || 0}
-              status={company.status}
-              isVerified={company.is_verified}
-              reviewCount={company.review_count}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12">
-          <p className="text-lg text-gray-600 dark:text-gray-300 mb-4">
-            No companies found matching your criteria.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button onClick={() => {
-              setSearchTerm('');
-              setSelectedType('all');
-            }}>
-              Clear Filters
-            </Button>
-            
-            {user && (
-              <Button 
-                onClick={() => navigate('/vendors/new')} 
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <PlusCircle size={18} />
-                Add a new company
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
+      <VendorList 
+        isLoading={isLoading}
+        filteredCompanies={filteredCompanies}
+        searchTerm={searchTerm}
+        selectedType={selectedType}
+        setSearchTerm={setSearchTerm}
+        setSelectedType={setSelectedType}
+        user={user}
+      />
     </div>
   );
 };

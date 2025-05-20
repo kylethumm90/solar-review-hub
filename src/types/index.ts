@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   email: string;
@@ -24,6 +23,7 @@ export interface Company {
   avg_rating?: number;
   review_count?: number;
   operating_states?: string[]; // Added operating_states field
+  solargrade_score?: number; // Added solargrade_score field
 }
 
 export interface Review {

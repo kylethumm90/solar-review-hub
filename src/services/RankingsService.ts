@@ -56,9 +56,10 @@ export class RankingsService {
       const allRegions: string[] = [];
       data.forEach(company => {
         if (company) {
-          // Safely access operating_states with type checking
-          const states = company.operating_states;
-          if (states && Array.isArray(states)) {
+          // Check if company object has operating_states property and it's an array
+          if (company.hasOwnProperty('operating_states') && 
+              Array.isArray(company.operating_states)) {
+            const states = company.operating_states;
             states.forEach(state => {
               if (state && !allRegions.includes(state)) {
                 allRegions.push(state);

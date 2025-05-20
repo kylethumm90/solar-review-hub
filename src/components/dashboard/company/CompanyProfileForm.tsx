@@ -157,7 +157,7 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({ company, onCanc
                         variant="outline"
                         className={cn(
                           "w-full justify-between",
-                          !field.value?.length && "text-muted-foreground"
+                          !(field.value?.length) && "text-muted-foreground"
                         )}
                       >
                         {field.value?.length
@@ -177,11 +177,13 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({ company, onCanc
                                 <CommandItem
                                   key={state.value}
                                   onSelect={() => {
+                                    // Ensure field.value is always an array before operating on it
+                                    const currentValues = field.value || [];
                                     const updatedValues = isSelected
-                                      ? field.value?.filter(
+                                      ? currentValues.filter(
                                           (value) => value !== state.value
                                         )
-                                      : [...(field.value || []), state.value];
+                                      : [...currentValues, state.value];
                                     form.setValue("operating_states", updatedValues);
                                   }}
                                 >
@@ -202,7 +204,7 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({ company, onCanc
                   </Popover>
                 </FormControl>
                 <div className="flex flex-wrap gap-1 mt-2">
-                  {field.value?.map((state) => {
+                  {(field.value || []).map((state) => {
                     const stateObj = US_STATES.find((s) => s.value === state);
                     return (
                       <Badge key={state} variant="secondary" className="flex items-center gap-1">
@@ -210,7 +212,7 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({ company, onCanc
                         <X
                           className="h-3 w-3 cursor-pointer"
                           onClick={() => {
-                            const updatedValues = field.value?.filter(
+                            const updatedValues = (field.value || []).filter(
                               (value) => value !== state
                             );
                             form.setValue("operating_states", updatedValues);

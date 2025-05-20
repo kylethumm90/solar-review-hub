@@ -31,7 +31,7 @@ export const useCompanyUpdate = (company: CompanyData) => {
       description: company?.description || "",
       website: company?.website || "",
       type: company?.type || "",
-      operating_states: company?.operating_states || [],
+      operating_states: company?.operating_states || [], // Ensure always array
     },
   });
 
@@ -74,7 +74,8 @@ export const useCompanyUpdate = (company: CompanyData) => {
       
       // Only include operating_states if the user has permission
       if (showStatesField) {
-        updateData.operating_states = values.operating_states;
+        // Ensure operating_states is always an array
+        updateData.operating_states = values.operating_states || [];
       }
 
       const { error } = await supabase

@@ -16,23 +16,6 @@ import {
   type CompanyFormValues, 
   useCompanyUpdate
 } from '@/hooks/useCompanyUpdate';
-import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
-import { 
-  Command, 
-  CommandEmpty, 
-  CommandGroup, 
-  CommandInput, 
-  CommandItem 
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
 
 interface CompanyProfileFormProps {
   company: CompanyData;
@@ -47,8 +30,9 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({ company, onCanc
     companyTypes, 
     handleLogoChange, 
     onSubmit,
-    US_STATES,
-    showStatesField
+    // TODO: Re-enable operating_states once we add proper null guards and controlled default values
+    // US_STATES,
+    // showStatesField
   } = useCompanyUpdate(company);
 
   return (
@@ -143,6 +127,7 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({ company, onCanc
           )}
         />
         
+        {/* TODO: Re-enable operating_states once we add proper null guards and controlled default values
         {showStatesField && (
           <FormField
             control={form.control}
@@ -230,6 +215,7 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({ company, onCanc
             )}
           />
         )}
+        */}
         
         <FormField
           control={form.control}

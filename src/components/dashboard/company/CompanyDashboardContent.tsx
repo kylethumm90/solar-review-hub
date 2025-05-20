@@ -16,6 +16,7 @@ interface CompanyDashboardContentProps {
     website?: string;
     type?: string;
     logo_url?: string;
+    // TODO: Re-enable operating_states once we add proper null guards and controlled default values
     operating_states?: string[];
     status?: string;
   };

@@ -24,6 +24,7 @@ export const useCompanyUpdate = (company: CompanyData) => {
   const { logoFile, logoPreview, handleLogoChange } = useLogoUpload(company.logo_url);
   const { showStatesField } = useClaimPermission(company.id, company.type);
   
+  // TODO: Re-enable operating_states once we add proper null guards and controlled default values
   const form = useForm<CompanyFormValues>({
     resolver: zodResolver(companyFormSchema),
     defaultValues: {
@@ -31,7 +32,7 @@ export const useCompanyUpdate = (company: CompanyData) => {
       description: company?.description || "",
       website: company?.website || "",
       type: company?.type || "",
-      operating_states: company?.operating_states || [], // Ensure always array
+      // operating_states: [], // Removed to avoid any iteration attempts on this field
     },
   });
 
@@ -72,11 +73,12 @@ export const useCompanyUpdate = (company: CompanyData) => {
         logo_url: logoUrl
       };
       
+      // TODO: Re-enable operating_states once we add proper null guards and controlled default values
       // Only include operating_states if the user has permission
-      if (showStatesField) {
-        // Ensure operating_states is always an array
-        updateData.operating_states = values.operating_states || [];
-      }
+      // if (showStatesField) {
+      //   // Ensure operating_states is always an array
+      //   updateData.operating_states = values.operating_states || [];
+      // }
 
       const { error } = await supabase
         .from("companies")

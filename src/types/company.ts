@@ -7,7 +7,8 @@ export const companyFormSchema = z.object({
   description: z.string().optional(),
   website: z.string().url("Please enter a valid URL").or(z.string().length(0)),
   type: z.string().min(1, "Company type is required"),
-  operating_states: z.array(z.string()).optional(),
+  // TODO: Re-enable operating_states once we add proper null guards and controlled default values
+  // operating_states: z.array(z.string()).optional(),
 });
 
 export type CompanyFormValues = z.infer<typeof companyFormSchema>;
@@ -19,6 +20,7 @@ export type CompanyData = {
   website?: string;
   type?: string;
   logo_url?: string;
+  // TODO: Re-enable operating_states once we add proper null guards and controlled default values
   operating_states?: string[];
   status?: string;
   is_verified?: boolean; // Keeping for backward compatibility

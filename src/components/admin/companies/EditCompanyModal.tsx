@@ -72,6 +72,8 @@ const EditCompanyModal = ({
           description: formData.description,
           grade: formData.grade || null,
           logo_url: formData.logo_url || null
+          // TODO: Re-enable operating_states once we add proper null guards and controlled default values
+          // operating_states: company.operating_states // Keep existing value
         })
         .eq("id", company.id);
 

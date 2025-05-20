@@ -21,6 +21,8 @@ interface VendorCardProps {
   isVerified?: boolean;
   status?: string;
   reviewCount?: number;
+  // TODO: Re-enable operating_states once we add proper null guards and controlled default values
+  // operating_states?: string[];
 }
 
 const VendorCard = ({

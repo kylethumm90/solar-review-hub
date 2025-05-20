@@ -2,12 +2,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import StarRating from '@/components/StarRating';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ExternalLink, ArrowUpDown } from 'lucide-react';
 import { useUserReviews, UserReviewWithCompany } from '@/hooks/useUserReviews';
 import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
+import { scoreToGrade } from '@/utils/reviewUtils';
+import { getBadgeColorForGrade } from '@/components/reviews/reviewUtils';
 
 const DashboardReviews = () => {
   const { reviews, loading, sortBy, handleSortChange } = useUserReviews();
@@ -82,6 +84,8 @@ interface ReviewCardProps {
 }
 
 const ReviewCard = ({ review, getTruncatedText }: ReviewCardProps) => {
+  const grade = scoreToGrade(review.average_score || 0);
+  
   return (
     <Card className="h-full">
       <CardContent className="p-6 flex flex-col h-full">
@@ -110,11 +114,12 @@ const ReviewCard = ({ review, getTruncatedText }: ReviewCardProps) => {
             </div>
           </div>
 
-          <StarRating 
-            value={review.average_score || 0} 
-            readOnly 
-            size="sm" 
-          />
+          <Badge 
+            variant="outline" 
+            className={`${getBadgeColorForGrade(grade)}`}
+          >
+            {grade}
+          </Badge>
         </div>
 
         {review.review_title && (

@@ -1,6 +1,9 @@
 
 import { Card } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { scoreToGrade } from "@/utils/reviewUtils";
+import { getBadgeColorForGrade } from "@/components/reviews/reviewUtils";
 
 interface Review {
   id: string;
@@ -23,30 +26,27 @@ const ReviewsList = ({ reviews }: ReviewsListProps) => {
         </div>
       ) : (
         <div className="space-y-6">
-          {reviews.map((review) => (
-            <div key={review.id} className="border rounded-lg p-4">
-              <div className="flex justify-between mb-2">
-                <h3 className="font-medium">{review.review_title || 'Review'}</h3>
-                <div className="flex items-center">
-                  {Array(5).fill(0).map((_, i) => (
-                    <svg 
-                      key={i} 
-                      className={`w-4 h-4 ${i < Math.round(review.average_score || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300 fill-current'}`} 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                    </svg>
-                  ))}
-                  <span className="ml-1 text-sm">{(review.average_score || 0).toFixed(1)}</span>
+          {reviews.map((review) => {
+            const grade = scoreToGrade(review.average_score || 0);
+            
+            return (
+              <div key={review.id} className="border rounded-lg p-4">
+                <div className="flex justify-between mb-2">
+                  <h3 className="font-medium">{review.review_title || 'Review'}</h3>
+                  <Badge 
+                    variant="outline" 
+                    className={`${getBadgeColorForGrade(grade)}`}
+                  >
+                    Grade: {grade}
+                  </Badge>
                 </div>
+                <p className="text-sm mb-2">{review.text_feedback}</p>
+                <p className="text-xs text-muted-foreground">
+                  Posted on {formatDate(review.created_at)}
+                </p>
               </div>
-              <p className="text-sm mb-2">{review.text_feedback}</p>
-              <p className="text-xs text-muted-foreground">
-                Posted on {formatDate(review.created_at)}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </>

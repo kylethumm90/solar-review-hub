@@ -1,11 +1,11 @@
 
 import { Link } from 'react-router-dom';
-import StarRating from './StarRating';
 import { Building, ExternalLink } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from './ui/hover-card';
 import { Badge } from './ui/badge';
+import { getBadgeColorForGrade } from './reviews/reviewUtils';
 
 interface VendorCardProps {
   id: string;
@@ -70,15 +70,21 @@ const VendorCard = ({
           </div>
           
           <div className="text-center">
-            <div className="text-2xl font-bold text-primary">{grade}</div>
+            <div className="text-2xl font-bold text-primary">
+              <Badge 
+                variant="outline" 
+                className={`${grade !== 'N/A' ? getBadgeColorForGrade(grade) : ''}`}
+              >
+                {grade}
+              </Badge>
+            </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">Grade</div>
           </div>
         </div>
         
         <div className="mb-4">
-          <StarRating value={rating} readOnly size="sm" />
-          <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
-            {rating.toFixed(1)} {reviewCount > 0 ? `(${reviewCount})` : ''}
+          <span className="text-sm text-gray-500 dark:text-gray-400">
+            {reviewCount > 0 ? `${reviewCount} ${reviewCount === 1 ? 'review' : 'reviews'}` : 'No reviews yet'}
           </span>
         </div>
         

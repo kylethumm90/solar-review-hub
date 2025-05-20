@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Globe, Calendar, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Company } from '@/types';
+import { getBadgeColorForGrade } from '@/components/reviews/reviewUtils';
 
 interface VendorDetailsHeaderProps {
   company: Company;

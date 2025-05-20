@@ -20,7 +20,7 @@ const CompanyProfile = ({ company }: CompanyProfileProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { formatCompanyType, US_STATES } = useCompanyUpdate(company);
   
-  const stateNames = getStateNames(company.operating_states);
+  const stateNames = getStateNames(company.operating_states || []);
   const showStates = (company.type === 'epc' || company.type === 'sales_org') && 
                      stateNames.length > 0;
   

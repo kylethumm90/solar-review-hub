@@ -25,19 +25,20 @@ export class RankingsService {
 
   static async getOperatingRegions(): Promise<string[]> {
     try {
-      // Check if operating_states column exists by querying metadata
-      const { data: columns, error: metaError } = await supabase
+      // First check if the operating_states column exists by checking if a query returns a certain error
+      const testQuery = await supabase
         .from('companies')
         .select('operating_states')
-        .limit(1)
-        .maybeSingle();
+        .limit(1);
       
-      // If we get an error mentioning the column doesn't exist, return empty array
-      if (metaError && metaError.message?.includes("operating_states")) {
-        console.log("operating_states column may not exist in companies table");
+      // If we get an error about the column not existing, return an empty array
+      if (testQuery.error && testQuery.error.message && 
+          testQuery.error.message.includes('operating_states')) {
+        console.log("operating_states column does not exist in companies table");
         return [];
       }
       
+      // If we get here, the column exists, so proceed with the query
       const { data, error } = await supabase
         .from('companies')
         .select('operating_states');
@@ -47,14 +48,15 @@ export class RankingsService {
         return [];
       }
 
-      // Safe handling for potentially missing column
-      if (!data || !Array.isArray(data)) return [];
+      if (!data || !Array.isArray(data)) {
+        return [];
+      }
       
-      // Flatten the array of arrays and get unique values, with safer property access
+      // Flatten all operating_states arrays and get unique values
       const allRegions: string[] = [];
       data.forEach(company => {
         if (company && 
-            Object.prototype.hasOwnProperty.call(company, 'operating_states') && 
+            company.operating_states && 
             Array.isArray(company.operating_states)) {
           company.operating_states.forEach(state => {
             if (state && !allRegions.includes(state)) {
@@ -91,9 +93,11 @@ export class RankingsService {
         query = query.eq('type', vendorType);
       }
 
+      // Check if operating_states column exists before trying to use it
+      const hasOperatingStates = await this.checkOperatingStatesColumn();
+
       // Apply region filter if specified, only if operating_states column exists
-      if (region && region.trim()) {
-        // Check if column exists first (we'll catch the error if not)
+      if (region && region.trim() && hasOperatingStates) {
         try {
           query = query.contains('operating_states', [region]);
         } catch (e) {
@@ -180,6 +184,27 @@ export class RankingsService {
     } catch (e) {
       console.error("Exception fetching rankings:", e);
       return [];
+    }
+  }
+
+  // Helper method to check if operating_states column exists
+  private static async checkOperatingStatesColumn(): Promise<boolean> {
+    try {
+      const result = await supabase
+        .from('companies')
+        .select('operating_states')
+        .limit(1);
+      
+      // If there's an error mentioning the column, it doesn't exist
+      if (result.error && result.error.message && 
+          result.error.message.includes('operating_states')) {
+        return false;
+      }
+      
+      return true;
+    } catch (e) {
+      console.error("Error checking operating_states column:", e);
+      return false;
     }
   }
 }

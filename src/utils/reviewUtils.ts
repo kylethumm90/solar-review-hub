@@ -33,3 +33,41 @@ export const getBadgeColorForGrade = (grade: string): string => {
       return 'bg-gray-100 text-gray-800 border-gray-200';
   }
 };
+
+// Calculate weighted average rating
+export const calculateWeightedAverage = (ratings: number[], weights: number[]): number => {
+  if (ratings.length !== weights.length || ratings.length === 0) {
+    return 0;
+  }
+  
+  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+  const weightedSum = ratings.reduce((sum, rating, index) => sum + (rating * weights[index]), 0);
+  
+  return totalWeight > 0 ? weightedSum / totalWeight : 0;
+};
+
+// Calculate average rating from review
+export const calculateAverageRating = (reviews: any[]): number => {
+  if (!reviews || reviews.length === 0) return 0;
+  
+  const totalScore = reviews.reduce((sum, review) => sum + (review.average_score || 0), 0);
+  return totalScore / reviews.length;
+};
+
+// Get review average score
+export const getReviewAvgScore = (review: any): number => {
+  if (!review) return 0;
+  
+  const scores = [
+    review.rating_communication || 0,
+    review.rating_install_quality || 0,
+    review.rating_timeliness || 0,
+    review.rating_payment_reliability || 0,
+    review.rating_post_install_support || 0
+  ];
+  
+  const validScores = scores.filter(score => score > 0);
+  if (validScores.length === 0) return 0;
+  
+  return validScores.reduce((sum, score) => sum + score, 0) / validScores.length;
+};

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/hooks/use-toast";
 import { scoreToGrade, getReviewAvgScore } from '@/utils/reviewUtils';
@@ -10,7 +10,7 @@ export const useVendorDetails = (vendorId: string | undefined) => {
   const [reviewAnswers, setReviewAnswers] = useState<any[]>([]);
   const [reviewQuestions, setReviewQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [toastShown, setToastShown] = useState(false);
+  const toastShownRef = useRef<{[key: string]: boolean}>({});
 
   useEffect(() => {
     async function fetchVendorDetails() {
@@ -116,10 +116,10 @@ export const useVendorDetails = (vendorId: string | undefined) => {
         setReviewQuestions(questionsData || []);
         setReviewAnswers(answersData);
         
-        // Show toast only once per vendor load
-        if (!toastShown && companyData) {
+        // Show toast only once per vendor ID
+        if (companyData && !toastShownRef.current[vendorId]) {
           toast.success(`Loaded details for ${companyData.name}`);
-          setToastShown(true);
+          toastShownRef.current[vendorId] = true;
         }
       } catch (error) {
         console.error('Error fetching vendor details:', error);
@@ -129,12 +129,7 @@ export const useVendorDetails = (vendorId: string | undefined) => {
     }
     
     fetchVendorDetails();
-    
-    // Reset toast shown state when vendor ID changes
-    return () => {
-      setToastShown(false);
-    };
-  }, [vendorId, toastShown]);
+  }, [vendorId]);
 
   // Using the imported getReviewAvgScore function to ensure consistency
   

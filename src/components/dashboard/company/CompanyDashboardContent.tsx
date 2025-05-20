@@ -17,8 +17,13 @@ interface CompanyDashboardContentProps {
     type?: string;
     logo_url?: string;
     operating_states?: string[];
+    status?: string;
   };
-  claim: any;
+  claim: {
+    full_name: string;
+    job_title?: string;
+    company_email?: string;
+  };
   reviews: any[];
 }
 
@@ -28,7 +33,7 @@ const CompanyDashboardContent: React.FC<CompanyDashboardContentProps> = ({
   reviews 
 }) => {
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto">
       <CompanyHeader 
         companyName={company.name} 
         companyId={company.id} 

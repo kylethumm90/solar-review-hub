@@ -6,10 +6,20 @@ import CompanyDashboardContent from '@/components/dashboard/company/CompanyDashb
 import UnauthorizedMessage from '@/components/dashboard/company/UnauthorizedMessage';
 import NoAccessMessage from '@/components/dashboard/company/NoAccessMessage';
 import { useCompanyData } from '@/hooks/useCompanyData';
+import CompanySelector from '@/components/dashboard/company/CompanySelector';
 
 const DashboardMyCompany = () => {
   const { user } = useAuth();
-  const { loading, claim, company, reviews } = useCompanyData();
+  const { 
+    loading, 
+    currentClaim, 
+    currentCompany, 
+    reviews, 
+    companies,
+    selectedClaimIndex,
+    selectCompany,
+    totalClaimedCompanies
+  } = useCompanyData();
   
   if (!user) {
     return <UnauthorizedMessage />;
@@ -19,16 +29,26 @@ const DashboardMyCompany = () => {
     return <LoadingSpinner message="Loading company dashboard..." />;
   }
   
-  if (!claim || !company) {
+  if (!currentClaim || !currentCompany) {
     return <NoAccessMessage />;
   }
   
   return (
-    <CompanyDashboardContent 
-      company={company}
-      claim={claim}
-      reviews={reviews}
-    />
+    <div className="container mx-auto py-4">
+      {totalClaimedCompanies > 1 && (
+        <CompanySelector 
+          companies={companies}
+          selectedIndex={selectedClaimIndex}
+          onSelect={selectCompany}
+        />
+      )}
+      
+      <CompanyDashboardContent 
+        company={currentCompany}
+        claim={currentClaim}
+        reviews={reviews}
+      />
+    </div>
   );
 };
 

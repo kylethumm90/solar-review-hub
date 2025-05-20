@@ -7,9 +7,21 @@ import { toast } from 'sonner';
 export const useCompanyData = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [claim, setClaim] = useState<any>(null);
-  const [company, setCompany] = useState<any>(null);
+  const [claims, setClaims] = useState<any[]>([]);
+  const [selectedClaimIndex, setSelectedClaimIndex] = useState(0);
+  const [companies, setCompanies] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
+  
+  // Get the currently selected claim and company
+  const currentClaim = claims.length > 0 ? claims[selectedClaimIndex] : null;
+  const currentCompany = companies.length > 0 ? companies[selectedClaimIndex] : null;
+  
+  // Function to change the selected company
+  const selectCompany = (index: number) => {
+    if (index >= 0 && index < claims.length) {
+      setSelectedClaimIndex(index);
+    }
+  };
   
   useEffect(() => {
     const fetchCompanyData = async () => {
@@ -24,53 +36,61 @@ export const useCompanyData = () => {
           .from('claims')
           .select('*, company:companies(*)')
           .eq('user_id', user.id)
-          .eq('status', 'approved')
-          .single();
+          .eq('status', 'approved');
           
         if (claimError) {
-          if (claimError.code !== 'PGRST116') { // Not Found error
-            console.error('Error fetching claim:', claimError);
-            toast.error('Failed to fetch company data');
-          }
+          console.error('Error fetching claims:', claimError);
+          toast.error('Failed to fetch company data');
           setLoading(false);
           return;
         }
         
-        if (!claimData || !claimData.company) {
+        if (!claimData || claimData.length === 0) {
           setLoading(false);
           return;
         }
         
-        setClaim(claimData);
+        setClaims(claimData);
         
-        // Fetch the full company data including operating states
-        const { data: companyData, error: companyError } = await supabase
+        // Fetch full company details for all claimed companies
+        const companyIds = claimData.map(claim => claim.company_id);
+        
+        const { data: companiesData, error: companiesError } = await supabase
           .from('companies')
           .select('*, operating_states')
-          .eq('id', claimData.company_id)
-          .single();
+          .in('id', companyIds);
           
-        if (companyError) {
-          console.error('Error fetching company:', companyError);
+        if (companiesError) {
+          console.error('Error fetching companies:', companiesError);
           toast.error('Failed to fetch company details');
           setLoading(false);
           return;
         }
         
-        setCompany(companyData);
+        // Sort companies to match the order of claims
+        const sortedCompanies = companyIds.map(id => 
+          companiesData?.find(company => company.id === id)
+        ).filter(Boolean);
         
-        // Fetch reviews for this company
+        setCompanies(sortedCompanies);
+        
+        // Fetch all reviews for these companies
         const { data: reviewsData, error: reviewsError } = await supabase
           .from('reviews')
           .select('*')
-          .eq('company_id', claimData.company_id)
+          .in('company_id', companyIds)
           .order('created_at', { ascending: false });
           
         if (reviewsError) {
           console.error('Error fetching reviews:', reviewsError);
           toast.error('Failed to fetch company reviews');
         } else {
-          setReviews(reviewsData || []);
+          // Group reviews by company_id
+          const reviewsByCompany = companyIds.map(id => 
+            reviewsData?.filter(review => review.company_id === id) || []
+          );
+          
+          setReviews(reviewsByCompany);
         }
         
       } catch (error) {
@@ -86,8 +106,13 @@ export const useCompanyData = () => {
   
   return {
     loading,
-    claim,
-    company,
-    reviews
+    claims,
+    companies,
+    currentClaim,
+    currentCompany,
+    reviews: reviews[selectedClaimIndex] || [],
+    selectedClaimIndex,
+    selectCompany,
+    totalClaimedCompanies: claims.length
   };
 };

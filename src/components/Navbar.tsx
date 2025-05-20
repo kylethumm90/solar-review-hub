@@ -1,105 +1,136 @@
 
-import { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import * as React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { LogOut } from 'lucide-react';
-
-const navItems = [
-  { name: 'Home', href: '/' },
-  { name: 'Reviews', href: '/reviews' },
-  { name: 'Vendors', href: '/vendors' },
-  { name: 'Rankings', href: '/rankings' }, 
-  { name: 'Pricing', href: '/pricing' }
-];
+import { Menu, Search, Sun, Moon } from 'lucide-react';
+import { useState } from 'react';
+import { useTheme } from '@/context/ThemeContext';
+import { Button } from '@/components/ui/button';
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
-  // Extract user properties safely
-  const userAvatar = user?.avatar_url || "";
-  const userName = user?.full_name || user?.email || "";
-  const userInitials = (user?.full_name || user?.email || "").slice(0, 2).toUpperCase();
-
   return (
-    <nav className="bg-background border-b">
-      <div className="container max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
-        <Link to="/" className="flex items-center">
-          <img src="/logo.svg" className="h-8 mr-3" alt="SolarGrade Logo" />
-          <span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">SolarGrade</span>
-        </Link>
-        <button
-          onClick={toggleMenu}
-          type="button"
-          className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
-          aria-controls="navbar-default"
-          aria-expanded={isMenuOpen}
-        >
-          <span className="sr-only">Open main menu</span>
-          <svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
-            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M1 1h15M1 7h15M1 13h15" />
-          </svg>
-        </button>
-        <div className={`w-full md:block md:w-auto ${isMenuOpen ? '' : 'hidden'}`} id="navbar-default">
-          <ul className="font-medium flex flex-col p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:flex-row md:space-x-8 md:mt-0 md:border-0 md:bg-transparent dark:bg-gray-900 dark:border-gray-700">
-            {navItems.map((item) => (
-              <li key={item.name}>
-                <NavLink
-                  to={item.href}
-                  className={({ isActive }) => `block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent ${isActive ? 'text-blue-700' : ''}`}
-                >
-                  {item.name}
-                </NavLink>
-              </li>
-            ))}
-            <li>
-              {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={userAvatar} alt={userName} />
-                        <AvatarFallback>{userInitials}</AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuItem>
-                      <Link to="/profile" className="w-full h-full block">
-                        Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <>
-                  <Button variant="ghost" asChild>
-                    <Link to="/login">Login</Link>
-                  </Button>
-                  <Button asChild>
-                    <Link to="/register">Sign Up</Link>
-                  </Button>
-                </>
-              )}
-            </li>
-          </ul>
+    <nav className="bg-white dark:bg-gray-800 shadow-sm">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo and site name */}
+          <div className="flex items-center">
+            <Link to="/" className="flex items-center">
+              <span className="text-xl font-bold text-primary">SolarGrade</span>
+            </Link>
+          </div>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-4">
+            <Link to="/vendors" className="text-gray-700 dark:text-gray-200 hover:text-primary">
+              Vendors
+            </Link>
+            
+            {/* Conditionally render dashboard link if logged in */}
+            {user && (
+              <Link to="/dashboard" className="text-gray-700 dark:text-gray-200 hover:text-primary">
+                Dashboard
+              </Link>
+            )}
+            
+            {/* Admin link if user is admin */}
+            {user && user.user_metadata?.role === 'admin' && (
+              <Link to="/admin" className="text-gray-700 dark:text-gray-200 hover:text-primary">
+                Admin
+              </Link>
+            )}
+            
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+            
+            {user ? (
+              <Button variant="outline" onClick={() => signOut()}>
+                Sign Out
+              </Button>
+            ) : (
+              <Button asChild>
+                <Link to="/login">Sign In</Link>
+              </Button>
+            )}
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden flex items-center">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 rounded-md text-gray-700 dark:text-gray-200 hover:text-primary"
+            >
+              <Menu size={24} />
+            </button>
+          </div>
         </div>
+
+        {/* Mobile menu, show/hide based on menu state */}
+        {isMenuOpen && (
+          <div className="md:hidden pb-4">
+            <div className="flex flex-col space-y-2 px-2 pt-2">
+              <Link
+                to="/vendors"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Vendors
+              </Link>
+              
+              {user && (
+                <Link
+                  to="/dashboard"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+              )}
+              
+              {user && user.user_metadata?.role === 'admin' && (
+                <Link
+                  to="/admin"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Admin
+                </Link>
+              )}
+              
+              <div className="flex items-center justify-between px-3 py-2">
+                <button
+                  onClick={() => {
+                    toggleTheme();
+                    setIsMenuOpen(false);
+                  }}
+                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                </button>
+                
+                {user ? (
+                  <Button variant="outline" onClick={() => {
+                    signOut();
+                    setIsMenuOpen(false);
+                  }}>
+                    Sign Out
+                  </Button>
+                ) : (
+                  <Button asChild onClick={() => setIsMenuOpen(false)}>
+                    <Link to="/login">Sign In</Link>
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );

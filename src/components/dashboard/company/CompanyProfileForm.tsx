@@ -12,7 +12,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { 
-  type CompanyDataPartial, 
+  type CompanyData, 
   type CompanyFormValues, 
   useCompanyUpdate
 } from '@/hooks/useCompanyUpdate';
@@ -35,7 +35,7 @@ import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 
 interface CompanyProfileFormProps {
-  company: CompanyDataPartial;
+  company: CompanyData;
   onCancel: () => void;
 }
 

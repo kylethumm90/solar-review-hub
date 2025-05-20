@@ -11,12 +11,12 @@ import { US_STATES } from "@/data/us-states";
 import { 
   companyFormSchema, 
   type CompanyFormValues, 
-  type CompanyDataPartial,
+  type CompanyData,
   COMPANY_TYPES,
   formatCompanyType
 } from "@/types/company";
 
-export const useCompanyUpdate = (company: CompanyDataPartial) => {
+export const useCompanyUpdate = (company: CompanyData) => {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -113,4 +113,4 @@ export const useCompanyUpdate = (company: CompanyDataPartial) => {
 };
 
 // Re-export types for backwards compatibility
-export type { CompanyFormValues, CompanyDataPartial };
+export type { CompanyFormValues, CompanyData };

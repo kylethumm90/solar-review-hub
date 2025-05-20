@@ -38,7 +38,10 @@ const VendorDetails = () => {
         reviewCount={reviews.length} 
         letterGrade={letterGrade}
       />
-      <VendorActionButtons companyId={company.id} />
+      <VendorActionButtons 
+        companyId={company.id}
+        status={company.status}
+      />
       <ReviewsList 
         companyId={company.id}
         reviews={reviews}

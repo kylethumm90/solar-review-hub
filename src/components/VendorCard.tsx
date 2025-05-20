@@ -1,11 +1,13 @@
 
 import { Link } from 'react-router-dom';
-import { Building, ExternalLink } from 'lucide-react';
+import { Building, ExternalLink, CheckCircle, Medal } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from './ui/hover-card';
 import { Badge } from './ui/badge';
 import { getBadgeColorForGrade } from './reviews/reviewUtils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { COMPANY_STATUS, getStatusDisplayName } from '@/types/company';
 
 interface VendorCardProps {
   id: string;
@@ -16,7 +18,8 @@ interface VendorCardProps {
   grade?: string;
   type: string;
   rating?: number;
-  isVerified: boolean;
+  isVerified?: boolean;
+  status?: string;
   reviewCount?: number;
 }
 
@@ -30,6 +33,7 @@ const VendorCard = ({
   type,
   rating = 0,
   isVerified,
+  status = COMPANY_STATUS.UNCLAIMED,
   reviewCount = 0,
 }: VendorCardProps) => {
   // Format the company type for display
@@ -37,6 +41,38 @@ const VendorCard = ({
     return type.split('_').map(word => 
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
+  };
+
+  // Get status badge
+  const renderStatusBadge = () => {
+    if (status === COMPANY_STATUS.UNCLAIMED) {
+      return null;
+    }
+
+    const isCertified = status === COMPANY_STATUS.CERTIFIED;
+    const StatusIcon = isCertified ? Medal : CheckCircle;
+    const tooltipText = isCertified 
+      ? "This company is recognized for consistent quality and positive feedback." 
+      : "This company's profile has been claimed and verified by SolarGrade.";
+
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge 
+              variant="outline" 
+              className={`ml-2 ${isCertified ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'} text-xs px-2 py-0.5 rounded-full`}
+            >
+              <StatusIcon className="h-3 w-3 mr-1" />
+              {status === COMPANY_STATUS.CERTIFIED ? "Certified" : "Verified"}
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{tooltipText}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
   };
 
   return (
@@ -59,11 +95,7 @@ const VendorCard = ({
             <div>
               <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
                 {name}
-                {isVerified && (
-                  <Badge variant="outline" className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full dark:bg-green-900 dark:text-green-100">
-                    Verified
-                  </Badge>
-                )}
+                {renderStatusBadge()}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">{formatType(type)}</p>
             </div>

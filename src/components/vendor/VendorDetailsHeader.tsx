@@ -1,10 +1,12 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Globe, Calendar, CheckCircle } from 'lucide-react';
+import { Globe, Calendar, CheckCircle, Medal, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Company } from '@/types';
 import { getBadgeColorForGrade } from '@/components/reviews/reviewUtils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { COMPANY_STATUS, getStatusDisplayName } from '@/types/company';
 
 interface VendorDetailsHeaderProps {
   company: Company;
@@ -24,6 +26,38 @@ const VendorDetailsHeader: React.FC<VendorDetailsHeaderProps> = ({
     if (grade.startsWith('A')) return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
     if (grade.startsWith('B')) return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300";
     return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+  };
+
+  // Get status display information
+  const renderStatusBadge = () => {
+    if (!company.status || company.status === COMPANY_STATUS.UNCLAIMED) {
+      return null;
+    }
+
+    const isCertified = company.status === COMPANY_STATUS.CERTIFIED;
+    const StatusIcon = isCertified ? Medal : CheckCircle;
+    const badgeClass = isCertified 
+      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" 
+      : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
+    const tooltipText = isCertified 
+      ? "This company is recognized for consistent quality and positive feedback." 
+      : "This company's profile has been claimed and verified by SolarGrade.";
+
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className={`${badgeClass} text-xs px-2 py-1 rounded-full flex items-center`}>
+              <StatusIcon className="h-3.5 w-3.5 mr-1" />
+              <span>{getStatusDisplayName(company.status)}</span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{tooltipText}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
   };
   
   return (
@@ -52,12 +86,7 @@ const VendorDetailsHeader: React.FC<VendorDetailsHeaderProps> = ({
             >
               Grade: {letterGrade}
             </Badge>
-            {company.is_verified && (
-              <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs px-2 py-1 rounded-full flex items-center">
-                <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                <span>Verified</span>
-              </div>
-            )}
+            {renderStatusBadge()}
           </div>
           
           <div className="mb-3">

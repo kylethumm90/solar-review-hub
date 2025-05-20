@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +15,7 @@ import EditCompanyModal from "@/components/admin/companies/EditCompanyModal";
 type CompanyFilter = {
   name: string;
   type: string | null;
-  verified: boolean | null;
+  status: string | null;
   grade: string | null;
 };
 
@@ -30,7 +29,7 @@ const CompaniesPage = () => {
   const [filters, setFilters] = useState<CompanyFilter>({
     name: "",
     type: null,
-    verified: null,
+    status: null,
     grade: null,
   });
   
@@ -39,6 +38,7 @@ const CompaniesPage = () => {
 
   // Fetch all company types for the filter dropdown
   const companyTypes = ["epc", "sales_org", "lead_gen", "software", "other"];
+  const companyStatuses = ["unclaimed", "verified", "certified"];
   const grades = ["A", "B", "C", "D", "F"];
 
   const { data: companies, isLoading, error, refetch } = useQuery({
@@ -59,8 +59,8 @@ const CompaniesPage = () => {
         query = query.eq("type", filters.type);
       }
       
-      if (filters.verified !== null) {
-        query = query.eq("is_verified", filters.verified);
+      if (filters.status) {
+        query = query.eq("status", filters.status);
       }
       
       if (filters.grade) {
@@ -89,6 +89,7 @@ const CompaniesPage = () => {
           logo_url: company.logo_url,
           type: company.type,
           is_verified: company.is_verified,
+          status: company.status,
           grade: company.grade,
           last_verified: company.last_verified,
           created_at: company.created_at,
@@ -102,25 +103,34 @@ const CompaniesPage = () => {
     },
   });
 
-  const handleUpdateVerified = async (id: string, isVerified: boolean) => {
+  const handleUpdateStatus = async (id: string, status: string) => {
     try {
+      const updateObj: any = { 
+        status: status,
+        last_verified: new Date().toISOString()
+      };
+      
+      // For backward compatibility, also update is_verified
+      if (status === 'verified' || status === 'certified') {
+        updateObj.is_verified = true;
+      } else {
+        updateObj.is_verified = false;
+      }
+      
       const { error } = await supabase
         .from("companies")
-        .update({ 
-          is_verified: isVerified,
-          last_verified: isVerified ? new Date().toISOString() : null
-        })
+        .update(updateObj)
         .eq("id", id);
 
       if (error) {
-        toast.error("Failed to update verification status");
+        toast.error(`Failed to update status: ${error.message}`);
         throw error;
       }
 
-      toast.success(`Company ${isVerified ? "verified" : "unverified"} successfully`);
+      toast.success(`Company status updated successfully`);
       refetch();
     } catch (err) {
-      console.error("Error updating company verification:", err);
+      console.error("Error updating company status:", err);
     }
   };
 
@@ -142,6 +152,17 @@ const CompaniesPage = () => {
       month: "short",
       day: "numeric",
     });
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch(status) {
+      case 'certified':
+        return <Badge className="bg-green-500 text-white">Certified</Badge>;
+      case 'verified':
+        return <Badge className="bg-blue-500 text-white">Verified</Badge>;
+      default:
+        return <Badge className="bg-gray-300 text-gray-700">Unclaimed</Badge>;
+    }
   };
 
   if (error) {
@@ -180,6 +201,20 @@ const CompaniesPage = () => {
             ))}
           </select>
           
+          {/* Status Filter */}
+          <select
+            className="border rounded px-3 py-2 bg-background"
+            value={filters.status || ""}
+            onChange={(e) => setFilters({ ...filters, status: e.target.value || null })}
+          >
+            <option value="">All Statuses</option>
+            {companyStatuses.map((status) => (
+              <option key={status} value={status}>
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </option>
+            ))}
+          </select>
+          
           {/* Grade Filter */}
           <select
             className="border rounded px-3 py-2 bg-background"
@@ -194,27 +229,13 @@ const CompaniesPage = () => {
             ))}
           </select>
           
-          {/* Verified Filter */}
-          <div className="flex items-center gap-2 border rounded px-3 py-2 bg-background">
-            <label htmlFor="verified-filter" className="text-sm cursor-pointer">
-              Verified Only
-            </label>
-            <Switch
-              id="verified-filter"
-              checked={filters.verified === true}
-              onCheckedChange={(checked) => 
-                setFilters({ ...filters, verified: checked ? true : null })
-              }
-            />
-          </div>
-          
           {/* Reset Filters */}
           <Button
             variant="outline"
             onClick={() => setFilters({
               name: "",
               type: null,
-              verified: null,
+              status: null,
               grade: null
             })}
           >
@@ -231,9 +252,9 @@ const CompaniesPage = () => {
               <TableHead>Name</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Grade</TableHead>
-              <TableHead>Verified</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Reviews</TableHead>
-              <TableHead>Last Verified</TableHead>
+              <TableHead>Last Updated</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -255,7 +276,7 @@ const CompaniesPage = () => {
                   <TableCell className="font-medium">{company.name}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="capitalize">
-                      {company.type.replace("_", " ")}
+                      {company.type?.replace("_", " ")}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -272,14 +293,16 @@ const CompaniesPage = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Switch 
-                        checked={company.is_verified}
-                        onCheckedChange={(checked) => handleUpdateVerified(company.id, checked)}
-                      />
-                      {company.is_verified ? 
-                        <Check className="h-4 w-4 text-green-500" /> : 
-                        <X className="h-4 w-4 text-red-500" />
-                      }
+                      <select
+                        className="border rounded px-2 py-1 text-sm bg-background"
+                        value={company.status || "unclaimed"}
+                        onChange={(e) => handleUpdateStatus(company.id, e.target.value)}
+                      >
+                        <option value="unclaimed">Unclaimed</option>
+                        <option value="verified">Verified</option>
+                        <option value="certified">Certified</option>
+                      </select>
+                      {getStatusBadge(company.status || "unclaimed")}
                     </div>
                   </TableCell>
                   <TableCell>{company.review_count || 0}</TableCell>

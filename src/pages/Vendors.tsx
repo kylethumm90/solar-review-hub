@@ -71,7 +71,7 @@ const Vendors = () => {
   // Filter companies based on search term and type
   const filteredCompanies = companies.filter(company => {
     const matchesSearch = company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         company.description.toLowerCase().includes(searchTerm.toLowerCase());
+                         (company.description?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     
     const matchesType = selectedType === 'all' || company.type === selectedType;
     
@@ -160,12 +160,13 @@ const Vendors = () => {
               key={company.id}
               id={company.id}
               name={company.name}
-              description={company.description}
+              description={company.description || ''}
               logoUrl={company.logo_url}
               website={company.website}
               grade={company.grade}
-              type={company.type}
+              type={company.type || ''}
               rating={company.avg_rating || 0}
+              status={company.status}
               isVerified={company.is_verified}
               reviewCount={company.review_count}
             />

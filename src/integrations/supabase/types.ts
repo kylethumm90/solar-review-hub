@@ -98,6 +98,7 @@ export type Database = {
           last_verified: string | null
           logo_url: string | null
           name: string
+          status: string
           type: string
           website: string
         }
@@ -110,6 +111,7 @@ export type Database = {
           last_verified?: string | null
           logo_url?: string | null
           name: string
+          status?: string
           type: string
           website: string
         }
@@ -122,6 +124,7 @@ export type Database = {
           last_verified?: string | null
           logo_url?: string | null
           name?: string
+          status?: string
           type?: string
           website?: string
         }

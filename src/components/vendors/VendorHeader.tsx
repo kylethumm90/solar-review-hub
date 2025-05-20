@@ -20,15 +20,13 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ user }) => {
       
       {/* Add New Company Button - Only visible for logged in users */}
       {user && (
-        <Button 
-          asChild
-          className="flex items-center gap-2"
+        <Link 
+          to="/vendors/new"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md text-sm font-medium"
         >
-          <Link to="/vendors/new">
-            <PlusCircle size={18} />
-            Add New Company
-          </Link>
-        </Button>
+          <PlusCircle size={18} />
+          Add New Company
+        </Link>
       )}
     </div>
   );

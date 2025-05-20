@@ -28,15 +28,13 @@ const VendorEmptyState: React.FC<VendorEmptyStateProps> = ({
         </Button>
         
         {user && (
-          <Button 
-            as={Link}
+          <Link 
             to="/vendors/new"
-            variant="outline"
-            className="flex items-center gap-2"
+            className="inline-flex items-center px-4 py-2 border rounded-md text-sm font-medium hover:bg-gray-100 border-gray-300 text-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700 gap-2"
           >
             <PlusCircle size={18} />
             Add a new company
-          </Button>
+          </Link>
         )}
       </div>
     </div>

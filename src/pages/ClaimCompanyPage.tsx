@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Helmet } from 'react-helmet';
+import { Helmet } from 'react-helmet-async';
 import CompanyClaimForm from '@/components/claim/CompanyClaimForm';
 import { FAQ } from '@/components/claim/FAQ';
 import { Step } from '@/components/claim/Step';

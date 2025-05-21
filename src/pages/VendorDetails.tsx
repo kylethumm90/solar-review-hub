@@ -31,6 +31,8 @@ const VendorDetails = () => {
   // If there are no reviews, it will return 'NR' (Not Rated)
   const letterGrade = reviews.length > 0 ? scoreToGrade(avgRating) : 'NR';
   
+  console.log(`Company ${company.name} has grade ${letterGrade} with avg score ${avgRating}`);
+  
   return (
     <div className="container mx-auto py-8 px-4">
       <VendorDetailsHeader 

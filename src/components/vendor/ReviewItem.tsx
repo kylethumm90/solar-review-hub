@@ -12,6 +12,8 @@ interface ReviewAnswer {
   review_questions: {
     id: string;
     category: string;
+    question: string;
+    weight: number;
   };
 }
 
@@ -24,6 +26,8 @@ interface ReviewItemProps {
 const ReviewItem: React.FC<ReviewItemProps> = ({ review, getReviewAvgScore, reviewAnswers }) => {
   const avgScore = getReviewAvgScore(review);
   const letterGrade = scoreToGrade(avgScore);
+  
+  console.log(`Review ${review.id} - calculated score: ${avgScore}, grade: ${letterGrade}`);
   
   // Function to get icon for a category
   const getCategoryIcon = (category: string) => {
@@ -107,6 +111,21 @@ const ReviewItem: React.FC<ReviewItemProps> = ({ review, getReviewAvgScore, revi
               </div>
             );
           })}
+        </div>
+      )}
+      
+      {/* Debug information - only show in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mt-4 p-2 bg-gray-100 dark:bg-gray-800 text-xs">
+          <details>
+            <summary className="cursor-pointer font-medium">Debug Info</summary>
+            <div className="mt-2 space-y-1">
+              <div>Review ID: {review.id}</div>
+              <div>Score calculation: {avgScore.toFixed(2)}</div>
+              <div>Answer count: {reviewAnswers?.length || 0}</div>
+              <div>Legacy avg score: {review.average_score || 'N/A'}</div>
+            </div>
+          </details>
         </div>
       )}
     </div>

@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/hooks/use-toast";
-import { scoreToGrade, getReviewAvgScore } from '@/utils/reviewUtils';
+import { scoreToGrade, calculateWeightedAverage } from '@/utils/reviewUtils';
 
 export const useVendorDetails = (vendorId: string | undefined) => {
   const [company, setCompany] = useState<any>(null);
@@ -126,7 +126,37 @@ export const useVendorDetails = (vendorId: string | undefined) => {
     fetchVendorDetails();
   }, [vendorId]);
 
-  // Using the imported getReviewAvgScore function to ensure consistency
+  // Calculate average score for a review based on review_answers
+  // This is the new scoring system using weighted average from review_answers
+  const getReviewAvgScore = (review: any): number => {
+    // Get answers for this review
+    const reviewAnswersForReview = reviewAnswers.filter(
+      answer => answer.review_id === review.id
+    );
+    
+    // If no answers found, fall back to the stored average_score or 0
+    if (!reviewAnswersForReview.length) {
+      return review.average_score || 0;
+    }
+    
+    // Calculate weighted average from answers
+    let totalWeight = 0;
+    let weightedSum = 0;
+    
+    reviewAnswersForReview.forEach(answer => {
+      if (answer.review_questions) {
+        const weight = answer.review_questions.weight || 1;
+        weightedSum += answer.rating * weight;
+        totalWeight += weight;
+      } else {
+        // If no question metadata is available, use rating with default weight of 1
+        weightedSum += answer.rating;
+        totalWeight += 1;
+      }
+    });
+    
+    return totalWeight > 0 ? weightedSum / totalWeight : (review.average_score || 0);
+  };
   
   // Get letter grade from score
   const getReviewLetterGrade = (review: any) => {
@@ -134,6 +164,7 @@ export const useVendorDetails = (vendorId: string | undefined) => {
     return scoreToGrade(avgScore);
   };
   
+  // Calculate overall average rating for all reviews
   const avgRating = reviews.length 
     ? reviews.reduce((sum, review) => sum + getReviewAvgScore(review), 0) / reviews.length 
     : 0;
@@ -146,6 +177,12 @@ export const useVendorDetails = (vendorId: string | undefined) => {
     acc[answer.review_id].push(answer);
     return acc;
   }, {} as Record<string, any[]>);
+
+  // Log for debugging
+  console.log('Using new scoring system based on review_answers');
+  console.log('Company:', company?.name);
+  console.log('Overall average rating:', avgRating);
+  console.log('Total reviews:', reviews.length);
 
   return {
     company,

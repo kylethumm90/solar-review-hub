@@ -11,20 +11,20 @@ export interface ExtendedReview extends Review {
 }
 
 // Filter state type
-export type FilterState = {
+export interface FilterState {
   vendorTypes: string[];
   companyName: string | null;
   reviewDate: string | null;
   states: string[];
   grades: string[];
   stillActive: string | null;
-};
+}
 
 // Define a simplified company type for the dropdown
-export type SimpleCompany = {
+export interface SimpleCompany {
   id: string;
   name: string;
   type: string;
   is_verified: boolean;
   logo_url?: string;
-};
+}

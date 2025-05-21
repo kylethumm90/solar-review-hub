@@ -98,9 +98,6 @@ export type Database = {
           last_verified: string | null
           logo_url: string | null
           name: string
-          operating_states: string[] | null
-          solargrade_score: number | null
-          status: string
           type: string
           website: string
         }
@@ -113,9 +110,6 @@ export type Database = {
           last_verified?: string | null
           logo_url?: string | null
           name: string
-          operating_states?: string[] | null
-          solargrade_score?: number | null
-          status?: string
           type: string
           website: string
         }
@@ -128,9 +122,6 @@ export type Database = {
           last_verified?: string | null
           logo_url?: string | null
           name?: string
-          operating_states?: string[] | null
-          solargrade_score?: number | null
-          status?: string
           type?: string
           website?: string
         }

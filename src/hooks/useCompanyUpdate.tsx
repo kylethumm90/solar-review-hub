@@ -1,28 +1,33 @@
 
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuth } from "@/context/AuthContext";
-import { useLogoUpload } from "./useLogoUpload";
-import { useClaimPermission } from "./useClaimPermission";
-import { US_STATES } from "@/data/us-states";
-import { 
-  companyFormSchema, 
-  type CompanyFormValues, 
-  type CompanyData,
-  COMPANY_TYPES,
-  formatCompanyType
-} from "@/types/company";
+
+const companyFormSchema = z.object({
+  name: z.string().min(1, "Company name is required"),
+  description: z.string().optional(),
+  website: z.string().url("Please enter a valid URL").or(z.string().length(0)),
+  type: z.string().min(1, "Company type is required"),
+});
+
+export type CompanyFormValues = z.infer<typeof companyFormSchema>;
+
+export type CompanyData = {
+  id: string;
+  name: string;
+  description?: string;
+  website?: string;
+  type?: string;
+  logo_url?: string;
+};
 
 export const useCompanyUpdate = (company: CompanyData) => {
-  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Use our custom hooks
-  const { logoFile, logoPreview, handleLogoChange } = useLogoUpload(company.logo_url);
-  const { showStatesField } = useClaimPermission(company.id, company.type);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(company?.logo_url || null);
   
   const form = useForm<CompanyFormValues>({
     resolver: zodResolver(companyFormSchema),
@@ -31,9 +36,42 @@ export const useCompanyUpdate = (company: CompanyData) => {
       description: company?.description || "",
       website: company?.website || "",
       type: company?.type || "",
-      operating_states: company?.operating_states || [],
     },
   });
+
+  // Define company types
+  const companyTypes = [
+    { value: "epc", label: "EPC (Engineering, Procurement, Construction)" },
+    { value: "sales_org", label: "Sales Organization" },
+    { value: "lead_gen", label: "Lead Generation" },
+    { value: "software", label: "Software" },
+    { value: "other", label: "Other" }
+  ];
+
+  // Helper function to format company type for display
+  const formatCompanyType = (type: string): string => {
+    const foundType = companyTypes.find(t => t.value === type);
+    return foundType ? foundType.label : type
+      .replace("_", " ")
+      .split(" ")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+  
+  // Handle logo file selection
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setLogoFile(file);
+    
+    // Create preview URL for the selected image
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const onSubmit = async (values: CompanyFormValues) => {
     setIsSubmitting(true);
@@ -63,23 +101,15 @@ export const useCompanyUpdate = (company: CompanyData) => {
         logoUrl = publicUrl;
       }
 
-      // Prepare update object with conditional operating_states field
-      const updateData: any = {
-        name: values.name,
-        description: values.description,
-        website: values.website,
-        type: values.type,
-        logo_url: logoUrl
-      };
-      
-      // Only include operating_states if the user has permission
-      if (showStatesField) {
-        updateData.operating_states = values.operating_states;
-      }
-
       const { error } = await supabase
         .from("companies")
-        .update(updateData)
+        .update({
+          name: values.name,
+          description: values.description,
+          website: values.website,
+          type: values.type,
+          logo_url: logoUrl
+        })
         .eq("id", company.id);
 
       if (error) {
@@ -103,14 +133,9 @@ export const useCompanyUpdate = (company: CompanyData) => {
     isSubmitting,
     logoFile,
     logoPreview,
-    companyTypes: COMPANY_TYPES,
+    companyTypes,
     formatCompanyType,
     handleLogoChange,
-    onSubmit,
-    US_STATES,
-    showStatesField
+    onSubmit
   };
 };
-
-// Re-export types for backwards compatibility
-export type { CompanyFormValues, CompanyData };

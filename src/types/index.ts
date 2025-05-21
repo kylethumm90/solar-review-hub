@@ -22,7 +22,6 @@ export interface Company {
   reviews?: Review[];
   avg_rating?: number;
   review_count?: number;
-  operating_states?: string[]; // Added operating_states field
 }
 
 export interface Review {

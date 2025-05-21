@@ -1,101 +1,138 @@
 
-import React from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import * as React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { Menu, Search, Sun, Moon } from 'lucide-react';
+import { useState } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import {
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-} from "@/components/ui/dropdown-menu"
-import { LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from "sonner";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-  
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      toast.success("Signed out successfully");
-      navigate('/login');
-    } catch (error) {
-      console.error("Sign out failed:", error);
-      toast.error("Failed to sign out");
-    }
-  };
-  
+  const { theme, toggleTheme } = useTheme();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
-    <header className="border-b bg-background">
+    <nav className="bg-white dark:bg-gray-800 shadow-sm">
       <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
-          <Link to="/" className="font-bold text-xl">
-            SolarGrade
-          </Link>
-          
-          <nav className="flex items-center space-x-4 lg:space-x-6">
-            <NavLink to="/" className={({ isActive }) =>
-              `text-sm font-medium transition-colors hover:text-foreground/80 ${
-                isActive ? "text-foreground" : "text-muted-foreground"
-              }`
-            }>Home</NavLink>
-            <NavLink to="/vendors" className={({ isActive }) =>
-              `text-sm font-medium transition-colors hover:text-foreground/80 ${
-                isActive ? "text-foreground" : "text-muted-foreground"
-              }`
-            }>Vendors</NavLink>
-            <NavLink to="/rankings" className={({ isActive }) =>
-              `text-sm font-medium transition-colors hover:text-foreground/80 ${
-                isActive ? "text-foreground" : "text-muted-foreground"
-              }`
-            }>Rankings</NavLink>
-            {user?.user_metadata?.role === 'admin' && (
-              <NavLink to="/admin/dashboard" className={({ isActive }) =>
-                `text-sm font-medium transition-colors hover:text-foreground/80 ${
-                  isActive ? "text-foreground" : "text-muted-foreground"
-                }`
-              }>Admin</NavLink>
+        <div className="flex justify-between items-center h-16">
+          {/* Logo and site name */}
+          <div className="flex items-center">
+            <Link to="/" className="flex items-center">
+              <span className="text-xl font-bold text-primary">SolarGrade</span>
+            </Link>
+          </div>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-4">
+            <Link to="/vendors" className="text-gray-700 dark:text-gray-200 hover:text-primary">
+              Vendors
+            </Link>
+            
+            {/* Conditionally render dashboard link if logged in */}
+            {user && (
+              <Link to="/dashboard" className="text-gray-700 dark:text-gray-200 hover:text-primary">
+                Dashboard
+              </Link>
             )}
-          </nav>
-          
-          {user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={`https://avatar.vercel.sh/${user.email}.png`} alt={user.user_metadata?.full_name || 'User'} />
-                    <AvatarFallback>{(user.user_metadata?.full_name || 'User').slice(0, 2).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuItem asChild>
-                  <Link to="/dashboard">Dashboard</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                  <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <div className="flex items-center space-x-4">
-              <Link to="/login">
-                <Button variant="outline" size="sm">Log In</Button>
+            
+            {/* Admin link if user is admin */}
+            {user && user.user_metadata?.role === 'admin' && (
+              <Link to="/admin" className="text-gray-700 dark:text-gray-200 hover:text-primary">
+                Admin
               </Link>
-              <Link to="/register">
-                <Button size="sm">Sign Up</Button>
-              </Link>
-            </div>
-          )}
+            )}
+            
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+            
+            {user ? (
+              <Button variant="outline" onClick={() => signOut()}>
+                Sign Out
+              </Button>
+            ) : (
+              <Button asChild>
+                <Link to="/login">Sign In</Link>
+              </Button>
+            )}
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden flex items-center">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 rounded-md text-gray-700 dark:text-gray-200 hover:text-primary"
+            >
+              <Menu size={24} />
+            </button>
+          </div>
         </div>
+
+        {/* Mobile menu, show/hide based on menu state */}
+        {isMenuOpen && (
+          <div className="md:hidden pb-4">
+            <div className="flex flex-col space-y-2 px-2 pt-2">
+              <Link
+                to="/vendors"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Vendors
+              </Link>
+              
+              {user && (
+                <Link
+                  to="/dashboard"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+              )}
+              
+              {user && user.user_metadata?.role === 'admin' && (
+                <Link
+                  to="/admin"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Admin
+                </Link>
+              )}
+              
+              <div className="flex items-center justify-between px-3 py-2">
+                <button
+                  onClick={() => {
+                    toggleTheme();
+                    setIsMenuOpen(false);
+                  }}
+                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                </button>
+                
+                {user ? (
+                  <Button variant="outline" onClick={() => {
+                    signOut();
+                    setIsMenuOpen(false);
+                  }}>
+                    Sign Out
+                  </Button>
+                ) : (
+                  <Button asChild onClick={() => setIsMenuOpen(false)}>
+                    <Link to="/login">Sign In</Link>
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </header>
+    </nav>
   );
 };
 

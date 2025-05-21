@@ -6,44 +6,41 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { COMPANY_STATUS, isVerifiedOrCertified } from '@/types/company';
 
 interface VendorActionButtonsProps {
   companyId: string;
-  status?: string;
 }
 
-const VendorActionButtons: React.FC<VendorActionButtonsProps> = ({ 
-  companyId, 
-  status = COMPANY_STATUS.UNCLAIMED 
-}) => {
+const VendorActionButtons: React.FC<VendorActionButtonsProps> = ({ companyId }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [isCompanyClaimed, setIsCompanyClaimed] = useState(false);
   const [isClaimedByCurrentUser, setIsClaimedByCurrentUser] = useState(false);
   const [loading, setLoading] = useState(true);
-  
-  // Check if company has been claimed or verified (not unclaimed)
-  const isCompanyClaimed = isVerifiedOrCertified(status);
   
   useEffect(() => {
     const checkClaimStatus = async () => {
       setLoading(true);
       try {
-        if (isCompanyClaimed && user) {
-          // Check if current user is the claimer
-          const { data: claims, error } = await supabase
-            .from('claims')
-            .select('*')
-            .eq('company_id', companyId)
-            .eq('user_id', user.id)
-            .eq('status', 'approved');
-            
-          if (error) {
-            console.error('Error checking claim status:', error);
-            return;
-          }
+        // Check if company has any approved claims
+        const { data: claims, error } = await supabase
+          .from('claims')
+          .select('*')
+          .eq('company_id', companyId)
+          .eq('status', 'approved');
           
-          setIsClaimedByCurrentUser(claims && claims.length > 0);
+        if (error) {
+          console.error('Error checking claim status:', error);
+          return;
+        }
+        
+        const hasClaim = claims && claims.length > 0;
+        setIsCompanyClaimed(hasClaim);
+        
+        // Check if current user is the claimer
+        if (hasClaim && user) {
+          const userClaim = claims.find(claim => claim.user_id === user.id);
+          setIsClaimedByCurrentUser(!!userClaim);
         }
       } catch (error) {
         console.error('Error in checkClaimStatus:', error);
@@ -53,7 +50,7 @@ const VendorActionButtons: React.FC<VendorActionButtonsProps> = ({
     };
     
     checkClaimStatus();
-  }, [companyId, user, isCompanyClaimed]);
+  }, [companyId, user]);
   
   const handleClaimClick = () => {
     if (!user) {

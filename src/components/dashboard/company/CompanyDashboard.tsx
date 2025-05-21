@@ -12,7 +12,6 @@ interface CompanyDashboardProps {
     id: string;
     name: string;
     is_verified: boolean;
-    status?: string;
     last_verified?: string;
   };
   claim: {
@@ -28,7 +27,7 @@ const CompanyDashboard = ({ company, claim, reviewsCount }: CompanyDashboardProp
     <div className="space-y-6">
       {/* Verification Status Card */}
       <CompanyStatus 
-        status={company.status}
+        isVerified={company.is_verified} 
         lastVerified={company.last_verified} 
       />
       

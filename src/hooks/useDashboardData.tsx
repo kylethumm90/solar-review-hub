@@ -31,9 +31,8 @@ export const useDashboardData = () => {
       const { company, ...review } = item;
       return {
         ...review,
-        reviewer_id: review.user_id || user.id, // Add reviewer_id field to fix type error
         company: company as Company
-      } as Review;
+      };
     });
     
     return typedReviews;

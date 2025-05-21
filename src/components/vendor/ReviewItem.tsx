@@ -4,8 +4,6 @@ import { formatDate } from '@/lib/utils';
 import { scoreToGrade } from '@/utils/reviewUtils';
 import { Badge } from '@/components/ui/badge';
 import { MessageCircle, Wrench, Clock, DollarSign, LifeBuoy, HeadphonesIcon } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ReviewAnswer {
   id: string;
@@ -43,7 +41,6 @@ const ReviewItem: React.FC<ReviewItemProps> = ({ review, getReviewAvgScore, revi
   const getBadgeColor = (grade: string) => {
     if (grade.startsWith('A')) return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
     if (grade.startsWith('B')) return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300";
-    if (grade.startsWith('C')) return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300";
     return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
   };
   
@@ -57,73 +54,60 @@ const ReviewItem: React.FC<ReviewItemProps> = ({ review, getReviewAvgScore, revi
   }, {});
   
   return (
-    <div className="border-b dark:border-gray-700 pb-8 mb-8 last:border-0">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-lg">
-            {review.users?.full_name || 'Anonymous User'}
-          </span>
-          {review.is_verified_reviewer && (
-            <Badge variant="outline" className="text-xs bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
-              Verified Reviewer
-            </Badge>
+    <div className="border-b dark:border-gray-700 pb-8 last:border-0">
+      <div className="flex justify-between mb-2">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="font-semibold">
+              {review.users?.full_name || 'Anonymous User'}
+            </span>
+            {review.is_verified_reviewer && (
+              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
+                Verified Reviewer
+              </Badge>
+            )}
+          </div>
+          {review.review_title && (
+            <h3 className="text-lg font-medium mt-1">{review.review_title}</h3>
           )}
         </div>
-        
         <div className="flex items-center gap-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Badge 
-                  variant="outline" 
-                  className={`px-3 py-1 text-base font-semibold ${getBadgeColor(letterGrade)}`}
-                >
-                  SolarGrade: {letterGrade}
-                </Badge>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>This is the reviewer's calculated SolarGrade letter rating.</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Badge 
+            variant="outline" 
+            className={`${getBadgeColor(letterGrade)}`}
+          >
+            Grade: {letterGrade}
+          </Badge>
           <span className="text-gray-500 text-sm">
             {formatDate(review.created_at)}
           </span>
         </div>
       </div>
       
-      {review.review_title && (
-        <h3 className="text-lg font-medium mb-2">{review.review_title}</h3>
-      )}
-      
-      <p className="text-gray-600 dark:text-gray-300 mb-6">
+      <p className="text-gray-600 dark:text-gray-300 mb-4">
         {review.review_details || review.text_feedback}
       </p>
       
       {reviewAnswers && reviewAnswers.length > 0 && (
-        <>
-          <Separator className="mb-4" />
-          <h4 className="font-medium mb-3">Category Ratings</h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {Object.entries(answersByCategory).map(([category, answer]) => {
-              const grade = scoreToGrade(answer.rating);
-              return (
-                <div key={answer.id} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/30 rounded">
-                  <div className="flex items-center">
-                    {getCategoryIcon(category)}
-                    <span className="text-sm font-medium">{category}</span>
-                  </div>
-                  <Badge 
-                    variant="outline" 
-                    className={`${getBadgeColor(grade)}`}
-                  >
-                    {grade}
-                  </Badge>
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {Object.entries(answersByCategory).map(([category, answer]) => {
+            const grade = scoreToGrade(answer.rating);
+            return (
+              <div key={answer.id} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/30 rounded">
+                <div className="flex items-center">
+                  {getCategoryIcon(category)}
+                  <span className="text-sm font-medium">{category}</span>
                 </div>
-              );
-            })}
-          </div>
-        </>
+                <Badge 
+                  variant="outline" 
+                  className={`${getBadgeColor(grade)}`}
+                >
+                  {grade}
+                </Badge>
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );

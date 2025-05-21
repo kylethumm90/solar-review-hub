@@ -16,15 +16,9 @@ interface CompanyDashboardContentProps {
     website?: string;
     type?: string;
     logo_url?: string;
-    // TODO: Re-enable operating_states once we add proper null guards and controlled default values
     operating_states?: string[];
-    status?: string;
   };
-  claim: {
-    full_name: string;
-    job_title?: string;
-    company_email?: string;
-  };
+  claim: any;
   reviews: any[];
 }
 
@@ -34,7 +28,7 @@ const CompanyDashboardContent: React.FC<CompanyDashboardContentProps> = ({
   reviews 
 }) => {
   return (
-    <div className="container mx-auto">
+    <div className="container mx-auto py-6">
       <CompanyHeader 
         companyName={company.name} 
         companyId={company.id} 

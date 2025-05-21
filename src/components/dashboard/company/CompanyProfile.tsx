@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -8,6 +7,8 @@ import { Edit } from "lucide-react";
 import CompanyLogo from "./CompanyLogo";
 import CompanyProfileForm from "./CompanyProfileForm";
 import { useCompanyUpdate } from "@/hooks/useCompanyUpdate";
+import { Badge } from "@/components/ui/badge";
+import { getStateNames } from "@/data/us-states";
 
 interface CompanyProfileProps {
   company: {
@@ -23,12 +24,11 @@ interface CompanyProfileProps {
 
 const CompanyProfile = ({ company }: CompanyProfileProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { formatCompanyType } = useCompanyUpdate(company);
+  const { formatCompanyType, US_STATES } = useCompanyUpdate(company);
   
-  // TODO: Re-enable operating_states once we add proper null guards and controlled default values
-  // const stateNames = getStateNames(company.operating_states);
-  // const showStates = (company.type === 'epc' || company.type === 'sales_org') && 
-  //                    stateNames.length > 0;
+  const stateNames = getStateNames(company.operating_states);
+  const showStates = (company.type === 'epc' || company.type === 'sales_org') && 
+                     stateNames.length > 0;
   
   return (
     <Card className="h-full">
@@ -70,9 +70,8 @@ const CompanyProfile = ({ company }: CompanyProfileProps) => {
           </p>
         </div>
         
-        {/* TODO: Re-enable operating_states once we add proper null guards and controlled default values */}
         {/* Operating States (only shown for EPCs and Sales Organizations) */}
-        {/* {showStates && (
+        {showStates && (
           <>
             <Separator className="my-4" />
             
@@ -87,7 +86,7 @@ const CompanyProfile = ({ company }: CompanyProfileProps) => {
               </div>
             </div>
           </>
-        )} */}
+        )}
       </CardContent>
       <CardFooter>
         <Button onClick={() => setDialogOpen(true)} className="w-full">

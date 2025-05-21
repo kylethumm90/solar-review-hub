@@ -16,6 +16,23 @@ import {
   type CompanyFormValues, 
   useCompanyUpdate
 } from '@/hooks/useCompanyUpdate';
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
+import { 
+  Command, 
+  CommandEmpty, 
+  CommandGroup, 
+  CommandInput, 
+  CommandItem 
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+import { Check } from "lucide-react";
 
 interface CompanyProfileFormProps {
   company: CompanyData;
@@ -30,9 +47,8 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({ company, onCanc
     companyTypes, 
     handleLogoChange, 
     onSubmit,
-    // TODO: Re-enable operating_states once we add proper null guards and controlled default values
-    // US_STATES,
-    // showStatesField
+    US_STATES,
+    showStatesField
   } = useCompanyUpdate(company);
 
   return (
@@ -127,7 +143,6 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({ company, onCanc
           )}
         />
         
-        {/* TODO: Re-enable operating_states once we add proper null guards and controlled default values
         {showStatesField && (
           <FormField
             control={form.control}
@@ -142,7 +157,7 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({ company, onCanc
                         variant="outline"
                         className={cn(
                           "w-full justify-between",
-                          !(field.value?.length) && "text-muted-foreground"
+                          !field.value?.length && "text-muted-foreground"
                         )}
                       >
                         {field.value?.length
@@ -162,13 +177,11 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({ company, onCanc
                                 <CommandItem
                                   key={state.value}
                                   onSelect={() => {
-                                    // Ensure field.value is always an array before operating on it
-                                    const currentValues = field.value || [];
                                     const updatedValues = isSelected
-                                      ? currentValues.filter(
+                                      ? field.value?.filter(
                                           (value) => value !== state.value
                                         )
-                                      : [...currentValues, state.value];
+                                      : [...(field.value || []), state.value];
                                     form.setValue("operating_states", updatedValues);
                                   }}
                                 >
@@ -189,7 +202,7 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({ company, onCanc
                   </Popover>
                 </FormControl>
                 <div className="flex flex-wrap gap-1 mt-2">
-                  {(field.value || []).map((state) => {
+                  {field.value?.map((state) => {
                     const stateObj = US_STATES.find((s) => s.value === state);
                     return (
                       <Badge key={state} variant="secondary" className="flex items-center gap-1">
@@ -197,7 +210,7 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({ company, onCanc
                         <X
                           className="h-3 w-3 cursor-pointer"
                           onClick={() => {
-                            const updatedValues = (field.value || []).filter(
+                            const updatedValues = field.value?.filter(
                               (value) => value !== state
                             );
                             form.setValue("operating_states", updatedValues);
@@ -215,7 +228,6 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({ company, onCanc
             )}
           />
         )}
-        */}
         
         <FormField
           control={form.control}

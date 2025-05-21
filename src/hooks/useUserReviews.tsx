@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -6,7 +7,6 @@ import { Review, Company } from '@/types';
 
 export type UserReviewWithCompany = Review & {
   company: Company;
-  verification_status?: string;
 };
 
 type SortOption = 'newest' | 'highest';
@@ -55,7 +55,7 @@ export const useUserReviews = () => {
       const companyIds = reviewsData.map(review => review.company_id);
       const { data: companiesData, error: companiesError } = await supabase
         .from('companies')
-        .select('id, name, description, logo_url, type, is_verified, created_at')
+        .select('id, name, description, logo_url, type, is_verified')
         .in('id', companyIds);
 
       if (companiesError) throw companiesError;
@@ -63,22 +63,16 @@ export const useUserReviews = () => {
       // Combine the data
       const userReviewsWithCompanies = reviewsData.map(review => {
         const company = companiesData?.find(c => c.id === review.company_id);
-        
-        // Add the reviewer_id field which is required by the Review type
-        const reviewWithCompany = {
+        return {
           ...review,
-          reviewer_id: review.user_id || user.id, // Add reviewer_id as required by type
           company: company || {
             id: review.company_id,
             name: 'Unknown Company',
             description: '',
             type: '',
-            is_verified: false,
-            created_at: new Date().toISOString()
+            is_verified: false
           }
         } as UserReviewWithCompany;
-        
-        return reviewWithCompany;
       });
 
       // Sort the reviews

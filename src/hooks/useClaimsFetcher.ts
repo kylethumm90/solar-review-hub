@@ -80,7 +80,7 @@ export function useClaimsFetcher(activeTab: string, searchQuery: string, debugMo
         // Extra verification that we actually got data back
         console.log(`[ClaimsFetcher] Fetched ${data?.length || 0} claims:`, data);
         
-        return data as unknown as Claim[];
+        return data as Claim[];
       } catch (err) {
         console.error('[ClaimsFetcher] Unexpected error in fetch function:', err);
         toast.error('An unexpected error occurred while loading claims');
@@ -103,10 +103,10 @@ export function useClaimsFetcher(activeTab: string, searchQuery: string, debugMo
     
     const searchTerm = searchQuery.toLowerCase();
     const result = (
-      (claim.full_name?.toLowerCase() || '').includes(searchTerm) ||
-      (claim.company_email?.toLowerCase() || '').includes(searchTerm) ||
-      (claim.job_title?.toLowerCase() || '').includes(searchTerm) ||
-      (claim.company?.name?.toLowerCase() || '').includes(searchTerm)
+      claim.full_name?.toLowerCase().includes(searchTerm) ||
+      claim.company_email?.toLowerCase().includes(searchTerm) ||
+      claim.job_title?.toLowerCase().includes(searchTerm) ||
+      claim.company?.name?.toLowerCase().includes(searchTerm)
     );
     
     return result;

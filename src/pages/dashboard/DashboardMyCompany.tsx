@@ -6,20 +6,10 @@ import CompanyDashboardContent from '@/components/dashboard/company/CompanyDashb
 import UnauthorizedMessage from '@/components/dashboard/company/UnauthorizedMessage';
 import NoAccessMessage from '@/components/dashboard/company/NoAccessMessage';
 import { useCompanyData } from '@/hooks/useCompanyData';
-import CompanySelector from '@/components/dashboard/company/CompanySelector';
 
 const DashboardMyCompany = () => {
   const { user } = useAuth();
-  const { 
-    loading, 
-    currentClaim, 
-    currentCompany, 
-    reviews, 
-    companies,
-    selectedClaimIndex,
-    selectCompany,
-    totalClaimedCompanies
-  } = useCompanyData();
+  const { loading, claim, company, reviews } = useCompanyData();
   
   if (!user) {
     return <UnauthorizedMessage />;
@@ -29,30 +19,16 @@ const DashboardMyCompany = () => {
     return <LoadingSpinner message="Loading company dashboard..." />;
   }
   
-  if (!currentClaim || !currentCompany) {
+  if (!claim || !company) {
     return <NoAccessMessage />;
   }
-
-  // Ensure we have valid arrays for the selector
-  const validCompanies = Array.isArray(companies) ? companies : [];
-  const hasMultipleCompanies = validCompanies.length > 1;
   
   return (
-    <div className="container mx-auto py-4">
-      {hasMultipleCompanies && (
-        <CompanySelector 
-          companies={validCompanies}
-          selectedIndex={selectedClaimIndex}
-          onSelect={selectCompany}
-        />
-      )}
-      
-      <CompanyDashboardContent 
-        company={currentCompany}
-        claim={currentClaim}
-        reviews={Array.isArray(reviews) ? reviews : []}
-      />
-    </div>
+    <CompanyDashboardContent 
+      company={company}
+      claim={claim}
+      reviews={reviews}
+    />
   );
 };
 

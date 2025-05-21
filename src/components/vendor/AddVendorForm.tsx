@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +17,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
+import { companyTypes } from '@/constants/companyTypes';
 
 const AddVendorForm = () => {
   const navigate = useNavigate();
@@ -224,11 +224,11 @@ const AddVendorForm = () => {
           <SelectContent>
             <SelectGroup>
               <SelectLabel>Company Types</SelectLabel>
-              <SelectItem value="epc">EPC (Engineering, Procurement, Construction)</SelectItem>
-              <SelectItem value="sales_org">Sales Organization</SelectItem>
-              <SelectItem value="lead_gen">Lead Generation</SelectItem>
-              <SelectItem value="software">Software</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
+              {companyTypes.map((type) => (
+                <SelectItem key={type.value} value={type.value}>
+                  {type.label}
+                </SelectItem>
+              ))}
             </SelectGroup>
           </SelectContent>
         </Select>

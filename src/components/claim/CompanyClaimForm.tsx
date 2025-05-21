@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import { companyTypes } from '@/constants/companyTypes';
 
 const formSchema = z.object({
   companyName: z.string().min(2, { message: "Company name must be at least 2 characters." }),
@@ -157,13 +157,11 @@ const CompanyClaimForm = ({ onSuccess }: CompanyClaimFormProps) => {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="installer">Installer</SelectItem>
-                      <SelectItem value="epc">EPC</SelectItem>
-                      <SelectItem value="sales_org">Sales Organization</SelectItem>
-                      <SelectItem value="manufacturer">Manufacturer</SelectItem>
-                      <SelectItem value="distributor">Distributor</SelectItem>
-                      <SelectItem value="financier">Financier</SelectItem>
-                      <SelectItem value="software">Software Provider</SelectItem>
+                      {companyTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

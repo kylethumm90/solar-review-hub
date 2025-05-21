@@ -1,10 +1,10 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { companyTypes, getCompanyTypeLabel } from "@/constants/companyTypes";
 
 const companyFormSchema = z.object({
   name: z.string().min(1, "Company name is required"),
@@ -39,23 +39,9 @@ export const useCompanyUpdate = (company: CompanyData) => {
     },
   });
 
-  // Define company types
-  const companyTypes = [
-    { value: "epc", label: "EPC (Engineering, Procurement, Construction)" },
-    { value: "sales_org", label: "Sales Organization" },
-    { value: "lead_gen", label: "Lead Generation" },
-    { value: "software", label: "Software" },
-    { value: "other", label: "Other" }
-  ];
-
   // Helper function to format company type for display
   const formatCompanyType = (type: string): string => {
-    const foundType = companyTypes.find(t => t.value === type);
-    return foundType ? foundType.label : type
-      .replace("_", " ")
-      .split(" ")
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
+    return getCompanyTypeLabel(type);
   };
   
   // Handle logo file selection

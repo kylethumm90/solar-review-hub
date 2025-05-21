@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   email: string;
@@ -61,6 +62,19 @@ export interface Review {
   user?: User;
   company?: Company;
   review_answers?: ReviewAnswer[];
+}
+
+export interface Claim {
+  id: string;
+  user_id: string;
+  company_id: string;
+  full_name: string;
+  job_title: string;
+  company_email: string;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+  user?: User;
+  company?: Company;
 }
 
 // API response types

@@ -1,9 +1,9 @@
 
 // Import the consistent toast implementation from our hooks
-import { toast, useToast } from "@/hooks/use-toast";
+import { toastFn, useToast, toast } from "@/hooks/use-toast";
 
 // Re-export to maintain compatibility with existing imports
-export { toast, useToast };
+export { toast, useToast, toastFn };
 
 // Export a default object for module imports
-export default toast;
+export default toastFn;

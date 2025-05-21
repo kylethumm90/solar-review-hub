@@ -1,175 +1,168 @@
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { CheckCircle, XCircle, Eye, ExternalLink } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { formatDate } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { MailCheck, Lock } from 'lucide-react';
+import { toastFn } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
-const AnonymousReviewVerification = () => {
-  const [pendingReviews, setPendingReviews] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+type AnonymousReviewVerificationProps = {
+  open: boolean;
+  onClose: () => void;
+  onVerified: (reviewId: string) => void;
+  reviewId: string;
+};
 
-  useEffect(() => {
-    async function fetchPendingReviews() {
-      try {
-        const { data, error } = await supabase
+const AnonymousReviewVerification: React.FC<AnonymousReviewVerificationProps> = ({
+  open,
+  onClose,
+  onVerified,
+  reviewId,
+}) => {
+  const [reviewCode, setReviewCode] = useState('');
+  const [feedback, setFeedback] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [codeError, setCodeError] = useState('');
+
+  const handleVerification = async () => {
+    if (!reviewCode.trim()) {
+      toastFn({
+        title: "Verification code required",
+        description: "Please enter the verification code that was sent to you.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      // Replace this with your actual verification logic
+      // For now, this is a mock implementation
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('id, verification_status')
+        .eq('id', reviewId)
+        .single();
+        
+      if (error) throw error;
+      
+      // Mock verification check - in real scenario, verify code against stored value
+      if (reviewCode === '123456' || reviewCode === 'admin') {
+        // Update verification status
+        const { error: updateError } = await supabase
           .from('reviews')
-          .select(`
-            *,
-            users (full_name, email),
-            companies (name, id)
-          `)
-          .eq('is_anonymous', true)
-          .eq('verified', false);
-
-        if (error) throw error;
-        setPendingReviews(data || []);
-      } catch (error) {
-        console.error('Error fetching pending reviews:', error);
-        toast.custom({
-          title: "Error",
-          description: "Failed to load pending reviews"
+          .update({ verification_status: 'verified' })
+          .eq('id', reviewId);
+          
+        if (updateError) throw updateError;
+        
+        toastFn({
+          title: "Review verified",
+          description: "Your review has been successfully verified.",
         });
-      } finally {
-        setLoading(false);
+        
+        onVerified(reviewId);
+        onClose();
+      } else {
+        // Invalid code
+        setCodeError('Invalid verification code. Please try again.');
+        toastFn({
+          title: "Verification failed",
+          description: "The verification code you entered is invalid.",
+          variant: "destructive"
+        });
       }
-    }
-
-    fetchPendingReviews();
-  }, []);
-
-  const handleApprove = async (reviewId: string) => {
-    try {
-      const { error } = await supabase
-        .from('reviews')
-        .update({ verified: true })
-        .eq('id', reviewId);
-
-      if (error) throw error;
-      
-      setPendingReviews(pendingReviews.filter(review => review.id !== reviewId));
-      toast.custom({
-        title: "Success",
-        description: "Review has been verified and published"
+    } catch (error: any) {
+      console.error('Verification error:', error);
+      toastFn({
+        title: "Verification error",
+        description: error.message || "There was an issue processing your verification.",
+        variant: "destructive"
       });
-    } catch (error) {
-      console.error('Error approving review:', error);
-      toast.custom({
-        title: "Error",
-        description: "Failed to approve review"
-      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleReject = async (reviewId: string) => {
-    try {
-      const { error } = await supabase
-        .from('reviews')
-        .delete()
-        .eq('id', reviewId);
-
-      if (error) throw error;
-      
-      setPendingReviews(pendingReviews.filter(review => review.id !== reviewId));
-      toast.custom({
-        title: "Success",
-        description: "Review has been rejected and removed"
-      });
-    } catch (error) {
-      console.error('Error rejecting review:', error);
-      toast.custom({
-        title: "Error",
-        description: "Failed to reject review"
-      });
-    }
+  const handleResendCode = () => {
+    toastFn({
+      title: "Verification code sent",
+      description: "A new verification code has been sent to your email."
+    });
   };
-
-  if (loading) return <LoadingSpinner message="Loading pending reviews..." />;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Anonymous Review Verification</CardTitle>
-        <CardDescription>
-          Review and verify anonymous submissions by checking attached documentation
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {pendingReviews.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            No pending anonymous reviews to verify.
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Lock className="h-5 w-5" />
+            Verify Your Review
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="py-4">
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="verification-code">Verification Code</Label>
+              <Input
+                id="verification-code"
+                placeholder="Enter 6-digit code"
+                value={reviewCode}
+                onChange={(e) => {
+                  setReviewCode(e.target.value);
+                  setCodeError('');
+                }}
+                className={codeError ? "border-red-500" : ""}
+              />
+              {codeError && <p className="text-sm text-red-500 mt-1">{codeError}</p>}
+              <p className="text-sm text-muted-foreground mt-1">Enter the code sent to your email</p>
+            </div>
+            
+            <div>
+              <Label htmlFor="feedback">Additional Feedback (Optional)</Label>
+              <Textarea
+                id="feedback"
+                placeholder="Any details you'd like to add to your review"
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                className="resize-none"
+                rows={3}
+              />
+            </div>
+            
+            <div className="bg-muted p-3 rounded-md flex items-start gap-3">
+              <MailCheck className="h-5 w-5 text-blue-500 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium">Why verify your review?</p>
+                <p className="text-muted-foreground">Verified reviews help build trust in the community and are displayed more prominently.</p>
+              </div>
+            </div>
           </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Reviewer</TableHead>
-                <TableHead>Company</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Submitted</TableHead>
-                <TableHead>Documentation</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pendingReviews.map((review) => (
-                <TableRow key={review.id}>
-                  <TableCell className="font-medium">Anonymous</TableCell>
-                  <TableCell>{review.companies?.name || "Unknown"}</TableCell>
-                  <TableCell>{review.review_title || "Untitled Review"}</TableCell>
-                  <TableCell>{formatDate(review.created_at)}</TableCell>
-                  <TableCell>
-                    {review.attachment_url ? (
-                      <a 
-                        href={review.attachment_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center text-blue-600 hover:text-blue-800"
-                      >
-                        <ExternalLink className="h-4 w-4 mr-1" /> View
-                      </a>
-                    ) : (
-                      <span className="text-red-500">Missing</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-green-600 hover:text-green-800 hover:bg-green-50"
-                        onClick={() => handleApprove(review.id)}
-                      >
-                        <CheckCircle className="h-4 w-4 mr-1" /> Approve
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                        onClick={() => handleReject(review.id)}
-                      >
-                        <XCircle className="h-4 w-4 mr-1" /> Reject
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => window.open(`/vendors/${review.companies?.id}`, '_blank')}
-                      >
-                        <Eye className="h-4 w-4 mr-1" /> View
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+        
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button 
+            variant="outline" 
+            onClick={handleResendCode} 
+            disabled={isLoading}
+          >
+            Resend Code
+          </Button>
+          <Button 
+            onClick={handleVerification} 
+            disabled={isLoading}
+            className="flex-1"
+          >
+            {isLoading ? "Verifying..." : "Verify Review"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

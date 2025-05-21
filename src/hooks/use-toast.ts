@@ -43,16 +43,26 @@ const toast = {
   dismiss: sonnerToast.dismiss
 };
 
+// Helper for direct calling without the .toast property
+export const toastFn = ({ title, description, variant, duration }: ToastProps) => {
+  if (variant === "destructive") {
+    return sonnerToast.error(title || "", { description, duration });
+  }
+  return sonnerToast(title || "", { description, duration });
+};
+
 // Mock for compatibility with shadcn/ui toast
 const useToast = () => {
   const [toasts] = React.useState<any[]>([]);
 
   return {
-    toast: toast,
+    toast: toastFn,
     dismiss: sonnerToast.dismiss,
     toasts
   };
 };
 
 // Export the base toast function directly to be used without the hook
-export { useToast, sonnerToast as toast };
+export { useToast };
+// Export sonnerToast for direct usage where needed
+export { sonnerToast as toast };

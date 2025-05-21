@@ -1,169 +1,227 @@
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { toast } from '@/hooks/use-toast';
-import { calculateWeightedAverage } from '@/utils/reviewUtils';
-import { ReviewQuestion } from '@/types';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import VendorNotFound from '@/components/review/VendorNotFound';
-import VendorHeader from '@/components/review/VendorHeader';
-import ReviewForm from '@/components/review/ReviewForm';
-import { ReviewService, VendorInfo } from '@/services/ReviewService';
-import { Star } from 'lucide-react';
-
-interface ReviewMetadata {
-  installCount: number | null;
-  stillActive: string | null;
-  lastInstallDate: string | null;
-  installStates: string[];
-  recommendEpc: string | null;
-}
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem } from '@/components/ui/select';
+import { useReviews } from '@/hooks/useReviews';
+import ReviewTable from '@/components/reviews/ReviewTable';
+import { FilterState, SimpleCompany } from '@/components/reviews/types';
+import { toastFn } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { Search, Filter, SlidersHorizontal } from 'lucide-react';
+import ReviewFilters from '@/components/reviews/ReviewFilters';
 
 const Reviews = () => {
-  const { vendorId } = useParams<{ vendorId: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [companies, setCompanies] = useState<SimpleCompany[]>([]);
+  const [isLoadingCompanies, setIsLoadingCompanies] = useState(true);
   
-  const [vendor, setVendor] = useState<VendorInfo | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [reviewQuestions, setReviewQuestions] = useState<ReviewQuestion[]>([]);
-  
-  useEffect(() => {
-    async function fetchVendorInfo() {
-      if (!vendorId) return;
-      
-      try {
-        const vendorData = await ReviewService.fetchVendorInfo(vendorId);
-        setVendor(vendorData);
-        
-        // Fetch questions for this vendor type
-        if (vendorData?.type) {
-          const questions = await ReviewService.fetchReviewQuestions(vendorData.type);
-          setReviewQuestions(questions);
-        }
-      } catch (error) {
-        console.error('Error fetching vendor info:', error);
-        toast.custom({
-          title: "Error",
-          description: "Vendor not found."
-        });
-        navigate('/vendors');
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    fetchVendorInfo();
-  }, [vendorId, navigate]);
-  
-  const handleSubmitReview = async (
-    title: string, 
-    details: string, 
-    questionRatings: Record<string, { rating: number; question: ReviewQuestion }>,
-    isAnonymous: boolean,
-    attachment: File | null,
-    metadata: ReviewMetadata
-  ) => {
-    if (!user) {
-      toast.custom({
-        title: "Authentication required",
-        description: "You must be logged in to submit a review"
-      });
-      navigate('/login', { state: { from: { pathname: `/reviews/${vendorId}` } } });
-      return;
-    }
-    
-    if (!vendorId) return;
-    
-    // Validation
-    const unansweredQuestions = reviewQuestions.filter(
-      q => !questionRatings[q.id] || questionRatings[q.id].rating === 0
-    );
-    
-    if (unansweredQuestions.length > 0) {
-      toast.custom({
-        title: "Incomplete review",
-        description: "Please rate all questions before submitting"
-      });
-      return;
-    }
-    
-    setSubmitting(true);
-    
-    try {
-      // Calculate average score using the weighted average function
-      const averageScore = calculateWeightedAverage(questionRatings);
-      
-      // Format question ratings for API
-      const formattedRatings: Record<string, { rating: number; notes?: string }> = {};
-      Object.keys(questionRatings).forEach(key => {
-        const { rating } = questionRatings[key];
-        formattedRatings[key] = { rating };
-      });
-      
-      await ReviewService.submitReview(
-        vendorId,
-        user.id,
-        title,
-        details,
-        averageScore,
-        formattedRatings,
-        isAnonymous,
-        attachment,
-        metadata
-      );
-      
-      // After submission, navigate to confirmation page with review data
-      navigate('/review/confirmation', {
-        state: {
-          answers: questionRatings,
-          vendorName: vendor?.name,
-          averageScore,
-          vendorId
-        }
-      });
-      
-    } catch (error: any) {
-      toast.custom({
-        title: "Error",
-        description: error.message || 'Failed to submit review'
-      });
-      setSubmitting(false);
-    }
+  // Get initial filter state from URL params
+  const getInitialFilters = (): FilterState => {
+    return {
+      vendorTypes: searchParams.get('types')?.split(',') || [],
+      companyName: searchParams.get('company') || null,
+      reviewDate: searchParams.get('date') || null,
+      states: searchParams.get('states')?.split(',') || [],
+      grades: searchParams.get('grades')?.split(',') || [],
+      stillActive: searchParams.get('active') || null,
+    };
   };
   
-  if (loading) {
-    return <LoadingSpinner message="Loading..." />;
-  }
+  const [filterState, setFilterState] = useState<FilterState>(getInitialFilters());
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   
-  if (!vendor) {
-    return <VendorNotFound />;
+  // Setup reviews hook
+  const { reviews, isLoading, error, fetchReviews } = useReviews({
+    filters: filterState,
+    searchTerm,
+  });
+  
+  // Fetch companies for the company filter
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      setIsLoadingCompanies(true);
+      try {
+        const { data, error } = await supabase
+          .from('companies')
+          .select('id, name, type, is_verified, logo_url')
+          .order('name');
+          
+        if (error) {
+          throw error;
+        }
+        
+        setCompanies(data || []);
+      } catch (err) {
+        console.error('Error fetching companies:', err);
+        toastFn({
+          title: "Error loading companies",
+          description: "Could not load the company filter data."
+        });
+      } finally {
+        setIsLoadingCompanies(false);
+      }
+    };
+    
+    fetchCompanies();
+  }, []);
+  
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newParams = new URLSearchParams(searchParams);
+    if (searchTerm) {
+      newParams.set('search', searchTerm);
+    } else {
+      newParams.delete('search');
+    }
+    setSearchParams(newParams);
+    fetchReviews();
+  };
+  
+  const applyFilters = (newFilters: FilterState) => {
+    setFilterState(newFilters);
+    
+    // Update URL params
+    const newParams = new URLSearchParams(searchParams);
+    
+    if (newFilters.vendorTypes.length > 0) {
+      newParams.set('types', newFilters.vendorTypes.join(','));
+    } else {
+      newParams.delete('types');
+    }
+    
+    if (newFilters.companyName) {
+      newParams.set('company', newFilters.companyName);
+    } else {
+      newParams.delete('company');
+    }
+    
+    if (newFilters.reviewDate) {
+      newParams.set('date', newFilters.reviewDate);
+    } else {
+      newParams.delete('date');
+    }
+    
+    if (newFilters.states.length > 0) {
+      newParams.set('states', newFilters.states.join(','));
+    } else {
+      newParams.delete('states');
+    }
+    
+    if (newFilters.grades.length > 0) {
+      newParams.set('grades', newFilters.grades.join(','));
+    } else {
+      newParams.delete('grades');
+    }
+    
+    if (newFilters.stillActive) {
+      newParams.set('active', newFilters.stillActive);
+    } else {
+      newParams.delete('active');
+    }
+    
+    setSearchParams(newParams);
+    fetchReviews();
+    
+    // Close mobile filters if open
+    setIsFiltersOpen(false);
+  };
+  
+  const clearFilters = () => {
+    const emptyFilters: FilterState = {
+      vendorTypes: [],
+      companyName: null,
+      reviewDate: null,
+      states: [],
+      grades: [],
+      stillActive: null,
+    };
+    applyFilters(emptyFilters);
+    
+    // Also clear search
+    setSearchTerm('');
+    const newParams = new URLSearchParams();
+    setSearchParams(newParams);
+  };
+
+  if (error) {
+    toastFn({
+      title: "Error loading reviews",
+      description: "There was a problem loading the reviews. Please try again later."
+    });
   }
   
   return (
-    <div className="max-w-3xl mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-2">Write a Review</h1>
-      <p className="text-muted-foreground mb-6">
-        Share your experience working with {vendor.name}
-      </p>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">Solar Industry Reviews</h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">
+          Explore genuine reviews from real solar industry professionals
+        </p>
+      </div>
       
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
-        <VendorHeader vendor={vendor} />
-        
-        <div className="mb-6">
-          <span className="text-sm text-gray-500 italic flex items-center gap-1">
-            <Star className="h-4 w-4" /> Your selections will be translated into SolarGrade letter grades after submission.
-          </span>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Filters Section */}
+        <div className="lg:col-span-1">
+          <ReviewFilters 
+            filterState={filterState}
+            companies={companies}
+            isLoading={isLoadingCompanies}
+            onApplyFilters={applyFilters}
+            onClearFilters={clearFilters}
+            isOpen={isFiltersOpen}
+            onClose={() => setIsFiltersOpen(false)}
+          />
         </div>
         
-        <ReviewForm 
-          vendor={vendor}
-          reviewQuestions={reviewQuestions}
-          onSubmit={handleSubmitReview}
-          submitting={submitting}
-        />
+        {/* Main Content */}
+        <div className="lg:col-span-3">
+          <Card className="mb-6 p-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <form onSubmit={handleSearch} className="flex-1">
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search reviews by keywords..."
+                    className="pl-10"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </form>
+              
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  type="button"
+                  className="lg:hidden flex items-center gap-2"
+                  onClick={() => setIsFiltersOpen(true)}
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                  Filters
+                </Button>
+                
+                <Button 
+                  type="button" 
+                  onClick={handleSearch}
+                >
+                  <Search className="mr-2 h-4 w-4" />
+                  Search
+                </Button>
+              </div>
+            </div>
+          </Card>
+          
+          <ReviewTable 
+            reviews={reviews}
+            isLoading={isLoading}
+          />
+        </div>
       </div>
     </div>
   );

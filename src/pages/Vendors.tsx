@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import VendorCard from '@/components/VendorCard';
-import { Search, Filter, PlusCircle } from 'lucide-react';
 import { Company } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Search, PlusCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { scoreToGrade } from '@/utils/reviewUtils';
+import VendorCard from '@/components/VendorCard';
 
-const Vendors = () => {
-  const [companies, setCompanies] = useState<Company[]>([]);
+const VendorsPage = () => {
+  const [vendors, setVendors] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
@@ -27,133 +26,102 @@ const Vendors = () => {
   ];
 
   useEffect(() => {
-    async function fetchCompanies() {
+    async function fetchVendors() {
       setIsLoading(true);
       
       try {
-        // Fetch all companies, their reviews and review_answers
-        const { data: companiesData, error: companiesError } = await supabase
+        const { data: vendorsData, error } = await supabase
           .from('companies')
           .select(`
             *,
-            reviews(*),
-            reviews!reviews_company_id_fkey(
-              id,
-              average_score,
-              review_answers(
-                id, 
-                rating, 
-                question_id,
-                review_questions(id, weight)
-              )
-            )
+            reviews(*)
           `);
-
-        if (companiesError) throw companiesError;
-
-        console.log('Companies data from Supabase:', companiesData);
-
-        // Process the companies data using the new weighted rating system
-        const processedCompanies = companiesData.map(company => {
-          const hasReviews = company.reviews && company.reviews.length > 0;
+        
+        if (error) throw error;
+        
+        const processedVendors = vendorsData.map(vendor => {
+          // Check if vendor has reviews
+          const hasReviews = vendor.reviews && vendor.reviews.length > 0;
           
-          // Calculate average rating using the new weighted system from review answers
+          // Calculate average rating (simpler method without using review_answers)
           let avgRating = 0;
           
           if (hasReviews) {
-            // Calculate the average score for each review using weighted answers
-            const reviewScores = company.reviews.map(review => {
-              // Type safety check: ensure review exists and has the expected structure
-              if (!review) return 0;
-              
-              // Check if review has the review_answers property and it's an array
-              const reviewAnswers = review.review_answers && Array.isArray(review.review_answers) 
-                ? review.review_answers 
-                : [];
-              
-              if (reviewAnswers.length === 0) {
-                return review.average_score || 0;
-              }
-              
-              // Calculate weighted average for this review
-              let totalWeight = 0;
-              let weightedSum = 0;
-              
-              // Type safety: ensure we handle each answer correctly
-              reviewAnswers.forEach(answer => {
-                if (!answer || typeof answer.rating !== 'number') return;
-                
-                const weight = answer.review_questions?.weight || 1;
-                weightedSum += answer.rating * weight;
-                totalWeight += weight;
-              });
-              
-              return totalWeight > 0 ? weightedSum / totalWeight : (review.average_score || 0);
+            // Use the stored average_score for each review when available
+            const reviewScores = vendor.reviews.map((review: any) => {
+              return review.average_score || 0;
             });
             
-            // Calculate overall average rating for the company
-            avgRating = reviewScores.reduce((sum, score) => sum + score, 0) / reviewScores.length;
+            // Calculate overall average
+            avgRating = reviewScores.reduce((sum: number, score: number) => sum + score, 0) / reviewScores.length;
           }
           
+          // Convert score to letter grade
           const grade = hasReviews ? scoreToGrade(avgRating) : 'NR';
           
-          console.log(`Company: ${company.name}, Status: ${company.status}, is_verified: ${company.is_verified}`);
-          console.log(`Company ${company.name}: avg_rating = ${avgRating}, grade = ${grade}`);
-          
+          // Return a new object that matches the Company type structure
           return {
-            ...company,
-            avg_rating: avgRating,
+            id: vendor.id,
+            name: vendor.name,
+            description: vendor.description,
+            website: vendor.website,
+            logo_url: vendor.logo_url,
+            type: vendor.type,
+            is_verified: vendor.is_verified,
+            status: vendor.status,
             grade: grade,
-            review_count: company.reviews ? company.reviews.length : 0
-          };
+            last_verified: vendor.last_verified,
+            created_at: vendor.created_at,
+            avg_rating: avgRating,
+            review_count: vendor.reviews ? vendor.reviews.length : 0
+          } as Company;
         });
 
-        // Cast the processed companies to match our Company[] type
-        setCompanies(processedCompanies as Company[]);
+        setVendors(processedVendors);
       } catch (error) {
-        console.error('Error fetching companies:', error);
+        console.error('Error fetching vendors:', error);
       } finally {
         setIsLoading(false);
       }
     }
 
-    fetchCompanies();
+    fetchVendors();
   }, []);
 
-  // Filter companies based on search term and type
-  const filteredCompanies = companies.filter(company => {
-    const matchesSearch = company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         company.description.toLowerCase().includes(searchTerm.toLowerCase());
+  // Filter vendors based on search term and type
+  const filteredVendors = vendors.filter(vendor => {
+    const matchesSearch = vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         vendor.description.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesType = selectedType === 'all' || company.type === selectedType;
+    const matchesType = selectedType === 'all' || vendor.type === selectedType;
     
     return matchesSearch && matchesType;
   });
 
-  // Get count of companies by type for the filter pills
-  const getCompanyCountByType = (type: string) => {
-    if (type === 'all') return companies.length;
-    return companies.filter(company => company.type === type).length;
+  // Get count of vendors by type for the filter pills
+  const getVendorCountByType = (type: string) => {
+    if (type === 'all') return vendors.length;
+    return vendors.filter(vendor => vendor.type === type).length;
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Solar Companies Directory</h1>
+          <h1 className="text-3xl font-bold mb-2">Solar Vendor Directory</h1>
           <p className="text-gray-600 dark:text-gray-300">
-            Find and review the best companies in the solar industry
+            Find and review the best vendors in the solar industry
           </p>
         </div>
         
-        {/* Add New Company Button - Only visible for logged in users */}
+        {/* Add New Vendor Button - Only visible for logged in users */}
         {user && (
           <Button 
             onClick={() => navigate('/vendors/new')} 
             className="flex items-center gap-2"
           >
             <PlusCircle size={18} />
-            Add New Company
+            Add New Vendor
           </Button>
         )}
       </div>
@@ -165,7 +133,7 @@ const Vendors = () => {
             <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search companies..."
+              placeholder="Search vendors..."
               className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-md bg-background"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -175,7 +143,7 @@ const Vendors = () => {
           {/* Filter Pills */}
           <div className="flex overflow-x-auto gap-2 pb-1">
             {companyTypes.map(type => {
-              const count = getCompanyCountByType(type.value);
+              const count = getVendorCountByType(type.value);
               const isActive = selectedType === type.value;
               
               return (
@@ -202,32 +170,31 @@ const Vendors = () => {
         <div className="flex justify-center items-center py-12">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-300">Loading companies...</p>
+            <p className="mt-4 text-gray-600 dark:text-gray-300">Loading vendors...</p>
           </div>
         </div>
-      ) : filteredCompanies.length > 0 ? (
+      ) : filteredVendors.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCompanies.map((company) => (
+          {filteredVendors.map((vendor) => (
             <VendorCard
-              key={company.id}
-              id={company.id}
-              name={company.name}
-              description={company.description}
-              logoUrl={company.logo_url}
-              website={company.website}
-              grade={company.grade}
-              type={company.type}
-              rating={company.avg_rating || 0}
-              isVerified={company.is_verified}
-              status={company.status}
-              reviewCount={company.review_count}
+              key={vendor.id}
+              id={vendor.id}
+              name={vendor.name}
+              description={vendor.description}
+              logoUrl={vendor.logo_url}
+              website={vendor.website}
+              grade={vendor.grade}
+              type={vendor.type}
+              rating={vendor.avg_rating || 0}
+              isVerified={vendor.is_verified}
+              reviewCount={vendor.review_count}
             />
           ))}
         </div>
       ) : (
         <div className="text-center py-12">
           <p className="text-lg text-gray-600 dark:text-gray-300 mb-4">
-            No companies found matching your criteria.
+            No vendors found matching your criteria.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button onClick={() => {
@@ -244,7 +211,7 @@ const Vendors = () => {
                 className="flex items-center gap-2"
               >
                 <PlusCircle size={18} />
-                Add a new company
+                Add a new vendor
               </Button>
             )}
           </div>
@@ -254,4 +221,4 @@ const Vendors = () => {
   );
 };
 
-export default Vendors;
+export default VendorsPage;

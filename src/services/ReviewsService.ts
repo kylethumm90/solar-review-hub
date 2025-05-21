@@ -149,9 +149,10 @@ export const fetchAllReviews = async (
     }
     
     // Cast or transform the data to match the ExtendedReview type
+    // Use optional chaining and nullish coalescing for safe access to user properties
     const reviews = data.map(review => ({
       ...review,
-      user_id: review.user_id || (review.user && typeof review.user === 'object' && 'id' in review.user ? review.user.id : ''), 
+      user_id: review.user_id || (review.user && typeof review.user === 'object' && 'id' in review.user ? review.user?.id : ''), 
     })) as unknown as ExtendedReview[];
     
     return {

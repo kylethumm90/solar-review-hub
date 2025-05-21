@@ -10,57 +10,48 @@ type ToastProps = {
   duration?: number;
 };
 
-// Create a wrapper function for sonner that accepts shadcn toast props
-const toast = {
-  // Basic toast with title and description support to match shadcn API
-  toast: ({ title, description, variant, duration }: ToastProps) => {
-    if (variant === "destructive") {
-      return sonnerToast.error(title || "", { 
-        description, 
-        duration 
-      });
-    }
-    return sonnerToast(title || "", { 
+// Create a wrapper for sonner toast that directly calls the right function
+export const toast = ({ title, description, variant, duration }: ToastProps) => {
+  if (variant === "destructive") {
+    return sonnerToast.error(title || "", { 
       description, 
       duration 
     });
-  },
-  
-  // Add the custom method back for backward compatibility
-  custom: ({ title, description, ...props }: ToastProps) => {
-    return sonnerToast(title || "", { 
-      description, 
-      ...props 
-    });
-  },
-  
-  // Standard sonner methods
-  message: sonnerToast,
-  success: sonnerToast.success,
-  error: sonnerToast.error,
-  warning: sonnerToast.warning,
-  info: sonnerToast.info,
-  dismiss: sonnerToast.dismiss
+  }
+  return sonnerToast(title || "", { 
+    description, 
+    duration 
+  });
 };
 
-// Helper for direct calling without the .toast property
-export const toastFn = ({ title, description, variant, duration }: ToastProps) => {
-  if (variant === "destructive") {
-    return sonnerToast.error(title || "", { description, duration });
-  }
-  return sonnerToast(title || "", { description, duration });
+// Add additional methods for more specific toast types
+toast.success = (title: string, options?: { description?: string; duration?: number }) => {
+  return sonnerToast.success(title, options);
 };
+
+toast.error = (title: string, options?: { description?: string; duration?: number }) => {
+  return sonnerToast.error(title, options);
+};
+
+toast.warning = (title: string, options?: { description?: string; duration?: number }) => {
+  return sonnerToast.warning(title, options);
+};
+
+toast.info = (title: string, options?: { description?: string; duration?: number }) => {
+  return sonnerToast.info(title, options);
+};
+
+toast.dismiss = sonnerToast.dismiss;
 
 // Mock for compatibility with shadcn/ui toast
 const useToast = () => {
   const [toasts] = React.useState<any[]>([]);
 
   return {
-    toast: toastFn,
+    toast,
     dismiss: sonnerToast.dismiss,
     toasts
   };
 };
 
-// Export the base toast function directly to be used without the hook
-export { useToast, toast };
+export { useToast };

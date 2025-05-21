@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -36,7 +35,7 @@ const Reviews = () => {
   const [filterState, setFilterState] = useState<FilterState>(getInitialFilters());
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   
-  // Setup reviews hook
+  // Setup reviews hook - make sure it matches the expected parameters
   const { reviews, loading } = useReviews({
     filters: filterState,
     searchTerm,
@@ -162,7 +161,7 @@ const Reviews = () => {
           <ReviewFilters 
             filters={filterState}
             companies={companies}
-            loading={isLoadingCompanies}
+            isLoading={isLoadingCompanies} // Rename to match expected prop
             onApplyFilters={applyFilters}
             onClearFilters={clearFilters}
             isOpen={isFiltersOpen}
@@ -211,6 +210,15 @@ const Reviews = () => {
           <ReviewTable 
             reviews={reviews}
             loading={loading}
+            totalPages={1} // Add missing required props
+            currentPage={1}
+            onPageChange={() => {}}
+            onClearFilters={clearFilters}
+            onSort={() => {}}
+            sortConfig={{
+              key: '',
+              direction: 'asc'
+            }}
           />
         </div>
       </div>

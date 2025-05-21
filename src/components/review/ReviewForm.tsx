@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { useToast, toast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import ReviewCategoryGroup from '@/components/ReviewCategoryGroup';
@@ -132,7 +132,7 @@ const ReviewForm = ({ companyId, companyName, companyType }: ReviewFormProps) =>
         ? ratingValues.reduce((sum, val) => sum + val, 0) / ratingValues.length 
         : 0;
       
-      // Insert review with fields matching the Review type in index.ts
+      // Insert review with required fields matching the Review type in index.ts
       const { data: reviewData, error: reviewError } = await supabase
         .from('reviews')
         .insert({
@@ -143,11 +143,12 @@ const ReviewForm = ({ companyId, companyName, companyType }: ReviewFormProps) =>
           review_details: reviewForm.details || null,
           average_score: averageScore,
           verification_status: 'pending',
-          rating_communication: null,
-          rating_install_quality: null,
-          rating_payment_reliability: null,
-          rating_post_install_support: null,
-          rating_timeliness: null
+          // Include all required fields from the reviews table
+          rating_communication: 0,
+          rating_install_quality: 0, 
+          rating_payment_reliability: 0,
+          rating_post_install_support: 0,
+          rating_timeliness: 0
         })
         .select()
         .single();

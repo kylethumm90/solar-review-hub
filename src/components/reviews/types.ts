@@ -1,30 +1,24 @@
 
 import { Review, Company } from '@/types';
 
-// Extended review type that includes joined data
 export interface ExtendedReview extends Review {
-  company?: Company | any; // Handle simplified company structure from joined query
-  install_count?: number;
-  install_states?: string[];
-  still_active?: string;
-  is_anonymous?: boolean;
+  company_id: string;
+  average_score: number;
+  is_anonymous: boolean;
+  review_title?: string;
+  review_details?: string;
+  text_feedback?: string;
+  created_at: string;
+  company?: Company;
 }
 
-// Filter state type
-export interface FilterState {
-  vendorTypes: string[];
-  companyName: string | null;
-  reviewDate: string | null;
-  states: string[];
-  grades: string[];
-  stillActive: string | null;
-}
-
-// Define a simplified company type for the dropdown
-export interface SimpleCompany {
-  id: string;
-  name: string;
-  type: string;
-  is_verified: boolean;
-  logo_url?: string;
+export interface ReviewFilter {
+  search?: string;
+  vendor?: string;
+  grade?: string;
+  dateRange?: {
+    from: Date | undefined;
+    to: Date | undefined;
+  };
+  type?: string;
 }

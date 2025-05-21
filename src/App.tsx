@@ -18,7 +18,7 @@ import CompanyDashboard from './pages/dashboard/DashboardMyCompany';
 import DashboardProfilePage from './pages/dashboard/DashboardProfilePage';
 import DashboardReviews from './pages/dashboard/DashboardReviews';
 import DashboardClaims from './pages/dashboard/DashboardClaims';
-import ProtectedRoute from './components/auth/LoginForm'; // Temporary replacement
+import Login from './pages/Login'; // Import the Login page
 import { AuthProvider } from './context/AuthContext';
 import { Toaster } from "sonner";
 import Rankings from './pages/Rankings';
@@ -50,6 +50,7 @@ function App() {
             <Route path="terms" element={<Terms />} />
             <Route path="privacy" element={<Privacy />} />
             <Route path="rankings" element={<Rankings />} />
+            <Route path="login" element={<Login />} />
           </Route>
           
           {/* Protected routes with ProtectedLayout */}

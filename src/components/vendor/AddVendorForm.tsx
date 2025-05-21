@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -238,7 +239,7 @@ const AddVendorForm = () => {
         <Input
           id="website"
           name="website"
-          type="url"
+          type="text" 
           placeholder="example.com or https://example.com"
           value={formData.website}
           onChange={handleChange}

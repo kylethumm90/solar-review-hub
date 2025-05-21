@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import VendorCard from '@/components/VendorCard';
@@ -168,6 +167,7 @@ const Vendors = () => {
               type={company.type}
               rating={company.avg_rating || 0}
               isVerified={company.is_verified}
+              status={company.status}
               reviewCount={company.review_count}
             />
           ))}

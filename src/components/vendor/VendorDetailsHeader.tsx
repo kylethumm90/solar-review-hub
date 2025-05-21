@@ -57,7 +57,7 @@ const VendorDetailsHeader: React.FC<VendorDetailsHeaderProps> = ({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            {company.is_verified && (
+            {company.status === 'claimed' && (
               <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs px-2 py-1 rounded-full flex items-center">
                 <CheckCircle className="h-3.5 w-3.5 mr-1" />
                 <span>Verified</span>

@@ -138,7 +138,7 @@ const ReviewTable = ({
                       variant="outline" 
                       className={`${getBadgeColorForGrade(grade)}`}
                     >
-                      {grade}
+                      {grade === 'NR' ? 'Not Rated' : grade}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-center">

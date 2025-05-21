@@ -4,6 +4,7 @@ import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { scoreToGrade } from "@/utils/reviewUtils";
 import { getBadgeColorForGrade } from "@/components/reviews/reviewUtils";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 interface Review {
   id: string;
@@ -27,18 +28,29 @@ const ReviewsList = ({ reviews }: ReviewsListProps) => {
       ) : (
         <div className="space-y-6">
           {reviews.map((review) => {
-            const grade = scoreToGrade(review.average_score || 0);
+            const grade = scoreToGrade(review.average_score);
             
             return (
               <div key={review.id} className="border rounded-lg p-4">
                 <div className="flex justify-between mb-2">
                   <h3 className="font-medium">{review.review_title || 'Review'}</h3>
-                  <Badge 
-                    variant="outline" 
-                    className={`${getBadgeColorForGrade(grade)}`}
-                  >
-                    Grade: {grade}
-                  </Badge>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge 
+                          variant="outline" 
+                          className={`${getBadgeColorForGrade(grade)}`}
+                        >
+                          {grade === 'NR' ? 'Not Rated' : `Grade: ${grade}`}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {grade === 'NR' 
+                          ? 'Rating calculation pending' 
+                          : `Grade: ${grade} based on review ratings`}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
                 <p className="text-sm mb-2">{review.text_feedback}</p>
                 <p className="text-xs text-muted-foreground">

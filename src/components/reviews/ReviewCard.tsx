@@ -57,7 +57,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
               variant="outline" 
               className={`${getBadgeColorForGrade(grade)}`}
             >
-              Grade: {grade}
+              {grade === 'NR' ? 'Not Rated' : `Grade: ${grade}`}
             </Badge>
             <span className="text-xs text-gray-500 mt-1">
               {formatDate(review.created_at)}

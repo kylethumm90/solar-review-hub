@@ -1,79 +1,51 @@
-
-import { ReviewQuestion } from '@/types';
-
-type QuestionRatings = Record<string, { rating: number, question: ReviewQuestion }>;
-
-// Define weights for each category for EPCs
-const EPC_CATEGORY_WEIGHTS: Record<string, number> = {
-  'payment_reliability': 1.5,
-  'installation_quality': 1.25,
-  'timeliness': 1.25,
-  'communication': 1.0,
-  'post_install_support': 1.0,
-  'customer_service': 1.0
-};
-
-export const calculateWeightedAverage = (
-  questionRatings: QuestionRatings
-): number => {
-  if (Object.keys(questionRatings).length === 0) return 0;
-
-  let totalWeightedRating = 0;
-  let totalWeight = 0;
-
-  Object.values(questionRatings).forEach(({ rating, question }) => {
-    // Use the new weighting system if category matches, otherwise use question weight
-    const categoryKey = question.category.toLowerCase().replace(/ /g, '_');
-    const weight = EPC_CATEGORY_WEIGHTS[categoryKey] || question.weight;
-    
-    totalWeightedRating += rating * weight;
-    totalWeight += weight;
-  });
-
-  return totalWeight > 0 ? totalWeightedRating / totalWeight : 0;
-};
-
-// Map numeric score to letter grade
-export const scoreToGrade = (score: number): string => {
-  if (score >= 4.7) return 'A+';
-  if (score >= 4.3) return 'A';
-  if (score >= 4.0) return 'A-';
-  if (score >= 3.7) return 'B+';
-  if (score >= 3.3) return 'B';
-  if (score >= 3.0) return 'B-';
-  if (score >= 2.7) return 'C+';
-  if (score >= 2.3) return 'C';
-  if (score >= 2.0) return 'C-';
-  if (score >= 1.7) return 'D+';
-  if (score >= 1.3) return 'D';
-  if (score >= 1.0) return 'D-';
-  return 'F';
-};
-
-// This is a consistent way to calculate average score from a review object
-// to ensure compatibility between different pages
-export const getReviewAvgScore = (review: any) => {
-  if (review.average_score) return review.average_score;
-  
-  // For legacy reviews without average_score field
-  const categoryRatings = [
-    review.rating_communication,
-    review.rating_install_quality,
-    review.rating_payment_reliability,
-    review.rating_timeliness,
-    review.rating_post_install_support,
-  ].filter(Boolean);
-
-  return categoryRatings.length > 0 ? 
-    categoryRatings.reduce((a, b) => a + b, 0) / categoryRatings.length : 
-    0;
-};
-
-// Calculate the average rating across multiple reviews
-export const calculateAverageRating = (reviews: any[]) => {
+export function calculateAverageRating(reviews: any[]): number {
   if (!reviews || reviews.length === 0) {
     return 0;
   }
 
-  return reviews.reduce((sum, review) => sum + getReviewAvgScore(review), 0) / reviews.length;
-};
+  const totalScore = reviews.reduce((sum, review) => {
+    const communication = review.rating_communication || 0;
+    const installQuality = review.rating_install_quality || 0;
+    const paymentReliability = review.rating_payment_reliability || 0;
+    const timeliness = review.rating_timeliness || 0;
+    const postInstallSupport = review.rating_post_install_support || 0;
+
+    return sum + (communication + installQuality + paymentReliability + timeliness + postInstallSupport) / 5;
+  }, 0);
+
+  return totalScore / reviews.length;
+}
+
+export function getReviewAvgScore(review: any): number {
+  const communication = review.rating_communication || 0;
+  const installQuality = review.rating_install_quality || 0;
+  const paymentReliability = review.rating_payment_reliability || 0;
+  const timeliness = review.rating_timeliness || 0;
+  const postInstallSupport = review.rating_post_install_support || 0;
+  
+  return (communication + installQuality + paymentReliability + timeliness + postInstallSupport) / 5;
+}
+
+export function scoreToGrade(score: number | null | undefined): string {
+  if (score === null || score === undefined || isNaN(score)) {
+    return 'NR'; // Not Rated
+  } else if (score >= 4.5) {
+    return 'A+';
+  } else if (score >= 4) {
+    return 'A';
+  } else if (score >= 3.5) {
+    return 'B+';
+  } else if (score >= 3) {
+    return 'B';
+  } else if (score >= 2.5) {
+    return 'C+';
+  } else if (score >= 2) {
+    return 'C';
+  } else if (score >= 1.5) {
+    return 'D+';
+  } else if (score >= 1) {
+    return 'D';
+  } else {
+    return 'F';
+  }
+}

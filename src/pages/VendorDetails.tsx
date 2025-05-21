@@ -28,7 +28,8 @@ const VendorDetails = () => {
   }
   
   // Calculate letter grade using our standardized function
-  const letterGrade = scoreToGrade(avgRating);
+  // If there are no reviews, it will return 'NR' (Not Rated)
+  const letterGrade = reviews.length > 0 ? scoreToGrade(avgRating) : 'NR';
   
   return (
     <div className="container mx-auto py-8 px-4">

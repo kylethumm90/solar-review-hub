@@ -6,6 +6,7 @@ import { Card, CardContent } from './ui/card';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from './ui/hover-card';
 import { Badge } from './ui/badge';
 import { getBadgeColorForGrade } from './reviews/reviewUtils';
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
 
 interface VendorCardProps {
   id: string;
@@ -26,7 +27,7 @@ const VendorCard = ({
   description,
   logoUrl,
   website,
-  grade = 'N/A',
+  grade = 'NR',
   type,
   rating = 0,
   isVerified,
@@ -70,14 +71,25 @@ const VendorCard = ({
           </div>
           
           <div className="text-center">
-            <div className="text-2xl font-bold text-primary">
-              <Badge 
-                variant="outline" 
-                className={`${grade !== 'N/A' ? getBadgeColorForGrade(grade) : ''}`}
-              >
-                {grade}
-              </Badge>
-            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="text-2xl font-bold text-primary">
+                    <Badge 
+                      variant="outline" 
+                      className={getBadgeColorForGrade(grade)}
+                    >
+                      {grade === 'NR' ? 'Not Rated' : grade}
+                    </Badge>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {grade === 'NR' ? 
+                    'This company has not received any verified reviews yet' : 
+                    `Grade: ${grade} based on ${reviewCount} ${reviewCount === 1 ? 'review' : 'reviews'}`}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <div className="text-xs text-gray-500 dark:text-gray-400">Grade</div>
           </div>
         </div>

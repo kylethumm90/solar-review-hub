@@ -45,8 +45,9 @@ const Vendors = () => {
         // Process the companies data to add average rating and grade
         // Using our standardized functions from reviewUtils
         const processedCompanies = companiesData.map(company => {
-          const avgRating = calculateAverageRating(company.reviews || []);
-          const grade = scoreToGrade(avgRating);
+          const hasReviews = company.reviews && company.reviews.length > 0;
+          const avgRating = hasReviews ? calculateAverageRating(company.reviews || []) : null;
+          const grade = hasReviews ? scoreToGrade(avgRating) : 'NR';
           
           return {
             ...company,

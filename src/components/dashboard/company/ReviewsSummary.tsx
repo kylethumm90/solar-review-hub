@@ -2,16 +2,27 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { getBadgeColorForGrade } from "@/components/reviews/reviewUtils";
 
 interface ReviewsSummaryProps {
   reviewCount: number;
+  grade?: string;
 }
 
-const ReviewsSummary = ({ reviewCount }: ReviewsSummaryProps) => {
+const ReviewsSummary = ({ reviewCount, grade = 'NR' }: ReviewsSummaryProps) => {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Reviews</CardTitle>
+        {grade && (
+          <Badge 
+            variant="outline" 
+            className={`${getBadgeColorForGrade(grade)}`}
+          >
+            {grade === 'NR' ? 'Not Rated' : grade}
+          </Badge>
+        )}
       </CardHeader>
       <CardContent>
         <p className="text-2xl font-bold">{reviewCount}</p>

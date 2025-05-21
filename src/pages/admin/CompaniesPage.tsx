@@ -100,9 +100,17 @@ const CompaniesPage = () => {
       });
     },
   });
-
+  
   const handleUpdateVerified = async (id: string, isVerified: boolean) => {
     try {
+      // First update locally for instant UI feedback
+      const updatedCompanies = companies?.map(company => 
+        company.id === id 
+          ? { ...company, is_verified: isVerified, last_verified: isVerified ? new Date().toISOString() : null } 
+          : company
+      );
+      
+      // Make the API call
       const { error } = await supabase
         .from("companies")
         .update({ 
@@ -112,30 +120,22 @@ const CompaniesPage = () => {
         .eq("id", id);
 
       if (error) {
-        toast.error("Failed to update verification status");
-        throw error;
+        // If there's an error, revert optimistic update and show error
+        toast.error(`Failed to update verification status: ${error.message}`);
+        console.error("Supabase error:", error);
+        refetch(); // Refetch to ensure UI displays correct state
+        return;
       }
 
-      // Optimistically update the local state to avoid waiting for refetch
-      if (companies) {
-        const updatedCompanies = companies.map(company => {
-          if (company.id === id) {
-            return {
-              ...company,
-              is_verified: isVerified,
-              last_verified: isVerified ? new Date().toISOString() : null
-            };
-          }
-          return company;
-        });
-        
-        // Force a re-render with optimistically updated data
-        refetch();
-      }
-
+      // Success! Show success message
       toast.success(`Company ${isVerified ? "verified" : "unverified"} successfully`);
+      
+      // Refetch to ensure data consistency
+      refetch();
     } catch (err) {
       console.error("Error updating company verification:", err);
+      toast.error("An unexpected error occurred");
+      refetch(); // Ensure UI reflects actual DB state
     }
   };
 

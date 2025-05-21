@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Company } from '@/types';
+import { Company, Review } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { calculateAverageRating, scoreToGrade } from '@/utils/reviewUtils';
 
@@ -42,21 +42,28 @@ const Vendors = () => {
         if (companiesError) throw companiesError;
 
         // Process the companies data to add average rating and grade
-        // Using our standardized functions from reviewUtils
         const processedCompanies = companiesData.map(company => {
-          const avgRating = calculateAverageRating(company.reviews || []);
+          const reviews = company.reviews || [];
+          
+          // Add reviewer_id to each review to match the type definition
+          const typedReviews = reviews.map(review => ({
+            ...review,
+            reviewer_id: review.user_id || 'unknown'
+          })) as Review[];
+          
+          const avgRating = calculateAverageRating(typedReviews);
           const grade = scoreToGrade(avgRating);
           
           return {
             ...company,
             avg_rating: avgRating,
             grade: grade,
-            review_count: company.reviews ? company.reviews.length : 0
-          };
+            review_count: typedReviews.length,
+            reviews: typedReviews
+          } as Company;
         });
 
-        // Cast the processed companies to match our Company[] type
-        setCompanies(processedCompanies as Company[]);
+        setCompanies(processedCompanies);
       } catch (error) {
         console.error('Error fetching companies:', error);
       } finally {

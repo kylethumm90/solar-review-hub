@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -40,8 +39,7 @@ export const useUserReviews = () => {
           rating_payment_reliability,
           rating_timeliness,
           rating_post_install_support,
-          created_at,
-          reviewer_id
+          created_at
         `)
         .eq('user_id', user.id);
 
@@ -65,10 +63,11 @@ export const useUserReviews = () => {
       // Combine the data
       const userReviewsWithCompanies = reviewsData.map(review => {
         const company = companiesData?.find(c => c.id === review.company_id);
-        // Fill in the required reviewer_id if it's missing from the database
-        const reviewWithReviewer = {
+        
+        // Add the reviewer_id field which is required by the Review type
+        const reviewWithCompany = {
           ...review,
-          reviewer_id: review.reviewer_id || review.user_id || user.id,
+          reviewer_id: review.user_id || user.id, // Add reviewer_id as required by type
           company: company || {
             id: review.company_id,
             name: 'Unknown Company',
@@ -77,9 +76,9 @@ export const useUserReviews = () => {
             is_verified: false,
             created_at: new Date().toISOString()
           }
-        } as unknown as UserReviewWithCompany;
+        } as UserReviewWithCompany;
         
-        return reviewWithReviewer;
+        return reviewWithCompany;
       });
 
       // Sort the reviews

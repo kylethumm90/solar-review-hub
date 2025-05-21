@@ -1,5 +1,5 @@
 
-import { Review, Company, FilterState, SimpleCompany } from '@/types';
+import { Review, Company, SimpleCompany } from '@/types';
 
 export interface ExtendedReview extends Review {
   company_id: string;
@@ -24,4 +24,13 @@ export interface ReviewFilter {
 }
 
 // Re-export these types for components that import from here
-export { FilterState, SimpleCompany };
+export type { FilterState, SimpleCompany };
+
+export interface FilterState {
+  vendorTypes: string[];
+  companyName: string | null;
+  reviewDate: string | null;
+  states: string[];
+  grades: string[];
+  stillActive: string | null;
+}

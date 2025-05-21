@@ -5,6 +5,7 @@ import ReviewsTable from "@/components/admin/reviews/ReviewsTable";
 import ReviewFilterTabs from "@/components/admin/reviews/ReviewFilterTabs";
 import AnonymousReviewVerification from "@/components/admin/reviews/AnonymousReviewVerification";
 import { useAdminReviews } from "@/hooks/useAdminReviews";
+import { Review } from "@/types"; // Make sure we're using the correct Review type
 
 const ReviewsPage = () => {
   const {
@@ -18,6 +19,12 @@ const ReviewsPage = () => {
   } = useAdminReviews();
   
   const [currentView, setCurrentView] = useState<'all' | 'anonymous'>('all');
+  
+  // Ensure reviews have reviewer_id to match the Review type
+  const typedReviews: Review[] = reviews.map(review => ({
+    ...review,
+    reviewer_id: review.user_id || 'unknown'
+  })) as Review[];
   
   return (
     <div className="p-6 space-y-6">
@@ -50,7 +57,7 @@ const ReviewsPage = () => {
             
             <TabsContent value={activeTab} className="space-y-4">
               <ReviewsTable 
-                reviews={reviews} 
+                reviews={typedReviews} 
                 isLoading={isLoading}
                 onApprove={(reviewId) => handleReviewAction(reviewId, 'approve')}
                 onReject={(reviewId) => handleReviewAction(reviewId, 'reject')}

@@ -1,25 +1,19 @@
 
 import { z } from "zod";
 
-// src/types/index.ts
-
 export * from './company';
 export * from './auth';
 export * from './admin';
 export * from './rankings';
 
-export * from './review';
-export * from './claim';
-export * from './user';
-export * from './reviewQuestion';
+// Define all necessary types directly in this file to avoid missing module errors
 
-// Add missing types that aren't properly exported
-
-// Review type if it isn't defined in review.ts
+// Review type
 export interface Review {
   id: string;
   company_id: string;
-  reviewer_id: string;
+  user_id: string;
+  reviewer_id: string; // Make this required to fix type errors
   review_title?: string;
   review_details?: string;
   text_feedback?: string;
@@ -45,7 +39,7 @@ export interface Review {
   recommend_epc?: string;
 }
 
-// Claim type if it isn't defined in claim.ts
+// Claim type
 export interface Claim {
   id: string;
   company_id: string;
@@ -55,12 +49,12 @@ export interface Claim {
   updated_at?: string;
   company?: Company;
   user?: User;
-  full_name?: string;
+  full_name?: string; // Add missing properties that are used in components
   job_title?: string;
   company_email?: string;
 }
 
-// User type if it isn't defined in user.ts
+// User type
 export interface User {
   id: string;
   email?: string;
@@ -69,14 +63,14 @@ export interface User {
   avatar_url?: string;
   created_at?: string;
   updated_at?: string;
-  review_count?: number;
+  review_count?: number; // Add this property that was missing
 }
 
-// ReviewQuestion type if it isn't defined in reviewQuestion.ts
+// ReviewQuestion type
 export interface ReviewQuestion {
   id: string;
-  question_text: string;
-  question?: string;
+  question_text: string; // Required property
+  question?: string;     // Also keep the question property for backward compatibility
   category: string;
   order?: number;
   weight?: number;
@@ -85,7 +79,7 @@ export interface ReviewQuestion {
   updated_at?: string;
 }
 
-// Add Company type if it doesn't exist in other files
+// Company type
 export type Company = {
   id: string;
   name: string;
@@ -103,7 +97,7 @@ export type Company = {
   reviews?: Review[] | undefined;
 };
 
-// Add ExtendedReview type for the review components
+// ExtendedReview type
 export interface ExtendedReview extends Review {
   company_id: string;
   average_score: number;
@@ -115,7 +109,7 @@ export interface ExtendedReview extends Review {
   company?: Company;
 }
 
-// Add missing FilterState and SimpleCompany types
+// FilterState
 export interface FilterState {
   vendorTypes: string[];
   companyName: string | null;
@@ -125,6 +119,7 @@ export interface FilterState {
   stillActive: string | null;
 }
 
+// SimpleCompany
 export interface SimpleCompany {
   id: string;
   name: string;

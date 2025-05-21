@@ -35,11 +35,18 @@ export const ReviewService = {
       .from('review_questions')
       .select('*')
       .eq('company_type', normalizedType)
-      .not('category', 'ilike', '%pto%time%') // More thorough exclusion of PTO time
+      .not('category', 'ilike', '%pto%time%')
       .order('category');
       
     if (error) throw error;
-    return data || [];
+    
+    // Transform the data to match the ReviewQuestion type
+    const typedQuestions = data?.map(item => ({
+      ...item,
+      question_text: item.question || '' // Ensure question_text is present
+    })) || [];
+    
+    return typedQuestions as ReviewQuestion[];
   },
   
   submitReview: async (

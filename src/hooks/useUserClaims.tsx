@@ -47,7 +47,7 @@ export const useUserClaims = () => {
       const companyIds = claimsData.map(claim => claim.company_id);
       const { data: companiesData, error: companiesError } = await supabase
         .from('companies')
-        .select('id, name, description, logo_url, type, is_verified')
+        .select('id, name, description, logo_url, type, is_verified, created_at')
         .in('id', companyIds);
 
       if (companiesError) throw companiesError;
@@ -62,9 +62,10 @@ export const useUserClaims = () => {
             name: 'Unknown Company',
             description: '',
             type: '',
-            is_verified: false
+            is_verified: false,
+            created_at: new Date().toISOString()
           }
-        } as UserClaimWithCompany;
+        } as unknown as UserClaimWithCompany;
       });
 
       setClaims(userClaimsWithCompanies);

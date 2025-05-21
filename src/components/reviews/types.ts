@@ -1,5 +1,5 @@
 
-import { Review, Company } from '@/types';
+import { Review, Company, FilterState, SimpleCompany } from '@/types';
 
 export interface ExtendedReview extends Review {
   company_id: string;
@@ -22,3 +22,6 @@ export interface ReviewFilter {
   };
   type?: string;
 }
+
+// Re-export these types for components that import from here
+export { FilterState, SimpleCompany };

@@ -28,7 +28,7 @@ const ReviewQuestionItem = ({ question, onChange }: ReviewQuestionItemProps) => 
     };
     
     const key = categoryName.toLowerCase().replace(/ /g, '_');
-    return descriptions[key] || question.question;
+    return descriptions[key] || (question.question_text || question.question || '');
   };
 
   // Skip rendering if this is a PTO time question

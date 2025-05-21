@@ -7,6 +7,7 @@ import { Review, Company } from '@/types';
 
 export type UserReviewWithCompany = Review & {
   company: Company;
+  verification_status?: string;
 };
 
 type SortOption = 'newest' | 'highest';
@@ -39,7 +40,8 @@ export const useUserReviews = () => {
           rating_payment_reliability,
           rating_timeliness,
           rating_post_install_support,
-          created_at
+          created_at,
+          reviewer_id
         `)
         .eq('user_id', user.id);
 
@@ -55,7 +57,7 @@ export const useUserReviews = () => {
       const companyIds = reviewsData.map(review => review.company_id);
       const { data: companiesData, error: companiesError } = await supabase
         .from('companies')
-        .select('id, name, description, logo_url, type, is_verified')
+        .select('id, name, description, logo_url, type, is_verified, created_at')
         .in('id', companyIds);
 
       if (companiesError) throw companiesError;
@@ -63,16 +65,21 @@ export const useUserReviews = () => {
       // Combine the data
       const userReviewsWithCompanies = reviewsData.map(review => {
         const company = companiesData?.find(c => c.id === review.company_id);
-        return {
+        // Fill in the required reviewer_id if it's missing from the database
+        const reviewWithReviewer = {
           ...review,
+          reviewer_id: review.reviewer_id || review.user_id || user.id,
           company: company || {
             id: review.company_id,
             name: 'Unknown Company',
             description: '',
             type: '',
-            is_verified: false
+            is_verified: false,
+            created_at: new Date().toISOString()
           }
-        } as UserReviewWithCompany;
+        } as unknown as UserReviewWithCompany;
+        
+        return reviewWithReviewer;
       });
 
       // Sort the reviews

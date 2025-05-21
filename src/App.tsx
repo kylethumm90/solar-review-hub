@@ -31,6 +31,7 @@ import { useToast } from '@/hooks/use-toast';
 import PublicLayout from './layouts/PublicLayout';
 import NewVendor from './pages/NewVendor';
 import ClaimVendor from './pages/ClaimVendor';
+import ClaimCompanyPage from './pages/ClaimCompanyPage';
 import Login from './pages/Login';
 import CheckEmail from './pages/CheckEmail';
 import ResetPassword from './pages/ResetPassword';
@@ -90,6 +91,7 @@ const App = () => {
             <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
             <Route path="/check-email" element={<CheckEmail />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/claim" element={<ClaimCompanyPage />} />
           </Route>
           
           {/* Protected routes using ProtectedLayout */}

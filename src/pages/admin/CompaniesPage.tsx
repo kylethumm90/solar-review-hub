@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -117,8 +116,24 @@ const CompaniesPage = () => {
         throw error;
       }
 
+      // Optimistically update the local state to avoid waiting for refetch
+      if (companies) {
+        const updatedCompanies = companies.map(company => {
+          if (company.id === id) {
+            return {
+              ...company,
+              is_verified: isVerified,
+              last_verified: isVerified ? new Date().toISOString() : null
+            };
+          }
+          return company;
+        });
+        
+        // Force a re-render with optimistically updated data
+        refetch();
+      }
+
       toast.success(`Company ${isVerified ? "verified" : "unverified"} successfully`);
-      refetch();
     } catch (err) {
       console.error("Error updating company verification:", err);
     }

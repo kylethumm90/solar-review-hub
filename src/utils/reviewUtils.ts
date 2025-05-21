@@ -5,19 +5,51 @@ export function calculateAverageRating(reviews: any[]): number {
   }
 
   const totalScore = reviews.reduce((sum, review) => {
-    const communication = review.rating_communication || 0;
-    const installQuality = review.rating_install_quality || 0;
-    const paymentReliability = review.rating_payment_reliability || 0;
-    const timeliness = review.rating_timeliness || 0;
-    const postInstallSupport = review.rating_post_install_support || 0;
+    // Check if the review has review_answers
+    if (review.review_answers && review.review_answers.length > 0) {
+      // Calculate weighted average
+      let totalWeight = 0;
+      let weightedSum = 0;
+      
+      review.review_answers.forEach((answer: any) => {
+        const weight = answer.review_questions?.weight || 1;
+        weightedSum += answer.rating * weight;
+        totalWeight += weight;
+      });
+      
+      return sum + (totalWeight > 0 ? weightedSum / totalWeight : (review.average_score || 0));
+    } else {
+      // Fall back to old calculation method if no review_answers
+      const communication = review.rating_communication || 0;
+      const installQuality = review.rating_install_quality || 0;
+      const paymentReliability = review.rating_payment_reliability || 0;
+      const timeliness = review.rating_timeliness || 0;
+      const postInstallSupport = review.rating_post_install_support || 0;
 
-    return sum + (communication + installQuality + paymentReliability + timeliness + postInstallSupport) / 5;
+      return sum + (communication + installQuality + paymentReliability + timeliness + postInstallSupport) / 5;
+    }
   }, 0);
 
   return totalScore / reviews.length;
 }
 
 export function getReviewAvgScore(review: any): number {
+  // Check if the review has review_answers
+  if (review.review_answers && review.review_answers.length > 0) {
+    // Calculate weighted average
+    let totalWeight = 0;
+    let weightedSum = 0;
+    
+    review.review_answers.forEach((answer: any) => {
+      const weight = answer.review_questions?.weight || 1;
+      weightedSum += answer.rating * weight;
+      totalWeight += weight;
+    });
+    
+    return totalWeight > 0 ? weightedSum / totalWeight : (review.average_score || 0);
+  }
+
+  // Fall back to old calculation method
   const communication = review.rating_communication || 0;
   const installQuality = review.rating_install_quality || 0;
   const paymentReliability = review.rating_payment_reliability || 0;

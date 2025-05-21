@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import VendorCard from '@/components/VendorCard';
@@ -7,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { calculateAverageRating, scoreToGrade } from '@/utils/reviewUtils';
+import { scoreToGrade } from '@/utils/reviewUtils';
 
 const Vendors = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -31,26 +32,65 @@ const Vendors = () => {
       setIsLoading(true);
       
       try {
-        // Fetch all companies and their reviews
+        // Fetch all companies, their reviews and review_answers
         const { data: companiesData, error: companiesError } = await supabase
           .from('companies')
           .select(`
             *,
-            reviews(*)
+            reviews(*),
+            reviews!reviews_company_id_fkey(
+              id,
+              average_score,
+              review_answers(
+                id, 
+                rating, 
+                question_id,
+                review_questions(id, weight)
+              )
+            )
           `);
 
         if (companiesError) throw companiesError;
 
         console.log('Companies data from Supabase:', companiesData);
 
-        // Process the companies data to add average rating and grade
-        // Using our standardized functions from reviewUtils
+        // Process the companies data using the new weighted rating system
         const processedCompanies = companiesData.map(company => {
           const hasReviews = company.reviews && company.reviews.length > 0;
-          const avgRating = hasReviews ? calculateAverageRating(company.reviews || []) : null;
+          
+          // Calculate average rating using the new weighted system from review answers
+          let avgRating = 0;
+          
+          if (hasReviews) {
+            // Calculate the average score for each review using weighted answers
+            const reviewScores = company.reviews.map(review => {
+              const answers = review.review_answers || [];
+              
+              if (answers.length === 0) {
+                return review.average_score || 0;
+              }
+              
+              // Calculate weighted average for this review
+              let totalWeight = 0;
+              let weightedSum = 0;
+              
+              answers.forEach(answer => {
+                const weight = answer.review_questions?.weight || 1;
+                weightedSum += answer.rating * weight;
+                totalWeight += weight;
+              });
+              
+              return totalWeight > 0 ? weightedSum / totalWeight : (review.average_score || 0);
+            });
+            
+            // Calculate overall average rating for the company
+            avgRating = reviewScores.reduce((sum, score) => sum + score, 0) / reviewScores.length;
+          }
+          
           const grade = hasReviews ? scoreToGrade(avgRating) : 'NR';
           
           console.log(`Company: ${company.name}, Status: ${company.status}, is_verified: ${company.is_verified}`);
+          console.log(`Company ${company.name}: avg_rating = ${avgRating}, grade = ${grade}`);
           
           return {
             ...company,

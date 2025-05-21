@@ -172,7 +172,7 @@ export class ReviewsService {
         user_id: item.user_id,
         created_at: item.created_at,
         // Ensure company is properly typed
-        company: item.company
+        company: item.company ?? {}
       }));
 
       // Calculate total pages

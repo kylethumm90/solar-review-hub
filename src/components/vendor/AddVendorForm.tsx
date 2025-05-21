@@ -119,12 +119,17 @@ const AddVendorForm = () => {
         logoUrl = publicUrl;
       }
 
+      // Set a default description if not provided by an owner
+      const companyDescription = isOwner && formData.description.trim() 
+        ? formData.description 
+        : "No description provided";
+
       // Insert new company into the database
       const { data: company, error } = await supabase
         .from('companies')
         .insert({
           name: formData.name,
-          description: isOwner ? formData.description : null,
+          description: companyDescription,
           website: normalizedWebsite,
           type: formData.type,
           logo_url: logoUrl,
@@ -243,45 +248,52 @@ const AddVendorForm = () => {
         </label>
       </div>
       
-      {/* Only show description and logo upload if user claims ownership */}
+      {/* Description Field - Now shown to everyone, but optional for non-owners */}
+      <div className="space-y-2">
+        <Label htmlFor="description">
+          Company Description 
+          {isOwner ? "" : " (Optional)"}
+        </Label>
+        <Textarea
+          id="description"
+          name="description"
+          rows={4}
+          className="w-full resize-none"
+          placeholder="Provide a brief description of the company and their services"
+          value={formData.description}
+          onChange={handleChange}
+        />
+        {!isOwner && (
+          <p className="text-xs text-gray-500">
+            If you don't provide a description, "No description provided" will be used.
+          </p>
+        )}
+      </div>
+      
+      {/* Logo Upload - Only for owners */}
       {isOwner && (
-        <>
-          <div className="space-y-2">
-            <Label htmlFor="description">Company Description</Label>
-            <Textarea
-              id="description"
-              name="description"
-              rows={4}
-              className="w-full resize-none"
-              placeholder="Provide a brief description of the company and their services"
-              value={formData.description}
-              onChange={handleChange}
-            />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="logo">Company Logo</Label>
+          <Input
+            id="logo"
+            name="logo"
+            type="file"
+            accept="image/*"
+            onChange={handleLogoChange}
+            className="cursor-pointer"
+          />
           
-          <div className="space-y-2">
-            <Label htmlFor="logo">Company Logo</Label>
-            <Input
-              id="logo"
-              name="logo"
-              type="file"
-              accept="image/*"
-              onChange={handleLogoChange}
-              className="cursor-pointer"
-            />
-            
-            {logoPreview && (
-              <div className="mt-2">
-                <p className="text-sm text-gray-500 mb-1">Preview:</p>
-                <img 
-                  src={logoPreview} 
-                  alt="Logo preview" 
-                  className="h-20 w-auto object-contain border rounded"
-                />
-              </div>
-            )}
-          </div>
-        </>
+          {logoPreview && (
+            <div className="mt-2">
+              <p className="text-sm text-gray-500 mb-1">Preview:</p>
+              <img 
+                src={logoPreview} 
+                alt="Logo preview" 
+                className="h-20 w-auto object-contain border rounded"
+              />
+            </div>
+          )}
+        </div>
       )}
       
       <div className="flex gap-4">

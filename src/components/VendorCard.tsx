@@ -42,6 +42,11 @@ const VendorCard = ({
     ).join(' ');
   };
 
+  // For debugging
+  console.log(`Company ${name} - status: ${status}, isVerified: ${isVerified}`);
+
+  const isClaimed = status === 'claimed';
+
   return (
     <Card className="overflow-hidden transition-all hover:shadow-lg hover:translate-y-[-2px]">
       <CardContent className="p-6">
@@ -62,7 +67,7 @@ const VendorCard = ({
             <div>
               <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
                 {name}
-                {status === 'claimed' && (
+                {isClaimed && (
                   <Badge variant="outline" className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full dark:bg-green-900 dark:text-green-100">
                     Verified
                   </Badge>

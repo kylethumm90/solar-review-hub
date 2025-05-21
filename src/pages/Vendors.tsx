@@ -41,12 +41,16 @@ const Vendors = () => {
 
         if (companiesError) throw companiesError;
 
+        console.log('Companies data from Supabase:', companiesData);
+
         // Process the companies data to add average rating and grade
         // Using our standardized functions from reviewUtils
         const processedCompanies = companiesData.map(company => {
           const hasReviews = company.reviews && company.reviews.length > 0;
           const avgRating = hasReviews ? calculateAverageRating(company.reviews || []) : null;
           const grade = hasReviews ? scoreToGrade(avgRating) : 'NR';
+          
+          console.log(`Company: ${company.name}, Status: ${company.status}, is_verified: ${company.is_verified}`);
           
           return {
             ...company,

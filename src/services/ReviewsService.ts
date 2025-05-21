@@ -1,188 +1,182 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { FilterState, ExtendedReview, SimpleCompany } from '@/components/reviews/types';
-import { scoreToGrade } from '@/utils/reviewUtils';
+import { toast } from 'sonner';
+import { ExtendedReview } from '@/components/reviews/types';
 
-export class ReviewsService {
-  static async getUniqueVendorTypes(): Promise<string[]> {
-    const { data, error } = await supabase
-      .from('companies')
-      .select('type')
-      .order('type');
-      
-    if (error || !data) {
-      console.error("Error fetching vendor types:", error);
-      return [];
-    }
-
-    return Array.from(new Set(data.map(item => item.type)));
-  }
-
-  static async getCompanies(): Promise<SimpleCompany[]> {
-    const { data, error } = await supabase
-      .from('companies')
-      .select('id, name, type, is_verified, logo_url')
-      .order('name');
-
-    if (error || !data) {
-      console.error("Error fetching companies:", error);
-      return [];
-    }
-
-    return data;
-  }
-
-  static async getStates(): Promise<string[]> {
-    const { data, error } = await supabase
+// Fetch filtered reviews for a specific company
+export const fetchReviewsForCompany = async (
+  companyId: string,
+  page = 1,
+  pageSize = 5,
+  sortField = 'created_at',
+  sortDirection = 'desc'
+) => {
+  try {
+    // Get total count for pagination
+    const { count, error: countError } = await supabase
       .from('reviews')
-      .select('install_states')
-      .not('install_states', 'is', null);
-      
-    if (error || !data) {
-      console.error("Error fetching states:", error);
-      return [];
+      .select('*', { count: 'exact', head: true })
+      .eq('company_id', companyId);
+    
+    if (countError) {
+      throw countError;
     }
-
-    const allStates = data.flatMap(review => review.install_states || []);
-    return Array.from(new Set(allStates)).sort();
+    
+    const totalPages = Math.ceil((count || 0) / pageSize);
+    
+    // Fetch reviews with user data
+    const { data: reviews, error } = await supabase
+      .from('reviews')
+      .select(`
+        *,
+        user:users(id, full_name)
+      `)
+      .eq('company_id', companyId)
+      .order(sortField, { ascending: sortDirection === 'asc' })
+      .range((page - 1) * pageSize, page * pageSize - 1);
+    
+    if (error) {
+      throw error;
+    }
+    
+    return {
+      reviews: reviews as ExtendedReview[],
+      totalPages,
+      currentPage: page
+    };
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+    toast.error('Failed to load reviews');
+    return {
+      reviews: [],
+      totalPages: 0,
+      currentPage: 1
+    };
   }
+};
 
-  static async fetchReviews(
-    currentPage: number, 
-    filters: FilterState, 
-    sortOption: string
-  ): Promise<{ 
-    reviews: ExtendedReview[], 
-    totalPages: number 
-  }> {
-    // Build the query
+// Fetch all reviews with filters
+export const fetchAllReviews = async (
+  filters: any = {},
+  page = 1,
+  pageSize = 10,
+  sortField = 'created_at',
+  sortDirection = 'desc'
+) => {
+  try {
     let query = supabase
       .from('reviews')
       .select(`
-        id, company_id, user_id, review_title, review_details, 
-        text_feedback, average_score, is_anonymous, created_at,
-        install_count, install_states, still_active,
-        rating_communication, rating_install_quality, rating_payment_reliability,
-        rating_timeliness, rating_post_install_support,
-        company:companies (id, name, type, logo_url)
-      `, { count: 'exact' })
-      .eq('verified', true); // Only show verified reviews
-      
-    // Apply sorting
-    if (sortOption === 'grade-high') {
-      query = query.order('average_score', { ascending: false });
-    } else if (sortOption === 'installs') {
-      query = query.order('install_count', { ascending: false });
-    } else {
-      // Default to most recent
-      query = query.order('created_at', { ascending: false });
-    }
+        *,
+        company:companies(
+          id,
+          name,
+          description,
+          website,
+          logo_url,
+          type,
+          is_verified,
+          grade
+        ),
+        user:users(
+          id,
+          full_name,
+          email
+        )
+      `);
     
     // Apply filters
-    if (filters.vendorTypes.length > 0) {
+    if (filters.vendorTypes && filters.vendorTypes.length > 0) {
       query = query.in('company.type', filters.vendorTypes);
     }
     
     if (filters.companyName) {
-      query = query.eq('company_id', filters.companyName);
+      query = query.ilike('company.name', `%${filters.companyName}%`);
     }
     
     if (filters.reviewDate) {
-      const now = new Date();
-      let daysAgo;
+      // Implement date filtering
+      const dateRanges = {
+        'last-30-days': 30,
+        'last-90-days': 90,
+        'last-year': 365,
+      };
       
-      switch (filters.reviewDate) {
-        case '30days':
-          daysAgo = 30;
-          break;
-        case '90days':
-          daysAgo = 90;
-          break;
-        case '365days':
-          daysAgo = 365;
-          break;
-        default:
-          daysAgo = null;
-      }
-      
-      if (daysAgo) {
-        const startDate = new Date(now);
-        startDate.setDate(now.getDate() - daysAgo);
-        query = query.gte('created_at', startDate.toISOString());
+      const days = dateRanges[filters.reviewDate as keyof typeof dateRanges];
+      if (days) {
+        const date = new Date();
+        date.setDate(date.getDate() - days);
+        query = query.gte('created_at', date.toISOString());
       }
     }
     
-    if (filters.stillActive === 'yes') {
-      query = query.eq('still_active', 'yes');
-    } else if (filters.stillActive === 'no') {
-      query = query.eq('still_active', 'no');
+    // Add states filter
+    if (filters.states && filters.states.length > 0) {
+      query = query.overlaps('install_states', filters.states);
     }
     
-    // Add pagination
-    const PAGE_SIZE = 10;
-    const start = (currentPage - 1) * PAGE_SIZE;
-    const end = start + PAGE_SIZE - 1;
-    query = query.range(start, end);
-    
-    try {
-      const { data, error, count } = await query;
-      
-      if (error) throw error;
-      
-      // Apply post-fetch filters
-      let filteredData = data || [];
-      
-      // Filter by states if applicable
-      if (filters.states.length > 0) {
-        filteredData = filteredData.filter(review => {
-          const reviewStates = review.install_states || [];
-          return filters.states.some(state => reviewStates.includes(state));
-        });
-      }
-      
-      // Filter by grades if applicable
-      if (filters.grades.length > 0) {
-        filteredData = filteredData.filter(review => {
-          const grade = scoreToGrade(review.average_score || 0);
-          return filters.grades.includes(grade);
-        });
-      }
-      
-      // Sort by company name if selected
-      if (sortOption === 'company') {
-        filteredData = filteredData.sort((a, b) => {
-          const nameA = a.company?.name || '';
-          const nameB = b.company?.name || '';
-          return nameA.localeCompare(nameB);
-        });
-      }
-      
-      // Transform data into ExtendedReview[]
-      const typedData: ExtendedReview[] = filteredData.map(item => ({
-        ...item,
-        // Ensure core review properties are present
-        rating_communication: item.rating_communication,
-        rating_install_quality: item.rating_install_quality,
-        rating_payment_reliability: item.rating_payment_reliability,
-        rating_timeliness: item.rating_timeliness,
-        rating_post_install_support: item.rating_post_install_support,
-        text_feedback: item.text_feedback,
-        id: item.id,
-        company_id: item.company_id,
-        user_id: item.user_id,
-        created_at: item.created_at,
-        // Ensure company is properly typed
-        company: item.company
-      }));
-
-      // Calculate total pages
-      const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
-      
-      return { reviews: typedData, totalPages };
-      
-    } catch (error) {
-      console.error("Error fetching reviews:", error);
-      return { reviews: [], totalPages: 1 };
+    // Add grade filter
+    if (filters.grades && filters.grades.length > 0) {
+      query = query.in('company.grade', filters.grades);
     }
+    
+    // Add still active filter
+    if (filters.stillActive) {
+      query = query.eq('still_active', filters.stillActive);
+    }
+    
+    // Get count for pagination
+    const { count, error: countError } = await query.select('id', { count: 'exact', head: true });
+    
+    if (countError) {
+      throw countError;
+    }
+    
+    const totalPages = Math.ceil((count || 0) / pageSize);
+    
+    // Fetch actual data with pagination
+    const { data, error } = await query
+      .order(sortField, { ascending: sortDirection === 'asc' })
+      .range((page - 1) * pageSize, page * pageSize - 1);
+    
+    if (error) {
+      throw error;
+    }
+    
+    // Cast or transform the data to match the ExtendedReview type
+    const reviews = data.map(review => ({
+      ...review,
+      user_id: review.user_id || (review.user?.id || ''), // Ensure user_id is always set
+    }));
+    
+    return {
+      reviews: reviews as unknown as ExtendedReview[],
+      totalPages,
+      currentPage: page
+    };
+  } catch (error) {
+    console.error('Error fetching all reviews:', error);
+    toast.error('Failed to load reviews');
+    return {
+      reviews: [],
+      totalPages: 0,
+      currentPage: 1
+    };
   }
-}
+};
+
+// Calculate average score from ratings
+export const calculateAverageScore = (review: any): number => {
+  const ratings = [
+    review.rating_communication,
+    review.rating_install_quality,
+    review.rating_payment_reliability,
+    review.rating_timeliness,
+    review.rating_post_install_support
+  ].filter(r => typeof r === 'number');
+  
+  if (ratings.length === 0) return 0;
+  
+  const sum = ratings.reduce((acc, curr) => acc + curr, 0);
+  return parseFloat((sum / ratings.length).toFixed(1));
+};

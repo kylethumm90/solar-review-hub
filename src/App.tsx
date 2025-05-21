@@ -45,6 +45,7 @@ import DashboardReviews from './pages/dashboard/DashboardReviews';
 import DashboardClaims from './pages/dashboard/DashboardClaims';
 import DashboardMyCompany from './pages/dashboard/DashboardMyCompany';
 import AllReviews from './pages/AllReviews';
+import CreateListingPage from './pages/CreateListingPage';
 
 const App = () => {
   const { user, isLoading } = useAuth();
@@ -89,6 +90,7 @@ const App = () => {
             <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
             <Route path="/check-email" element={<CheckEmail />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/create-listing" element={<CreateListingPage />} />
           </Route>
           
           {/* Protected routes using ProtectedLayout */}

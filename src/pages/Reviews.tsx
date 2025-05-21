@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -146,6 +147,11 @@ const Reviews = () => {
     setSearchParams(newParams);
   };
 
+  const handleSortColumn = (column: string) => {
+    // This is just a placeholder - you'll need to implement actual sorting logic
+    console.log("Sorting by column:", column);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
@@ -161,7 +167,7 @@ const Reviews = () => {
           <ReviewFilters 
             filters={filterState}
             companies={companies}
-            isLoading={isLoadingCompanies} // Rename to match expected prop
+            isLoading={isLoadingCompanies}
             onApplyFilters={applyFilters}
             onClearFilters={clearFilters}
             isOpen={isFiltersOpen}
@@ -210,15 +216,13 @@ const Reviews = () => {
           <ReviewTable 
             reviews={reviews}
             loading={loading}
-            totalPages={1} // Add missing required props
+            totalPages={1}
             currentPage={1}
-            onPageChange={() => {}}
+            onPageChange={(page) => console.log("Page change:", page)}
             onClearFilters={clearFilters}
-            onSort={() => {}}
-            sortConfig={{
-              key: '',
-              direction: 'asc'
-            }}
+            onSort={handleSortColumn}
+            sortColumn=""
+            sortDirection="asc"
           />
         </div>
       </div>

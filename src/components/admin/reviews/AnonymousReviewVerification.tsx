@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { MailCheck, Lock } from 'lucide-react';
-import { toastFn } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 type AnonymousReviewVerificationProps = {
@@ -29,7 +29,7 @@ const AnonymousReviewVerification: React.FC<AnonymousReviewVerificationProps> = 
 
   const handleVerification = async () => {
     if (!reviewCode.trim()) {
-      toastFn({
+      toast({
         title: "Verification code required",
         description: "Please enter the verification code that was sent to you.",
         variant: "destructive"
@@ -60,7 +60,7 @@ const AnonymousReviewVerification: React.FC<AnonymousReviewVerificationProps> = 
           
         if (updateError) throw updateError;
         
-        toastFn({
+        toast({
           title: "Review verified",
           description: "Your review has been successfully verified.",
         });
@@ -70,7 +70,7 @@ const AnonymousReviewVerification: React.FC<AnonymousReviewVerificationProps> = 
       } else {
         // Invalid code
         setCodeError('Invalid verification code. Please try again.');
-        toastFn({
+        toast({
           title: "Verification failed",
           description: "The verification code you entered is invalid.",
           variant: "destructive"
@@ -78,7 +78,7 @@ const AnonymousReviewVerification: React.FC<AnonymousReviewVerificationProps> = 
       }
     } catch (error: any) {
       console.error('Verification error:', error);
-      toastFn({
+      toast({
         title: "Verification error",
         description: error.message || "There was an issue processing your verification.",
         variant: "destructive"
@@ -89,7 +89,7 @@ const AnonymousReviewVerification: React.FC<AnonymousReviewVerificationProps> = 
   };
 
   const handleResendCode = () => {
-    toastFn({
+    toast({
       title: "Verification code sent",
       description: "A new verification code has been sent to your email."
     });

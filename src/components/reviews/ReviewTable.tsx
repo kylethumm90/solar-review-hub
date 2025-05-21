@@ -22,8 +22,8 @@ interface ReviewTableProps {
   onPageChange: (page: number) => void;
   onClearFilters: () => void;
   onSort: (column: string) => void;
-  sortColumn: string;
-  sortDirection: 'asc' | 'desc';
+  sortColumn?: string;
+  sortDirection?: 'asc' | 'desc';
 }
 
 const ReviewTable = ({
@@ -34,8 +34,8 @@ const ReviewTable = ({
   onPageChange,
   onClearFilters,
   onSort,
-  sortColumn,
-  sortDirection
+  sortColumn = '',
+  sortDirection = 'asc'
 }: ReviewTableProps) => {
   if (loading) {
     return <LoadingSpinner message="Loading reviews..." />;

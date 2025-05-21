@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,32 +12,37 @@ import { formatVendorType } from './reviewUtils';
 
 interface ReviewFiltersProps {
   filters: FilterState;
-  onFilterChange: (newFilters: Partial<FilterState>) => void;
-  onClearFilters: () => void;
-  vendorTypes: string[];
   companies: SimpleCompany[];
-  states: string[];
-  gradeOptions: string[];
+  onApplyFilters: (newFilters: FilterState) => void;
+  onClearFilters: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
+  isLoading?: boolean;
   isMobile?: boolean;
 }
 
 const ReviewFilters: React.FC<ReviewFiltersProps> = ({
   filters,
-  onFilterChange,
+  onApplyFilters,
   onClearFilters,
-  vendorTypes,
   companies,
-  states,
-  gradeOptions,
+  isLoading = false,
+  isOpen,
+  onClose,
   isMobile = false
 }) => {
+  // Define vendorTypes, states and gradeOptions
+  const vendorTypes = ["installer", "epc", "manufacturer", "distributor", "financier"];
+  const states = ["CA", "TX", "FL", "NY", "AZ", "NV", "CO", "OR", "WA", "NJ", "MA"];
+  const gradeOptions = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F"];
   
   const toggleVendorType = (type: string) => {
     const updated = filters.vendorTypes.includes(type)
       ? filters.vendorTypes.filter(t => t !== type)
       : [...filters.vendorTypes, type];
     
-    onFilterChange({ vendorTypes: updated });
+    const newFilters = { ...filters, vendorTypes: updated };
+    onApplyFilters(newFilters);
   };
   
   const toggleGrade = (grade: string) => {
@@ -44,7 +50,8 @@ const ReviewFilters: React.FC<ReviewFiltersProps> = ({
       ? filters.grades.filter(g => g !== grade)
       : [...filters.grades, grade];
     
-    onFilterChange({ grades: updated });
+    const newFilters = { ...filters, grades: updated };
+    onApplyFilters(newFilters);
   };
   
   const toggleState = (state: string) => {
@@ -52,7 +59,8 @@ const ReviewFilters: React.FC<ReviewFiltersProps> = ({
       ? filters.states.filter(s => s !== state)
       : [...filters.states, state];
     
-    onFilterChange({ states: updated });
+    const newFilters = { ...filters, states: updated };
+    onApplyFilters(newFilters);
   };
 
   return (
@@ -84,7 +92,8 @@ const ReviewFilters: React.FC<ReviewFiltersProps> = ({
         <h3 className="font-medium">Company Name</h3>
         <Select 
           value={filters.companyName || "all"} 
-          onValueChange={(value) => onFilterChange({ companyName: value === "all" ? null : value })}
+          onValueChange={(value) => onApplyFilters({ ...filters, companyName: value === "all" ? null : value })}
+          disabled={isLoading}
         >
           <SelectTrigger>
             <SelectValue placeholder="Select a company" />
@@ -105,7 +114,7 @@ const ReviewFilters: React.FC<ReviewFiltersProps> = ({
         <h3 className="font-medium">Review Date</h3>
         <RadioGroup 
           value={filters.reviewDate || "all"}
-          onValueChange={(value) => onFilterChange({ reviewDate: value === "all" ? null : value })}
+          onValueChange={(value) => onApplyFilters({ ...filters, reviewDate: value === "all" ? null : value })}
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="all" id="all-dates" />
@@ -185,7 +194,7 @@ const ReviewFilters: React.FC<ReviewFiltersProps> = ({
         <h3 className="font-medium">Still Working With Vendor</h3>
         <RadioGroup 
           value={filters.stillActive || "all"} 
-          onValueChange={(value) => onFilterChange({ stillActive: value === "all" ? null : value })}
+          onValueChange={(value) => onApplyFilters({ ...filters, stillActive: value === "all" ? null : value })}
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="all" id="all-active" />

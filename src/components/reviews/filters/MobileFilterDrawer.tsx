@@ -52,6 +52,7 @@ const MobileFilterDrawer = ({
           states={states}
           gradeOptions={gradeOptions}
           isMobile={true}
+          onApplyFilters={(newFilters) => onFilterChange(newFilters)} // Forward complete filters
         />
 
         <DrawerFooter>

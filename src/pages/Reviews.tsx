@@ -37,10 +37,7 @@ const Reviews = () => {
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   
   // Setup reviews hook - make sure it matches the expected parameters
-  const { reviews, loading } = useReviews({
-    filters: filterState,
-    searchTerm,
-  });
+  const { reviews, loading } = useReviews();
   
   // Fetch companies for the company filter
   useEffect(() => {

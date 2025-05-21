@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Globe, Calendar, CheckCircle, Info } from 'lucide-react';
+import { Globe, Calendar, BadgeCheck, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Company } from '@/types';
 import { getBadgeColorForGrade } from '@/components/reviews/reviewUtils';
@@ -57,9 +57,9 @@ const VendorDetailsHeader: React.FC<VendorDetailsHeaderProps> = ({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            {company.status === 'claimed' && (
-              <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs px-2 py-1 rounded-full flex items-center">
-                <CheckCircle className="h-3.5 w-3.5 mr-1" />
+            {company.is_verified && (
+              <div className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs px-2 py-1 rounded-full flex items-center">
+                <BadgeCheck className="h-3.5 w-3.5 mr-1" />
                 <span>Verified</span>
               </div>
             )}

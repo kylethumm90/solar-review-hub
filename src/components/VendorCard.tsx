@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom';
-import { Building, ExternalLink } from 'lucide-react';
+import { Building, ExternalLink, BadgeCheck } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from './ui/hover-card';
@@ -43,9 +43,7 @@ const VendorCard = ({
   };
 
   // For debugging
-  console.log(`Company ${name} - status: ${status}, isVerified: ${isVerified}`);
-
-  const isClaimed = status === 'claimed';
+  console.log(`Company ${name} - isVerified: ${isVerified}`);
 
   return (
     <Card className="overflow-hidden transition-all hover:shadow-lg hover:translate-y-[-2px]">
@@ -67,9 +65,9 @@ const VendorCard = ({
             <div>
               <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
                 {name}
-                {isClaimed && (
-                  <Badge variant="outline" className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full dark:bg-green-900 dark:text-green-100">
-                    Verified
+                {isVerified && (
+                  <Badge className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full flex items-center gap-1 dark:bg-green-900 dark:text-green-100">
+                    <BadgeCheck className="h-3 w-3" /> Verified
                   </Badge>
                 )}
               </h3>

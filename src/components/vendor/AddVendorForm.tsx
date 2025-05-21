@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -72,11 +71,25 @@ const AddVendorForm = () => {
     setIsOwner(checked);
   };
 
-  // Normalize website URL
+  // Normalize website URL - updated to be more flexible
   const normalizeUrl = (input: string) => {
     if (!input) return "";
-    if (input.startsWith("http://") || input.startsWith("https://")) return input;
-    return `https://${input.replace(/^www\./, "")}`;
+    
+    // Remove any leading/trailing whitespace
+    let url = input.trim();
+    
+    // If URL already has a protocol, return it as is
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      return url;
+    }
+    
+    // If URL starts with "www.", add https:// prefix
+    if (url.startsWith("www.")) {
+      return `https://${url}`;
+    }
+    
+    // Otherwise, add both https:// and ensure www. is not duplicated
+    return `https://${url}`;
   };
   
   // Submit form data to Supabase
@@ -226,11 +239,14 @@ const AddVendorForm = () => {
           id="website"
           name="website"
           type="url"
-          placeholder="https://example.com"
+          placeholder="example.com or https://example.com"
           value={formData.website}
           onChange={handleChange}
           required
         />
+        <p className="text-xs text-gray-500">
+          Enter your website with or without http/https - we'll format it correctly.
+        </p>
       </div>
       
       {/* Ownership Checkbox */}

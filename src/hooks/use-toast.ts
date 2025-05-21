@@ -48,10 +48,11 @@ const useToast = () => {
   const [toasts] = React.useState<any[]>([]);
 
   return {
-    toast,
+    toast: toast,
     dismiss: sonnerToast.dismiss,
     toasts
   };
 };
 
-export { useToast, toast };
+// Export the base toast function directly to be used without the hook
+export { useToast, sonnerToast as toast };

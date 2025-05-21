@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Company } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, PlusCircle } from 'lucide-react';
+import { Search, PlusCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { scoreToGrade } from '@/utils/reviewUtils';
@@ -100,16 +100,26 @@ const CompaniesPage = () => {
           
           console.log(`Company: ${company.name}, Rating: ${avgRating}, Grade: ${grade}`);
           
+          // Return a new object that matches the Company type structure
           return {
-            ...company,
-            avg_rating: avgRating,
+            id: company.id,
+            name: company.name,
+            description: company.description,
+            website: company.website,
+            logo_url: company.logo_url,
+            type: company.type,
+            is_verified: company.is_verified,
+            status: company.status,
             grade: grade,
+            last_verified: company.last_verified,
+            created_at: company.created_at,
+            avg_rating: avgRating,
             review_count: company.reviews ? company.reviews.length : 0
-          };
+          } as Company;
         });
 
-        // Cast the processed companies to match our Company[] type
-        setCompanies(processedCompanies as Company[]);
+        // Set the processed companies
+        setCompanies(processedCompanies);
       } catch (error) {
         console.error('Error fetching companies:', error);
       } finally {

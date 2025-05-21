@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   email: string;
@@ -14,53 +13,15 @@ export interface Company {
   description: string;
   website: string;
   logo_url?: string;
-  type: string; // Changed from specific literals to accept any string to match database
+  type: string;
   is_verified: boolean;
-  status?: string; // Added status property which can be 'claimed', 'unclaimed', etc.
+  status?: string;
   grade?: string;
   last_verified?: string;
   created_at: string;
   reviews?: Review[];
   avg_rating?: number;
   review_count?: number;
-}
-
-export interface Review {
-  id: string;
-  company_id: string;
-  user_id: string;
-  rating_communication: number;
-  rating_install_quality: number;
-  rating_payment_reliability: number;
-  rating_timeliness: number;
-  rating_post_install_support: number;
-  text_feedback: string;
-  review_title?: string;
-  review_details?: string;
-  average_score?: number;
-  verification_status?: string; // Changed from specific union type to string to match database
-  created_at: string;
-  user?: User;
-  company?: Company;
-}
-
-export interface Claim {
-  id: string;
-  user_id: string;
-  company_id: string;
-  full_name: string;
-  job_title: string;
-  company_email: string;
-  status: 'pending' | 'approved' | 'rejected';
-  created_at: string;
-  user?: User;
-  company?: Company;
-}
-
-// API response types
-export interface ApiResponse<T> {
-  data: T | null;
-  error: string | null;
 }
 
 export interface ReviewQuestion {
@@ -79,4 +40,31 @@ export interface ReviewAnswer {
   rating: number;
   notes?: string;
   created_at?: string;
+  review_questions?: ReviewQuestion;
+}
+
+export interface Review {
+  id: string;
+  company_id: string;
+  user_id: string;
+  rating_communication?: number;
+  rating_install_quality?: number;
+  rating_payment_reliability?: number;
+  rating_timeliness?: number;
+  rating_post_install_support?: number;
+  text_feedback: string;
+  review_title?: string;
+  review_details?: string;
+  average_score?: number;
+  verification_status?: string;
+  created_at: string;
+  user?: User;
+  company?: Company;
+  review_answers?: ReviewAnswer[];
+}
+
+// API response types
+export interface ApiResponse<T> {
+  data: T | null;
+  error: string | null;
 }

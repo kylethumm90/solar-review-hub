@@ -1,9 +1,12 @@
 
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import { Review } from '@/types';
 import { formatDate } from '@/lib/utils';
-import { File, Star } from 'lucide-react';
+import { File } from 'lucide-react';
+import { scoreToGrade } from '@/utils/reviewUtils';
+import { getBadgeColorForGrade } from '@/components/reviews/reviewUtils';
 
 interface RecentReviewsProps {
   reviews: Review[];
@@ -51,35 +54,43 @@ const RecentReviews = ({ reviews, isLoading }: RecentReviewsProps) => {
       
       {reviews && reviews.length > 0 ? (
         <div className="space-y-4">
-          {reviews.slice(0, 3).map((review) => (
-            <div key={review.id} className="border-b border-gray-200 dark:border-gray-700 pb-4 last:border-0">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-medium">
-                    {review.company?.name || 'Unknown Company'}
-                  </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {formatDate(review.created_at)}
-                  </p>
+          {reviews.slice(0, 3).map((review) => {
+            // Calculate average score
+            const avgScore = (
+              review.rating_communication +
+              review.rating_install_quality +
+              review.rating_payment_reliability +
+              review.rating_timeliness +
+              review.rating_post_install_support
+            ) / 5;
+            
+            // Convert score to letter grade
+            const grade = scoreToGrade(avgScore);
+            
+            return (
+              <div key={review.id} className="border-b border-gray-200 dark:border-gray-700 pb-4 last:border-0">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-medium">
+                      {review.company?.name || 'Unknown Company'}
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {formatDate(review.created_at)}
+                    </p>
+                  </div>
+                  <Badge 
+                    variant="outline" 
+                    className={`${getBadgeColorForGrade(grade)}`}
+                  >
+                    {grade}
+                  </Badge>
                 </div>
-                <div className="flex items-center">
-                  <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                  <span>
-                    {(
-                      (review.rating_communication +
-                      review.rating_install_quality +
-                      review.rating_payment_reliability +
-                      review.rating_timeliness +
-                      review.rating_post_install_support) / 5
-                    ).toFixed(1)}
-                  </span>
-                </div>
+                <p className="text-gray-600 dark:text-gray-300 mt-2 line-clamp-2">
+                  {review.text_feedback}
+                </p>
               </div>
-              <p className="text-gray-600 dark:text-gray-300 mt-2 line-clamp-2">
-                {review.text_feedback}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="text-center py-8">

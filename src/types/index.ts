@@ -1,11 +1,18 @@
 
 import { z } from "zod";
 
-// Importing and re-exporting specific type files
+// src/types/index.ts
+
 export * from './company';
 export * from './auth';
 export * from './admin';
 export * from './rankings';
+
+export * from './review';
+export * from './claim';
+export * from './user';
+export * from './reviewQuestion';
+
 
 // Add Company type if it doesn't exist in other files
 export type Company = {

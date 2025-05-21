@@ -248,27 +248,23 @@ const AddVendorForm = () => {
         </label>
       </div>
       
-      {/* Description Field - Now shown to everyone, but optional for non-owners */}
-      <div className="space-y-2">
-        <Label htmlFor="description">
-          Company Description 
-          {isOwner ? "" : " (Optional)"}
-        </Label>
-        <Textarea
-          id="description"
-          name="description"
-          rows={4}
-          className="w-full resize-none"
-          placeholder="Provide a brief description of the company and their services"
-          value={formData.description}
-          onChange={handleChange}
-        />
-        {!isOwner && (
-          <p className="text-xs text-gray-500">
-            If you don't provide a description, "No description provided" will be used.
-          </p>
-        )}
-      </div>
+      {/* Description Field - Only show when isOwner is true */}
+      {isOwner && (
+        <div className="space-y-2">
+          <Label htmlFor="description">
+            Company Description
+          </Label>
+          <Textarea
+            id="description"
+            name="description"
+            rows={4}
+            className="w-full resize-none"
+            placeholder="Provide a brief description of the company and their services"
+            value={formData.description}
+            onChange={handleChange}
+          />
+        </div>
+      )}
       
       {/* Logo Upload - Only for owners */}
       {isOwner && (

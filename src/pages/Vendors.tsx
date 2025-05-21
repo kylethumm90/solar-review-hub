@@ -64,6 +64,7 @@ const Vendors = () => {
           if (hasReviews) {
             // Calculate the average score for each review using weighted answers
             const reviewScores = company.reviews.map(review => {
+              // Type safety check: ensure review has review_answers property
               const answers = review.review_answers || [];
               
               if (answers.length === 0) {
@@ -74,6 +75,7 @@ const Vendors = () => {
               let totalWeight = 0;
               let weightedSum = 0;
               
+              // Type safety: ensure we handle each answer correctly
               answers.forEach(answer => {
                 const weight = answer.review_questions?.weight || 1;
                 weightedSum += answer.rating * weight;

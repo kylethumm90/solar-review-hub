@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import VendorCard from '@/components/VendorCard';
@@ -64,10 +63,15 @@ const Vendors = () => {
           if (hasReviews) {
             // Calculate the average score for each review using weighted answers
             const reviewScores = company.reviews.map(review => {
-              // Type safety check: ensure review has review_answers property
-              const answers = review.review_answers || [];
+              // Type safety check: ensure review exists and has the expected structure
+              if (!review) return 0;
               
-              if (answers.length === 0) {
+              // Check if review has the review_answers property and it's an array
+              const reviewAnswers = review.review_answers && Array.isArray(review.review_answers) 
+                ? review.review_answers 
+                : [];
+              
+              if (reviewAnswers.length === 0) {
                 return review.average_score || 0;
               }
               
@@ -76,7 +80,9 @@ const Vendors = () => {
               let weightedSum = 0;
               
               // Type safety: ensure we handle each answer correctly
-              answers.forEach(answer => {
+              reviewAnswers.forEach(answer => {
+                if (!answer || typeof answer.rating !== 'number') return;
+                
                 const weight = answer.review_questions?.weight || 1;
                 weightedSum += answer.rating * weight;
                 totalWeight += weight;

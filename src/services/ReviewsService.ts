@@ -39,8 +39,11 @@ export const fetchReviewsForCompany = async (
       throw error;
     }
     
+    // Type assertion to ensure the correct structure
+    const typedReviews = reviews as unknown as ExtendedReview[];
+    
     return {
-      reviews: reviews as ExtendedReview[],
+      reviews: typedReviews,
       totalPages,
       currentPage: page
     };
@@ -126,7 +129,9 @@ export const fetchAllReviews = async (
     }
     
     // Get count for pagination
-    const { count, error: countError } = await query.select('id', { count: 'exact', head: true });
+    const { count, error: countError } = await supabase
+      .from('reviews')
+      .select('id', { count: 'exact', head: true });
     
     if (countError) {
       throw countError;
@@ -146,11 +151,11 @@ export const fetchAllReviews = async (
     // Cast or transform the data to match the ExtendedReview type
     const reviews = data.map(review => ({
       ...review,
-      user_id: review.user_id || (review.user?.id || ''), // Ensure user_id is always set
-    }));
+      user_id: review.user_id || (review.user && typeof review.user === 'object' && 'id' in review.user ? review.user.id : ''), 
+    })) as unknown as ExtendedReview[];
     
     return {
-      reviews: reviews as unknown as ExtendedReview[],
+      reviews,
       totalPages,
       currentPage: page
     };
@@ -179,4 +184,101 @@ export const calculateAverageScore = (review: any): number => {
   
   const sum = ratings.reduce((acc, curr) => acc + curr, 0);
   return parseFloat((sum / ratings.length).toFixed(1));
+};
+
+// Export ReviewsService as a namespace to match the import in useReviews.ts
+export const ReviewsService = {
+  fetchReviewsForCompany,
+  fetchAllReviews,
+  calculateAverageScore,
+  
+  // Add these methods that are used in useReviews.ts
+  getUniqueVendorTypes: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('type')
+        .not('type', 'is', null);
+      
+      if (error) throw error;
+      
+      // Extract unique types
+      const types = [...new Set(data.map(item => item.type))];
+      return types;
+    } catch (error) {
+      console.error('Error fetching vendor types:', error);
+      return [];
+    }
+  },
+  
+  getCompanies: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('id, name, type, is_verified, logo_url');
+      
+      if (error) throw error;
+      
+      return data;
+    } catch (error) {
+      console.error('Error fetching companies:', error);
+      return [];
+    }
+  },
+  
+  getStates: async () => {
+    try {
+      // Get all unique states from reviews
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('install_states')
+        .not('install_states', 'is', null);
+      
+      if (error) throw error;
+      
+      // Flatten and get unique states
+      const allStates = data.flatMap(review => review.install_states || []);
+      const uniqueStates = [...new Set(allStates)].filter(Boolean);
+      
+      return uniqueStates;
+    } catch (error) {
+      console.error('Error fetching states:', error);
+      return [];
+    }
+  },
+  
+  fetchReviews: async (page: number, filters: any, sortOption: string) => {
+    // This is a wrapper around fetchAllReviews that handles sorting
+    let sortField = 'created_at';
+    let sortDirection: 'asc' | 'desc' = 'desc';
+    
+    switch (sortOption) {
+      case 'recent':
+        sortField = 'created_at';
+        sortDirection = 'desc';
+        break;
+      case 'oldest':
+        sortField = 'created_at';
+        sortDirection = 'asc';
+        break;
+      case 'grade-high':
+        sortField = 'average_score';
+        sortDirection = 'desc';
+        break;
+      case 'grade-low':
+        sortField = 'average_score';
+        sortDirection = 'asc';
+        break;
+      case 'company':
+        sortField = 'company.name';
+        sortDirection = 'asc';
+        break;
+      case 'installs':
+        sortField = 'install_count';
+        sortDirection = 'desc';
+        break;
+    }
+    
+    return fetchAllReviews(filters, page, 10, sortField, sortDirection);
+  }
 };

@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { FilterState, ExtendedReview, SimpleCompany } from '@/components/reviews/types';
 import { ReviewsService } from '@/services/ReviewsService';
 
 export const useReviews = () => {
+  
   const [searchParams, setSearchParams] = useSearchParams();
   const [reviews, setReviews] = useState<ExtendedReview[]>([]);
   const [loading, setLoading] = useState(true);

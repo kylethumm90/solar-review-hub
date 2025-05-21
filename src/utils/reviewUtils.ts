@@ -1,3 +1,4 @@
+
 export function calculateAverageRating(reviews: any[]): number {
   if (!reviews || reviews.length === 0) {
     return 0;
@@ -48,4 +49,21 @@ export function scoreToGrade(score: number | null | undefined): string {
   } else {
     return 'F';
   }
+}
+
+export function calculateWeightedAverage(questionRatings: Record<string, { rating: number; question: any }>): number {
+  if (!questionRatings || Object.keys(questionRatings).length === 0) {
+    return 0;
+  }
+  
+  let totalWeight = 0;
+  let weightedSum = 0;
+  
+  Object.values(questionRatings).forEach(({ rating, question }) => {
+    const weight = question.weight || 1; // Default weight is 1 if not specified
+    weightedSum += rating * weight;
+    totalWeight += weight;
+  });
+  
+  return totalWeight > 0 ? weightedSum / totalWeight : 0;
 }

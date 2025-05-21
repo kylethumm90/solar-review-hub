@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Globe, Calendar, CheckCircle, InfoCircle } from 'lucide-react';
+import { Globe, Calendar, CheckCircle, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Company } from '@/types';
 import { getBadgeColorForGrade } from '@/components/reviews/reviewUtils';

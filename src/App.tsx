@@ -3,6 +3,7 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PublicLayout from './layouts/PublicLayout';
 import ProtectedLayout from './layouts/ProtectedLayout';
+import AdminLayout from './layouts/AdminLayout';
 import Home from './pages/Home';
 import Vendors from './pages/Vendors';
 import VendorDetails from './pages/VendorDetails';
@@ -21,6 +22,16 @@ import ProtectedRoute from './components/auth/LoginForm'; // Temporary replaceme
 import { AuthProvider } from './context/AuthContext';
 import { Toaster } from "sonner";
 import Rankings from './pages/Rankings';
+
+// Admin pages
+import AdminDashboard from './pages/Admin';
+import AdminUsersPage from './pages/admin/UsersPage';
+import AdminCompaniesPage from './pages/admin/CompaniesPage';
+import AdminReviewsPage from './pages/admin/ReviewsPage';
+import AdminClaimsPage from './pages/admin/ClaimsPage';
+import AdminLogsPage from './pages/admin/LogsPage';
+import AdminPermissionsPage from './pages/admin/PermissionsPage';
+import AdminSettingsPage from './pages/admin/SettingsPage';
 
 function App() {
   return (
@@ -49,7 +60,20 @@ function App() {
             <Route path="claims" element={<DashboardClaims />} />
             <Route path="company/:companyId" element={<CompanyDashboard />} />
           </Route>
+
+          {/* Admin routes with AdminLayout */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUsersPage />} />
+            <Route path="companies" element={<AdminCompaniesPage />} />
+            <Route path="reviews" element={<AdminReviewsPage />} />
+            <Route path="claims" element={<AdminClaimsPage />} />
+            <Route path="logs" element={<AdminLogsPage />} />
+            <Route path="permissions" element={<AdminPermissionsPage />} />
+            <Route path="settings" element={<AdminSettingsPage />} />
+          </Route>
         </Routes>
+        <Toaster />
       </AuthProvider>
     </Router>
   );

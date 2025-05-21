@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
+import { useToast, toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import ReviewCategoryGroup from '@/components/ReviewCategoryGroup';
@@ -18,7 +18,8 @@ interface ReviewFormProps {
   companyType: string;
 }
 
-interface ReviewQuestion {
+// Define local ReviewQuestion interface to match what's used in this component
+interface ReviewQuestionLocal {
   id: string;
   category: string;
   company_type: string;
@@ -27,7 +28,7 @@ interface ReviewQuestion {
 }
 
 interface GroupedQuestions {
-  [key: string]: ReviewQuestion[];
+  [key: string]: ReviewQuestionLocal[];
 }
 
 const ReviewForm = ({ companyId, companyName, companyType }: ReviewFormProps) => {
@@ -37,12 +38,11 @@ const ReviewForm = ({ companyId, companyName, companyType }: ReviewFormProps) =>
     feedback: ''
   });
   const [ratings, setRatings] = useState<Record<string, number>>({});
-  const [questions, setQuestions] = useState<ReviewQuestion[]>([]);
+  const [questions, setQuestions] = useState<ReviewQuestionLocal[]>([]);
   const [groupedQuestions, setGroupedQuestions] = useState<GroupedQuestions>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { user } = useAuth();
   
   useEffect(() => {
@@ -99,7 +99,7 @@ const ReviewForm = ({ companyId, companyName, companyType }: ReviewFormProps) =>
     e.preventDefault();
     
     if (!user) {
-      toastFn({
+      toast({
         title: "Authentication required",
         description: "Please log in to submit a review."
       });
@@ -108,7 +108,7 @@ const ReviewForm = ({ companyId, companyName, companyType }: ReviewFormProps) =>
     }
     
     if (Object.keys(ratings).length === 0) {
-      toastFn({
+      toast({
         title: "Rating required",
         description: "Please provide ratings for at least one category."
       });
@@ -116,7 +116,7 @@ const ReviewForm = ({ companyId, companyName, companyType }: ReviewFormProps) =>
     }
     
     if (!reviewForm.feedback.trim()) {
-      toastFn({
+      toast({
         title: "Feedback required",
         description: "Please provide some written feedback about your experience."
       });
@@ -132,17 +132,22 @@ const ReviewForm = ({ companyId, companyName, companyType }: ReviewFormProps) =>
         ? ratingValues.reduce((sum, val) => sum + val, 0) / ratingValues.length 
         : 0;
       
-      // Insert review
+      // Insert review with fields matching the Review type in index.ts
       const { data: reviewData, error: reviewError } = await supabase
         .from('reviews')
         .insert({
           company_id: companyId,
           user_id: user.id,
+          text_feedback: reviewForm.feedback,
           review_title: reviewForm.title || null,
           review_details: reviewForm.details || null,
-          text_feedback: reviewForm.feedback,
           average_score: averageScore,
-          verification_status: 'pending'
+          verification_status: 'pending',
+          rating_communication: null,
+          rating_install_quality: null,
+          rating_payment_reliability: null,
+          rating_post_install_support: null,
+          rating_timeliness: null
         })
         .select()
         .single();
@@ -164,7 +169,7 @@ const ReviewForm = ({ companyId, companyName, companyType }: ReviewFormProps) =>
         if (answersError) throw answersError;
       }
       
-      toastFn({
+      toast({
         title: "Review submitted",
         description: "Thank you for sharing your experience!"
       });
@@ -173,7 +178,7 @@ const ReviewForm = ({ companyId, companyName, companyType }: ReviewFormProps) =>
       navigate(`/review-confirmation/${companyId}`);
     } catch (error: any) {
       console.error('Error submitting review:', error);
-      toastFn({
+      toast({
         title: "Error submitting review",
         description: error.message || "There was a problem submitting your review. Please try again."
       });

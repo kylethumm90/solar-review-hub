@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/AuthContext';
-import { toastFn } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 interface VendorActionButtonsProps {
@@ -54,7 +54,7 @@ const VendorActionButtons: React.FC<VendorActionButtonsProps> = ({ companyId }) 
   
   const handleClaimClick = () => {
     if (!user) {
-      toastFn({
+      toast({
         title: "Login Required",
         description: "You must be logged in to claim a vendor"
       });

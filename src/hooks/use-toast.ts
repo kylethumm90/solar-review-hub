@@ -63,6 +63,4 @@ const useToast = () => {
 };
 
 // Export the base toast function directly to be used without the hook
-export { useToast };
-// Export sonnerToast for direct usage where needed
-export { sonnerToast as toast };
+export { useToast, toast };

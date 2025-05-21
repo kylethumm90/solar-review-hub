@@ -6,4 +6,4 @@ import { toastFn, useToast, toast } from "@/hooks/use-toast";
 export { toast, useToast, toastFn };
 
 // Export a default object for module imports
-export default toastFn;
+export default { toast, useToast, toastFn };

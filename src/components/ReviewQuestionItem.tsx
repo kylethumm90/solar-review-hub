@@ -1,21 +1,22 @@
 
-import { useState } from 'react';
-import { ReviewQuestion } from '@/types';
+import { useState, useEffect } from 'react';
 import StarRating from './StarRating';
+
+interface ReviewQuestion {
+  id: string;
+  category: string;
+  company_type: string;
+  question: string;
+  weight: number;
+}
 
 interface ReviewQuestionItemProps {
   question: ReviewQuestion;
-  onChange: (questionId: string, rating: number) => void;
+  rating: number;
+  onChange: (rating: number) => void;
 }
 
-const ReviewQuestionItem = ({ question, onChange }: ReviewQuestionItemProps) => {
-  const [rating, setRating] = useState(0);
-
-  const handleRatingChange = (newRating: number) => {
-    setRating(newRating);
-    onChange(question.id, newRating);
-  };
-
+const ReviewQuestionItem = ({ question, rating, onChange }: ReviewQuestionItemProps) => {
   // Map category to description for EPC reviews
   const getCategoryDescription = (categoryName: string) => {
     const descriptions: Record<string, string> = {
@@ -45,7 +46,7 @@ const ReviewQuestionItem = ({ question, onChange }: ReviewQuestionItemProps) => 
       <div className="mt-3">
         <StarRating 
           value={rating} 
-          onChange={handleRatingChange} 
+          onChange={onChange} 
           size="lg"
         />
       </div>

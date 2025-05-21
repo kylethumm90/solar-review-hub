@@ -1,38 +1,32 @@
 
-import { ReviewQuestion } from '@/types';
+import { useState } from 'react';
 import ReviewQuestionItem from './ReviewQuestionItem';
 
-interface ReviewCategoryGroupProps {
-  title: string;
-  questions: ReviewQuestion[];
-  onQuestionChange: (questionId: string, rating: number) => void;
+// Define the interface that matches what's being used locally
+interface ReviewQuestion {
+  id: string;
+  category: string;
+  company_type: string;
+  question: string;
+  weight: number;
 }
 
-const ReviewCategoryGroup = ({ title, questions, onQuestionChange }: ReviewCategoryGroupProps) => {
-  // Group questions by category
-  const questionsByCategory = questions.reduce((acc, question) => {
-    if (!acc[question.category]) {
-      acc[question.category] = [];
-    }
-    acc[question.category].push(question);
-    return acc;
-  }, {} as Record<string, ReviewQuestion[]>);
+interface ReviewCategoryGroupProps {
+  questions: ReviewQuestion[];
+  ratings: Record<string, number>;
+  onRatingChange: (questionId: string, rating: number) => void;
+}
 
+const ReviewCategoryGroup = ({ questions, ratings, onRatingChange }: ReviewCategoryGroupProps) => {
   return (
-    <div className="mb-6">
-      <h2 className="text-xl font-bold mb-4">{title}</h2>
-      
-      {Object.entries(questionsByCategory).map(([category, categoryQuestions]) => (
-        <div key={category} className="mb-4">
-          <h3 className="text-lg font-semibold mb-3">{category}</h3>
-          {categoryQuestions.map(question => (
-            <ReviewQuestionItem 
-              key={question.id} 
-              question={question} 
-              onChange={onQuestionChange} 
-            />
-          ))}
-        </div>
+    <div className="space-y-4">
+      {questions.map(question => (
+        <ReviewQuestionItem 
+          key={question.id} 
+          question={question}
+          rating={ratings[question.id] || 0}
+          onChange={(rating) => onRatingChange(question.id, rating)} 
+        />
       ))}
     </div>
   );

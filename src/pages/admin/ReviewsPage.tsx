@@ -18,6 +18,24 @@ const ReviewsPage = () => {
   } = useAdminReviews();
   
   const [currentView, setCurrentView] = useState<'all' | 'anonymous'>('all');
+  const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
+  const [isVerificationOpen, setIsVerificationOpen] = useState(false);
+  
+  const handleOpenVerification = (reviewId: string) => {
+    setSelectedReviewId(reviewId);
+    setIsVerificationOpen(true);
+  };
+
+  const handleCloseVerification = () => {
+    setIsVerificationOpen(false);
+    setSelectedReviewId(null);
+  };
+
+  const handleVerified = (reviewId: string) => {
+    // Handle the verification success
+    handleReviewAction(reviewId, 'approve');
+    handleCloseVerification();
+  };
   
   return (
     <div className="p-6 space-y-6">
@@ -61,7 +79,12 @@ const ReviewsPage = () => {
         
         <TabsContent value="anonymous">
           <div className="mt-6">
-            <AnonymousReviewVerification />
+            <AnonymousReviewVerification 
+              open={isVerificationOpen}
+              onClose={handleCloseVerification}
+              onVerified={handleVerified}
+              reviewId={selectedReviewId || ''}
+            />
           </div>
         </TabsContent>
       </Tabs>

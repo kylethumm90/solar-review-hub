@@ -9,7 +9,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectI
 import { useReviews } from '@/hooks/useReviews';
 import ReviewTable from '@/components/reviews/ReviewTable';
 import { FilterState, SimpleCompany } from '@/components/reviews/types';
-import { toastFn } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Search, Filter, SlidersHorizontal } from 'lucide-react';
 import ReviewFilters from '@/components/reviews/ReviewFilters';
@@ -37,7 +37,7 @@ const Reviews = () => {
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   
   // Setup reviews hook
-  const { reviews, isLoading, error, fetchReviews } = useReviews({
+  const { reviews, loading } = useReviews({
     filters: filterState,
     searchTerm,
   });
@@ -59,7 +59,7 @@ const Reviews = () => {
         setCompanies(data || []);
       } catch (err) {
         console.error('Error fetching companies:', err);
-        toastFn({
+        toast({
           title: "Error loading companies",
           description: "Could not load the company filter data."
         });
@@ -80,7 +80,6 @@ const Reviews = () => {
       newParams.delete('search');
     }
     setSearchParams(newParams);
-    fetchReviews();
   };
   
   const applyFilters = (newFilters: FilterState) => {
@@ -126,7 +125,6 @@ const Reviews = () => {
     }
     
     setSearchParams(newParams);
-    fetchReviews();
     
     // Close mobile filters if open
     setIsFiltersOpen(false);
@@ -149,13 +147,6 @@ const Reviews = () => {
     setSearchParams(newParams);
   };
 
-  if (error) {
-    toastFn({
-      title: "Error loading reviews",
-      description: "There was a problem loading the reviews. Please try again later."
-    });
-  }
-  
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
@@ -169,9 +160,9 @@ const Reviews = () => {
         {/* Filters Section */}
         <div className="lg:col-span-1">
           <ReviewFilters 
-            filterState={filterState}
+            filters={filterState}
             companies={companies}
-            isLoading={isLoadingCompanies}
+            loading={isLoadingCompanies}
             onApplyFilters={applyFilters}
             onClearFilters={clearFilters}
             isOpen={isFiltersOpen}
@@ -219,7 +210,7 @@ const Reviews = () => {
           
           <ReviewTable 
             reviews={reviews}
-            isLoading={isLoading}
+            loading={loading}
           />
         </div>
       </div>

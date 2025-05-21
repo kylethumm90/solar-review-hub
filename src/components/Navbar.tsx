@@ -25,8 +25,8 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/vendors" className="text-gray-700 dark:text-gray-200 hover:text-primary">
-              Vendors
+            <Link to="/companies" className="text-gray-700 dark:text-gray-200 hover:text-primary">
+              Companies
             </Link>
             
             {/* Conditionally render dashboard link if logged in */}
@@ -77,11 +77,11 @@ const Navbar = () => {
           <div className="md:hidden pb-4">
             <div className="flex flex-col space-y-2 px-2 pt-2">
               <Link
-                to="/vendors"
+                to="/companies"
                 className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Vendors
+                Companies
               </Link>
               
               {user && (
